@@ -1364,7 +1364,7 @@ const Editor = ({
           </div>
         </Card>
 
-        <Card title="Desglose de pantallas" right={<Button onClick={addPantalla}>Añadir pantalla</Button>}>
+        <Card title="Desglose de pantallas">
           <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <div className="flex gap-2 items-center">
               <div className="flex-1">
@@ -2619,6 +2619,101 @@ export default function App() {
     });
   };
 
+  // Función auxiliar para procesar Excel y extraer pantallas
+  const procesarExcelPantallas = async (file) => {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const XLSXLib = await import('xlsx');
+      const workbook = XLSXLib.read(arrayBuffer, { type: 'array', defval: '' });
+      
+      // Obtener la primera hoja
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      
+      // Obtener todas las filas como arrays para encontrar la fila de encabezados
+      const allRows = XLSXLib.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+      
+      if (!allRows || allRows.length === 0) {
+        console.log('El archivo Excel está vacío');
+        return [];
+      }
+
+      // Buscar la fila que contiene "Etiqueta de plano"
+      let headerRowIndex = -1;
+      for (let i = 0; i < allRows.length; i++) {
+        const row = allRows[i];
+        const rowStr = row.join('|').toUpperCase();
+        if (rowStr.includes('ETIQUETA') || rowStr.includes('PLANO')) {
+          headerRowIndex = i;
+          break;
+        }
+      }
+
+      if (headerRowIndex === -1) {
+        console.log('No se encontró la fila de encabezados con "Etiqueta de plano"');
+        return [];
+      }
+
+      // Crear el objeto de encabezados desde esa fila
+      const headers = allRows[headerRowIndex];
+      
+      // Procesar las filas siguientes
+      const pantallasFromExcel = [];
+      for (let i = headerRowIndex + 1; i < allRows.length; i++) {
+        const row = allRows[i];
+        
+        // Crear objeto con los datos de esta fila
+        const rowData = {};
+        headers.forEach((header, idx) => {
+          if (header) {
+            rowData[header.toString().trim()] = row[idx] ? String(row[idx]).trim() : '';
+          }
+        });
+
+        // Buscar el valor de "Etiqueta de plano"
+        let etiquetaPlano = '';
+        for (let key in rowData) {
+          if (key.toUpperCase().includes('ETIQUETA') && key.toUpperCase().includes('PLANO')) {
+            etiquetaPlano = rowData[key];
+            break;
+          }
+        }
+
+        // Si tiene etiqueta de plano, agrégalo
+        if (etiquetaPlano && String(etiquetaPlano).trim() !== '') {
+          const getVal = (keySearch) => {
+            for (let key in rowData) {
+              if (key.toUpperCase().includes(keySearch.toUpperCase())) {
+                return rowData[key];
+              }
+            }
+            return '';
+          };
+
+          pantallasFromExcel.push({
+            etiquetaPlano: etiquetaPlano,
+            hostname: getVal('HOSTNAME') || getVal('HOST') || '',
+            mac: getVal('MAC') || '',
+            serie: getVal('S/N') || getVal('SERIE') || '',
+            resolucion: getVal('RESOLUCIÓN') || getVal('RESOLUCION') || '',
+            fondo: getVal('FONDO') || '',
+            puertoPatch: getVal('PUERTO PATCH') || '',
+            puertoSwitch: getVal('PUERTO SWITCH') || '',
+            contrato: getVal('CONTRATO') || '',
+            termicoPantalla: getVal('TÉRMICO PANTALLA') || getVal('TERMICO PANTALLA') || '',
+            termicoPC: getVal('TÉRMICO PC') || getVal('TERMICO PC') || '',
+            horas24: getVal('24H') || '',
+          });
+        }
+      }
+
+      return pantallasFromExcel;
+    } catch (error) {
+      console.error('Error al procesar el Excel:', error);
+      return [];
+    }
+  };
+
   // Función para importar carpeta y cargar fotos automáticamente
   const importFolder = async (event) => {
     const files = Array.from(event.target.files || []);
@@ -2798,11 +2893,45 @@ export default function App() {
       console.log('No se encontró foto de entrada (ENTRADA_TIENDA)');
     }
     
-    // Actualizar el estado con las nuevas fotos y foto de entrada (una sola actualización)
+    // Buscar y procesar archivos Excel de validación MKD
+    const validacionMKDFiles = files.filter(file => {
+      const path = file.webkitRelativePath || file.path || '';
+      const fileName = file.name.toUpperCase();
+      const isExcel = fileName.endsWith('.XLSX') || fileName.endsWith('.XLS');
+      const isInValidaciones = path.includes('Documentación/Validaciones/') || 
+                                path.includes('Documentación\\Validaciones\\') ||
+                                path.includes('Documentacion/Validaciones/') ||
+                                path.includes('Documentacion\\Validaciones\\');
+      const hasMKD = fileName.includes('VALIDACIÓN_MKD') || fileName.includes('VALIDACION_MKD');
+      return isExcel && isInValidaciones && hasMKD;
+    });
+
+    console.log('Archivos Excel de validación MKD encontrados:', validacionMKDFiles.length);
+    
+    let pantallasActualizadasMKD = 0;
+    let datosValidacionMKD = [];
+
+    // Procesar cada archivo Excel de validación MKD
+    for (const excelFile of validacionMKDFiles) {
+      try {
+        console.log('Procesando archivo Excel de validación MKD:', excelFile.name);
+        const pantallasFromMKD = await procesarExcelPantallas(excelFile);
+        
+        if (pantallasFromMKD.length > 0) {
+          datosValidacionMKD = datosValidacionMKD.concat(pantallasFromMKD);
+          console.log(`✓ Se extrajeron ${pantallasFromMKD.length} pantallas del archivo ${excelFile.name}`);
+        }
+      } catch (error) {
+        console.error(`Error procesando archivo Excel de validación MKD ${excelFile.name}:`, error);
+      }
+    }
+
+    // Actualizar el estado con las nuevas fotos, foto de entrada y datos de validación MKD
     setData((d) => {
       const c = structuredClone(d);
       // Reemplazar todas las fotos existentes con las nuevas importadas
       c.fotos = nuevasFotos;
+      
       // Actualizar foto de entrada y metadatos si se encontró
       if (fotoEntradaProcesada) {
         c.meta.fotoEntrada = {
@@ -2822,12 +2951,83 @@ export default function App() {
           c.meta.codigo = codigoExtraido;
         }
       }
-      console.log('Estado actualizado con', nuevasFotos.length, 'pantallas' + (fotoEntradaProcesada ? ' y foto de entrada' : ''));
+
+      // Actualizar pantallas existentes con datos de validación MKD
+      if (datosValidacionMKD.length > 0) {
+        console.log('Actualizando pantallas con datos de validación MKD...');
+        
+        // Crear un mapa de datos MKD por etiqueta de plano
+        const mkdMap = {};
+        datosValidacionMKD.forEach(pantallaMKD => {
+          const etiqueta = String(pantallaMKD.etiquetaPlano || '').trim().toUpperCase();
+          if (etiqueta) {
+            mkdMap[etiqueta] = pantallaMKD;
+          }
+        });
+
+        // Actualizar pantallas existentes que coincidan
+        c.pantallas = c.pantallas.map(pantalla => {
+          const etiqueta = String(pantalla.etiquetaPlano || '').trim().toUpperCase();
+          if (mkdMap[etiqueta]) {
+            const datosMKD = mkdMap[etiqueta];
+            pantallasActualizadasMKD++;
+            console.log(`  Actualizando pantalla ${pantalla.etiquetaPlano} con datos MKD`);
+            
+            // Actualizar campos que estén vacíos en la pantalla pero tengan valor en MKD
+            return {
+              ...pantalla,
+              hostname: pantalla.hostname || datosMKD.hostname || '',
+              mac: pantalla.mac || datosMKD.mac || '',
+              serie: pantalla.serie || datosMKD.serie || '',
+              resolucion: pantalla.resolucion || datosMKD.resolucion || '',
+              fondo: pantalla.fondo || datosMKD.fondo || '',
+              puertoPatch: pantalla.puertoPatch || datosMKD.puertoPatch || '',
+              puertoSwitch: pantalla.puertoSwitch || datosMKD.puertoSwitch || '',
+              contrato: pantalla.contrato || datosMKD.contrato || '',
+              termicoPantalla: pantalla.termicoPantalla || datosMKD.termicoPantalla || '',
+              termicoPC: pantalla.termicoPC || datosMKD.termicoPC || '',
+              horas24: pantalla.horas24 || datosMKD.horas24 || '',
+            };
+          }
+          return pantalla;
+        });
+
+        // Agregar nuevas pantallas de MKD que no existan
+        const etiquetasExistentes = new Set(
+          c.pantallas.map(p => String(p.etiquetaPlano || '').trim().toUpperCase())
+        );
+        
+        datosValidacionMKD.forEach(pantallaMKD => {
+          const etiqueta = String(pantallaMKD.etiquetaPlano || '').trim().toUpperCase();
+          if (etiqueta && !etiquetasExistentes.has(etiqueta)) {
+            console.log(`  Agregando nueva pantalla desde MKD: ${pantallaMKD.etiquetaPlano}`);
+            c.pantallas.push(pantallaMKD);
+            // Crear entrada de foto para la nueva pantalla
+            c.fotos.push({
+              etiquetaPlano: pantallaMKD.etiquetaPlano,
+              fotoFrontal: { url: "", fileName: undefined, fileSize: undefined },
+              fotoPlayer: { url: "", fileName: undefined, fileSize: undefined },
+              fotoIP: { url: "", fileName: undefined, fileSize: undefined },
+              nota: ""
+            });
+          }
+        });
+      }
+
+      console.log('Estado actualizado con', nuevasFotos.length, 'pantallas' + 
+                  (fotoEntradaProcesada ? ' y foto de entrada' : '') +
+                  (pantallasActualizadasMKD > 0 ? `, ${pantallasActualizadasMKD} pantallas actualizadas con datos MKD` : ''));
       return c;
     });
     
     const mensajeFotoEntrada = fotoEntradaProcesada ? ' y foto de entrada cargada' : '';
-    alert(`Importación completada: ${fotosProcesadas} fotos procesadas de ${nuevasFotos.length} pantallas${mensajeFotoEntrada}`);
+    const mensajeMKD = pantallasActualizadasMKD > 0 
+      ? `\n\n✅ Se procesaron ${validacionMKDFiles.length} archivo(s) de validación MKD y se actualizaron ${pantallasActualizadasMKD} pantalla(s)`
+      : validacionMKDFiles.length > 0 
+        ? `\n\n⚠️ Se encontraron ${validacionMKDFiles.length} archivo(s) de validación MKD pero no se pudieron actualizar pantallas`
+        : '';
+    
+    alert(`Importación completada: ${fotosProcesadas} fotos procesadas de ${nuevasFotos.length} pantallas${mensajeFotoEntrada}${mensajeMKD}`);
   };
 
   // Función para generar un reporte completamente limpio
