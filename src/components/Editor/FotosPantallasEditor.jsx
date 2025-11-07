@@ -5,142 +5,270 @@ import { Input } from '../UI/Input';
 import { Textarea } from '../UI/Textarea';
 import { Button } from '../UI/Button';
 import { compressImage } from '../../utils/imageUtils';
+import { extractSXPattern } from '../../utils/excelUtils';
 
 export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesFromFolder, onFotosProcessed }) => {
   const processedFilesRef = useRef(new Set());
-  // Procesar archivos de fotos recibidos desde App.jsx (importación de carpeta)
+
+  // Sincronizar data.fotos con data.pantallas: crear entradas de fotos para pantallas nuevas
   useEffect(() => {
-    if (!fotoFilesFromFolder || fotoFilesFromFolder.length === 0) return;
+    if (!data.pantallas || data.pantallas.length === 0) return;
 
-    const processFotoFiles = async () => {
-      // Parsear nombres de archivo y agrupar por pantalla
-      const fotosPorPantalla = {};
-      
-      for (const file of fotoFilesFromFolder) {
-        // Evitar procesar el mismo archivo dos veces
-        const fileKey = `${file.name}_${file.size}`;
-        if (processedFilesRef.current.has(fileKey)) {
-          console.log(`Archivo ya procesado: ${file.name}`);
-          continue;
-        }
+    setData((d) => {
+      const c = structuredClone(d);
+      const etiquetasExistentes = new Set(
+        c.fotos.map(f => String(f.etiquetaPlano || '').trim())
+      );
 
-        const fileName = file.name.toUpperCase();
-        console.log('Procesando archivo de foto:', file.name, '->', fileName);
-        
-        // Buscar patrón S[0-9]+ (número de pantalla)
-        const pantallaMatch = fileName.match(/S(\d+)/);
-        if (!pantallaMatch) {
-          console.log('  No se encontró patrón S[0-9] en:', fileName);
-          processedFilesRef.current.add(fileKey);
-          continue;
-        }
-        
-        const numeroPantalla = pantallaMatch[1];
-        const pantallaKey = `S${numeroPantalla}`;
-        console.log('  Pantalla encontrada:', pantallaKey);
-        
-        if (!fotosPorPantalla[pantallaKey]) {
-          fotosPorPantalla[pantallaKey] = {};
-        }
-        
-        // Determinar tipo de foto
-        let tipoFoto = null;
-        if (fileName.includes('FRONTAL')) {
-          tipoFoto = 'fotoFrontal';
-        } else if (fileName.includes('PLAYER_SENDING') || fileName.includes('PLAYER+SENDING') || fileName.includes('PLAYER')) {
-          tipoFoto = 'fotoPlayer';
-        } else if (fileName.includes('_IP') || fileName.endsWith('IP') || (fileName.includes('IP') && !fileName.includes('PLAYER'))) {
-          tipoFoto = 'fotoIP';
-        }
-        
-        if (tipoFoto) {
-          console.log('  Tipo de foto:', tipoFoto);
-          fotosPorPantalla[pantallaKey][tipoFoto] = file;
-        } else {
-          console.log('  No se pudo determinar el tipo de foto');
-        }
-        
-        processedFilesRef.current.add(fileKey);
-      }
-      
-      console.log('Fotos agrupadas por pantalla:', fotosPorPantalla);
-
-      // Solo crear entradas para pantallas que tengan foto FRONTAL
-      // Ordenar por número de pantalla
-      const pantallasConFrontal = Object.entries(fotosPorPantalla)
-        .filter(([_, fotos]) => fotos.fotoFrontal) // Solo pantallas con foto frontal
-        .sort(([a], [b]) => {
-          const numA = parseInt(a.replace('S', ''));
-          const numB = parseInt(b.replace('S', ''));
-          return numA - numB;
-        });
-
-      if (pantallasConFrontal.length > 0) {
-        // Procesar y asignar fotos a las pantallas
-        console.log('Pantallas con frontal encontradas:', pantallasConFrontal.length);
-        
-        const nuevasFotos = [];
-        let fotosProcesadas = 0;
-        
-        for (const [pantallaKey, fotos] of pantallasConFrontal) {
-          // Usar "SX" como etiqueta de plano
-          const etiquetaPlano = pantallaKey; // S1, S2, S3, etc.
-          console.log(`Procesando pantalla ${pantallaKey} con fotos:`, Object.keys(fotos));
-          
-          const fotoData = {
-            etiquetaPlano: etiquetaPlano,
+      // Crear entradas de fotos para pantallas que no tengan entrada de foto
+      let nuevasEntradas = 0;
+      data.pantallas.forEach(pantalla => {
+        const etiqueta = String(pantalla.etiquetaPlano || '').trim();
+        if (etiqueta && !etiquetasExistentes.has(etiqueta)) {
+          c.fotos.push({
+            etiquetaPlano: etiqueta,
             fotoFrontal: { url: "", fileName: undefined, fileSize: undefined },
             fotoPlayer: { url: "", fileName: undefined, fileSize: undefined },
             fotoIP: { url: "", fileName: undefined, fileSize: undefined },
             nota: ""
-          };
+          });
+          nuevasEntradas++;
+        }
+      });
+
+      // Eliminar entradas de fotos que no tengan pantalla correspondiente
+      const etiquetasPantallas = new Set(
+        data.pantallas.map(p => String(p.etiquetaPlano || '').trim())
+      );
+      c.fotos = c.fotos.filter(f => {
+        const etiqueta = String(f.etiquetaPlano || '').trim();
+        return !etiqueta || etiquetasPantallas.has(etiqueta);
+      });
+
+      if (nuevasEntradas > 0) {
+        console.log(`📸 Se crearon ${nuevasEntradas} nuevas entradas de fotos para pantallas`);
+        console.log(`   Total de entradas de fotos: ${c.fotos.length}`);
+      }
+
+      return c;
+    });
+  }, [data.pantallas, setData]);
+
+  // Procesar archivos de fotos recibidos desde App.jsx (importación de carpeta)
+  useEffect(() => {
+    if (!fotoFilesFromFolder || fotoFilesFromFolder.length === 0) return;
+    if (!data.pantallas || data.pantallas.length === 0) {
+      console.log('⚠️ No hay pantallas importadas. Importa primero el Excel en "Desglose de pantallas"');
+      return;
+    }
+    
+    // Verificar que las fotos estén sincronizadas con las pantallas
+    const etiquetasPantallas = new Set(
+      data.pantallas.map(p => String(p.etiquetaPlano || '').trim())
+    );
+    const etiquetasFotos = new Set(
+      (data.fotos || []).map(f => String(f.etiquetaPlano || '').trim())
+    );
+    
+    // Verificar que todas las pantallas tengan su entrada de foto
+    const todasPantallasTienenFoto = Array.from(etiquetasPantallas).every(etiqueta => 
+      etiquetasFotos.has(etiqueta)
+    );
+    
+    if (!todasPantallasTienenFoto || !data.fotos || data.fotos.length === 0) {
+      console.log('⚠️ Las entradas de fotos aún no están sincronizadas. Esperando sincronización...');
+      console.log(`   Pantallas: ${data.pantallas.length}, Fotos: ${data.fotos?.length || 0}`);
+      return;
+    }
+
+    // Resetear archivos procesados cuando cambian las pantallas o los archivos
+    processedFilesRef.current.clear();
+
+    const processFotoFiles = async () => {
+      console.log(`\n🚀 Iniciando procesamiento de ${fotoFilesFromFolder.length} archivo(s) de fotos...`);
+      // Agrupar fotos por SX extraído del nombre del archivo
+      const fotosPorSX = {};
+      
+      for (const file of fotoFilesFromFolder) {
+        const fileName = file.name.toUpperCase();
+        console.log(`\n📷 Procesando archivo: ${file.name}`);
+        console.log(`   Nombre normalizado: ${fileName}`);
+        
+        // Extraer SX del nombre del archivo (ej: "S1" de "BSK_16909_FR_DIJON_LA-TOISON-DOR_CIRCLE_S1_FRONTAL")
+        const sxPattern = extractSXPattern(fileName);
+        if (!sxPattern) {
+          console.log(`  ❌ No se encontró patrón SX (S1, S2, etc.) en: ${file.name}`);
+          continue;
+        }
+        
+        console.log(`  ✅ SX extraído: ${sxPattern} → Esta imagen pertenece a la pantalla ${sxPattern}`);
+        
+        if (!fotosPorSX[sxPattern]) {
+          fotosPorSX[sxPattern] = {};
+        }
+        
+        // Determinar tipo de foto según el contenido del nombre del archivo
+        // Orden importante: primero PLAYER_SENDING, luego IP, luego FRONTAL
+        let tipoFoto = null;
+        
+        // Detectar PLAYER_SENDING (debe contener PLAYER y SENDING)
+        if ((fileName.includes('PLAYER_SENDING') || fileName.includes('PLAYER+SENDING')) || 
+            (fileName.includes('PLAYER') && fileName.includes('SENDING'))) {
+          tipoFoto = 'fotoPlayer';
+        } 
+        // Detectar IP (debe contener IP pero NO PLAYER)
+        else if ((fileName.includes('_IP') || fileName.endsWith('IP') || fileName.includes('_IP_')) && 
+                 !fileName.includes('PLAYER')) {
+          tipoFoto = 'fotoIP';
+        } 
+        // Detectar FRONTAL (puede estar al final o en medio del nombre)
+        else if (fileName.includes('FRONTAL')) {
+          tipoFoto = 'fotoFrontal';
+        }
+        
+        if (tipoFoto) {
+          // Mapear tipo interno a nombre legible
+          const tipoNombre = tipoFoto === 'fotoFrontal' ? 'FOTO FRONTAL' : 
+                            tipoFoto === 'fotoPlayer' ? 'PLAYER + SENDING' : 
+                            'IP';
+          console.log(`  ✅ Tipo detectado: ${tipoNombre} → Se asignará al bloque "${sxPattern} ${tipoNombre}"`);
           
-          // Procesar cada tipo de foto
-          for (const [tipoFoto, file] of Object.entries(fotos)) {
+          // Si ya existe una foto de este tipo para este SX, mantener la primera encontrada
+          if (!fotosPorSX[sxPattern][tipoFoto]) {
+            fotosPorSX[sxPattern][tipoFoto] = file;
+            console.log(`  ✓ Foto preparada para asignación: ${sxPattern} → ${tipoNombre}`);
+          } else {
+            console.log(`  ⚠️ Ya existe una foto ${tipoNombre} para ${sxPattern}, se mantiene la primera: ${fotosPorSX[sxPattern][tipoFoto].name}`);
+          }
+        } else {
+          console.log(`  ❌ No se pudo determinar el tipo de foto para: ${file.name}`);
+          console.log(`     Buscando: "FRONTAL", "PLAYER_SENDING", o "IP" en el nombre`);
+          console.log(`     Ejemplo válido: BSK_16909_FR_DIJON_LA-TOISON-DOR_CIRCLE_S1_FRONTAL`);
+        }
+      }
+      
+      console.log('Fotos agrupadas por SX:', fotosPorSX);
+
+      // Asignar fotos a las pantallas según su etiqueta de plano
+      let fotosProcesadas = 0;
+      const pantallasActualizadasSet = new Set();
+
+      // Crear una copia del estado actual
+      const c = structuredClone(data);
+      
+      console.log(`\n📸 Iniciando asignación de fotos a ${c.fotos.length} pantalla(s)...`);
+      
+      // Procesar cada entrada de foto (cada bloque de pantalla)
+      for (let fotoIndex = 0; fotoIndex < c.fotos.length; fotoIndex++) {
+        const fotoEntry = c.fotos[fotoIndex];
+        const etiquetaPlano = String(fotoEntry.etiquetaPlano || '').trim();
+        if (!etiquetaPlano) {
+          console.log(`  ⚠️ Entrada ${fotoIndex} sin etiqueta de plano, se omite`);
+          continue;
+        }
+
+        console.log(`\n🔍 Procesando bloque de pantalla: "${etiquetaPlano}"`);
+
+        // Extraer SX de la etiqueta de plano (ej: "S1" de "LED_CIRCLE_0F_ENT_S1")
+        const sxPattern = extractSXPattern(etiquetaPlano);
+        if (!sxPattern) {
+          console.log(`  ⚠️ No se encontró patrón SX en etiqueta de plano: ${etiquetaPlano}`);
+          continue;
+        }
+
+        console.log(`  ✓ SX extraído de la etiqueta: ${sxPattern}`);
+
+        // Buscar fotos para este SX
+        const fotosDelSX = fotosPorSX[sxPattern];
+        if (!fotosDelSX || Object.keys(fotosDelSX).length === 0) {
+          console.log(`  ⚠️ No se encontraron fotos para SX: ${sxPattern} (etiqueta: ${etiquetaPlano})`);
+          console.log(`     Buscando imágenes con patrón: ...${sxPattern}_FRONTAL, ...${sxPattern}_PLAYER_SENDING, etc.`);
+          continue;
+        }
+
+        const tiposEncontrados = Object.keys(fotosDelSX).map(t => {
+          if (t === 'fotoFrontal') return 'FOTO FRONTAL';
+          if (t === 'fotoPlayer') return 'PLAYER + SENDING';
+          return 'IP';
+        });
+        console.log(`  📁 Fotos encontradas para ${sxPattern}: ${tiposEncontrados.join(', ')}`);
+
+        // Procesar cada tipo de foto encontrado
+        for (const [tipoFoto, file] of Object.entries(fotosDelSX)) {
+          const tipoNombre = tipoFoto === 'fotoFrontal' ? 'FOTO FRONTAL' : 
+                            tipoFoto === 'fotoPlayer' ? 'PLAYER + SENDING' : 
+                            'IP';
+          
+          // Solo actualizar si la foto no está ya asignada
+          if (!c.fotos[fotoIndex][tipoFoto]?.url) {
             try {
-              console.log(`  Comprimiendo ${tipoFoto}:`, file.name);
+              console.log(`  📤 Importando imagen al bloque "${sxPattern} ${tipoNombre}":`);
+              console.log(`     Archivo: ${file.name}`);
               const base64 = await compressImage(file, { maxDim: 1600, quality: 0.85 });
-              fotoData[tipoFoto] = {
+              c.fotos[fotoIndex][tipoFoto] = {
                 url: base64,
                 fileName: file.name,
                 fileSize: file.size
               };
               fotosProcesadas++;
-              console.log(`  ✓ ${tipoFoto} procesada correctamente`);
+              pantallasActualizadasSet.add(etiquetaPlano);
+              console.log(`  ✅ ✓ Imagen importada correctamente en el bloque "${sxPattern} ${tipoNombre}"`);
             } catch (error) {
-              console.error(`Error procesando ${file.name}:`, error);
+              console.error(`  ❌ Error procesando ${file.name}:`, error);
             }
+          } else {
+            console.log(`  ⏭️  ${tipoNombre} ya está asignada al bloque "${sxPattern} ${tipoNombre}", se omite`);
           }
-          
-          nuevasFotos.push(fotoData);
         }
+      }
+      
+      console.log(`\n✅ Proceso completado: ${fotosProcesadas} foto(s) asignada(s) a ${pantallasActualizadasSet.size} pantalla(s)`);
 
-        // Actualizar el estado con las nuevas fotos
-        setData((d) => ({
-          ...d,
-          fotos: nuevasFotos
-        }));
+      // Actualizar el estado una sola vez con todas las fotos procesadas
+      if (fotosProcesadas > 0) {
+        setData(c);
+      }
 
-        // Notificar a App.jsx que las fotos fueron procesadas
-        if (onFotosProcessed) {
-          onFotosProcessed({
-            fotosProcesadas,
-            totalPantallas: nuevasFotos.length
-          });
-        }
+      // Resumen de asignaciones por tipo
+      const resumenPorTipo = {
+        fotoFrontal: 0,
+        fotoPlayer: 0,
+        fotoIP: 0
+      };
+      
+      c.fotos.forEach(foto => {
+        if (foto.fotoFrontal?.url) resumenPorTipo.fotoFrontal++;
+        if (foto.fotoPlayer?.url) resumenPorTipo.fotoPlayer++;
+        if (foto.fotoIP?.url) resumenPorTipo.fotoIP++;
+      });
+
+      // Notificar a App.jsx que las fotos fueron procesadas
+      if (onFotosProcessed) {
+        onFotosProcessed({
+          fotosProcesadas,
+          totalPantallas: pantallasActualizadasSet.size,
+          resumenPorTipo: resumenPorTipo
+        });
+      }
+
+      if (fotosProcesadas > 0) {
+        let mensaje = `✅ Se asignaron ${fotosProcesadas} foto(s) a ${pantallasActualizadasSet.size} pantalla(s)\n\n`;
+        mensaje += `📊 Resumen por tipo:\n`;
+        mensaje += `  • FRONTAL: ${resumenPorTipo.fotoFrontal}\n`;
+        mensaje += `  • PLAYER + SENDING: ${resumenPorTipo.fotoPlayer}\n`;
+        mensaje += `  • IP: ${resumenPorTipo.fotoIP}`;
+        console.log(mensaje);
+        // Nota: La información también se envía a App.jsx a través de onFotosProcessed
       } else {
-        console.log('No se encontraron fotos FRONTAL en la carpeta.');
-        if (onFotosProcessed) {
-          onFotosProcessed({
-            fotosProcesadas: 0,
-            totalPantallas: 0
-          });
-        }
+        console.log('⚠️ No se asignaron fotos. Verifica que:');
+        console.log('  1. Los nombres de archivo contengan el patrón SX (S1, S2, etc.)');
+        console.log('  2. Los nombres contengan FRONTAL, PLAYER_SENDING, o IP');
+        console.log('  3. Las etiquetas de plano en "Desglose de pantallas" contengan el mismo patrón SX');
       }
     };
 
     processFotoFiles();
-  }, [fotoFilesFromFolder, setData, onFotosProcessed]);
+  }, [fotoFilesFromFolder, data.pantallas, data.fotos, setData, onFotosProcessed]);
 
   const addFoto = () => {
     setData((d) => ({
@@ -164,14 +292,9 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
               <Field className="flex-grow mr-4" label="Etiqueta de plano">
                 <Input
                   value={f.etiquetaPlano}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setData((d) => {
-                      const c = structuredClone(d);
-                      c.fotos[i].etiquetaPlano = v;
-                      return c;
-                    });
-                  }}
+                  disabled
+                  className="bg-neutral-100 cursor-not-allowed"
+                  title="La etiqueta de plano se sincroniza automáticamente desde 'Desglose de pantallas'"
                 />
               </Field>
               <div className="pt-6">

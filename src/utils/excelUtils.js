@@ -58,7 +58,7 @@ export const removeDuplicatesBySX = (pantallas) => {
  * - FILTRO 2 (SEGUNDO): Columna C (índice 2) debe contener "Alta"
  */
 export const processExcelPantallas = async (file) => {
-  if (!file) return { pantallas: [], fotos: [] };
+  if (!file) return { pantallas: [], duplicadosEliminados: 0 };
 
   try {
     // Validar nombre del archivo - DEBE contener "Validación_MKD" o "Validacion_MKD"
@@ -166,7 +166,7 @@ export const processExcelPantallas = async (file) => {
 
     if (pantallasFromExcel.length === 0) {
       alert('No se encontraron pantallas válidas que cumplan los criterios:\n- Columna U contiene "LED"\n- Columna C contiene "Alta"');
-      return { pantallas: [], fotos: [] };
+      return { pantallas: [], duplicadosEliminados: 0 };
     }
 
     // Validación final: asegurarse de que todas las pantallas importadas contengan "LED"
@@ -184,24 +184,15 @@ export const processExcelPantallas = async (file) => {
     // ============================================
     const { pantallasUnicas, duplicadosEliminados } = removeDuplicatesBySX(pantallasValidadas);
 
-    // Crear entradas de fotos para cada pantalla del desglose (solo para pantallas únicas)
-    const fotosFromExcel = pantallasUnicas.map((pantalla) => ({
-      etiquetaPlano: pantalla.etiquetaPlano,
-      fotoFrontal: { url: "", fileName: undefined, fileSize: undefined },
-      fotoPlayer: { url: "", fileName: undefined, fileSize: undefined },
-      fotoIP: { url: "", fileName: undefined, fileSize: undefined },
-      nota: ""
-    }));
-
+    // NOTA: Las entradas de fotos se sincronizan automáticamente en FotosPantallasEditor.jsx
     return { 
       pantallas: pantallasUnicas, 
-      fotos: fotosFromExcel,
       duplicadosEliminados: duplicadosEliminados.length
     };
   } catch (error) {
     console.error('Error al procesar el Excel:', error);
     alert('Error: ' + error.message);
-    return { pantallas: [], fotos: [] };
+    return { pantallas: [], duplicadosEliminados: 0 };
   }
 };
 

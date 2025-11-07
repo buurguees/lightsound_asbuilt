@@ -15,7 +15,7 @@ export const DesglosePantallasEditor = ({ data, setData, imageInputRefs, excelFi
       return;
     }
 
-    const { pantallas, fotos, duplicadosEliminados } = await processExcelPantallas(file);
+    const { pantallas, duplicadosEliminados } = await processExcelPantallas(file);
     
     if (pantallas.length > 0) {
       // El filtro anti-duplicados ya se aplicó en processExcelPantallas
@@ -28,12 +28,12 @@ export const DesglosePantallasEditor = ({ data, setData, imageInputRefs, excelFi
 
       setData((d) => ({
         ...d,
-        pantallas: pantallas, // Ya están filtradas y sin duplicados
-        fotos: fotos
+        pantallas: pantallas // Ya están filtradas y sin duplicados
+        // NOTA: Las fotos se sincronizan automáticamente en FotosPantallasEditor.jsx
       }));
       
       if (pantallas.length > 0) {
-        alert(`✅ Se han cargado ${pantallas.length} pantallas correctamente\n\nSe han creado ${fotos.length} entradas de fotos`);
+        alert(`✅ Se han cargado ${pantallas.length} pantallas correctamente\n\nLas entradas de fotos se sincronizarán automáticamente`);
       }
     }
   };
@@ -44,7 +44,6 @@ export const DesglosePantallasEditor = ({ data, setData, imageInputRefs, excelFi
 
     const processExcelFiles = async () => {
       let todasPantallas = [];
-      let todasFotos = [];
       let totalDuplicados = 0;
       let archivosProcesados = 0;
 
@@ -58,11 +57,10 @@ export const DesglosePantallasEditor = ({ data, setData, imageInputRefs, excelFi
 
         try {
           console.log('Procesando archivo Excel desde carpeta:', file.name);
-          const { pantallas, fotos, duplicadosEliminados } = await processExcelPantallas(file);
+          const { pantallas, duplicadosEliminados } = await processExcelPantallas(file);
           
           if (pantallas.length > 0) {
             todasPantallas = todasPantallas.concat(pantallas);
-            todasFotos = todasFotos.concat(fotos);
             totalDuplicados += duplicadosEliminados;
             archivosProcesados++;
             processedFilesRef.current.add(fileKey);
@@ -77,28 +75,16 @@ export const DesglosePantallasEditor = ({ data, setData, imageInputRefs, excelFi
         const { pantallasUnicas, duplicadosEliminados: duplicadosAdicionales } = removeDuplicatesBySX(todasPantallas);
         totalDuplicados += duplicadosAdicionales;
 
-        // Crear fotos solo para pantallas únicas
-        const fotosUnicas = pantallasUnicas.map((pantalla) => {
-          const fotoExistente = todasFotos.find(f => f.etiquetaPlano === pantalla.etiquetaPlano);
-          return fotoExistente || {
-            etiquetaPlano: pantalla.etiquetaPlano,
-            fotoFrontal: { url: "", fileName: undefined, fileSize: undefined },
-            fotoPlayer: { url: "", fileName: undefined, fileSize: undefined },
-            fotoIP: { url: "", fileName: undefined, fileSize: undefined },
-            nota: ""
-          };
-        });
-
         setData((d) => ({
           ...d,
-          pantallas: pantallasUnicas,
-          fotos: fotosUnicas
+          pantallas: pantallasUnicas
+          // NOTA: Las fotos se sincronizan automáticamente en FotosPantallasEditor.jsx
         }));
 
         if (archivosProcesados > 0) {
           let mensaje = `✅ Se procesaron ${archivosProcesados} archivo(s) Excel desde la carpeta\n`;
           mensaje += `✅ Se importaron ${pantallasUnicas.length} pantalla(s) únicas\n`;
-          mensaje += `✅ Se crearon ${fotosUnicas.length} entrada(s) de fotos`;
+          mensaje += `📸 Las entradas de fotos se sincronizarán automáticamente`;
           if (totalDuplicados > 0) {
             mensaje += `\n⚠️ Se eliminaron ${totalDuplicados} pantalla(s) duplicada(s) por patrón SX`;
           }
