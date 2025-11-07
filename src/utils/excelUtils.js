@@ -1,4 +1,55 @@
 /**
+ * Extrae el patrón SX (S1, S2, S3, etc.) de una etiqueta de plano
+ * Ejemplo: "LED_CIRCLE_0F_ENT_S1" → "S1"
+ * También maneja variaciones como "S01", "S_1", etc.
+ */
+export const extractSXPattern = (etiquetaPlano) => {
+  const nombre = String(etiquetaPlano || '').trim().toUpperCase();
+  // Buscar patrón S seguido de guión bajo opcional y uno o más dígitos
+  // Ejemplos: S1, S_1, S01, S_01, etc.
+  const match = nombre.match(/S_?(\d+)/);
+  return match ? `S${match[1]}` : null; // Normalizar a "S1", "S2", etc.
+};
+
+/**
+ * Elimina duplicados de pantallas basados en el patrón SX
+ * Solo mantiene la primera ocurrencia de cada SX único
+ */
+export const removeDuplicatesBySX = (pantallas) => {
+  const seenSX = new Set();
+  const pantallasUnicas = [];
+  const duplicadosEliminados = [];
+
+  for (const pantalla of pantallas) {
+    const sxPattern = extractSXPattern(pantalla.etiquetaPlano);
+    
+    if (sxPattern) {
+      // Si ya existe un SX con este patrón, es un duplicado
+      if (seenSX.has(sxPattern)) {
+        duplicadosEliminados.push({
+          etiqueta: pantalla.etiquetaPlano,
+          sxPattern: sxPattern
+        });
+        continue; // Saltar este duplicado
+      }
+      seenSX.add(sxPattern);
+    }
+    
+    pantallasUnicas.push(pantalla);
+  }
+
+  if (duplicadosEliminados.length > 0) {
+    console.warn(`Se eliminaron ${duplicadosEliminados.length} duplicados por patrón SX:`, duplicadosEliminados);
+    console.log(`Pantallas únicas después del filtro anti-duplicados: ${pantallasUnicas.length}`);
+  }
+
+  return { 
+    pantallasUnicas, 
+    duplicadosEliminados: duplicadosEliminados.length 
+  };
+};
+
+/**
  * Procesa un archivo Excel y extrae datos de pantallas
  * Reglas:
  * - Archivo DEBE contener "Validación_MKD" o "Validacion_MKD" en el nombre (obligatorio)
@@ -15,7 +66,11 @@ export const processExcelPantallas = async (file) => {
     const fileNameUpper = fileName.toUpperCase();
     
     // Validación estricta: el nombre del archivo debe contener el patrón
-    const tieneValidacionMKD = fileNameUpper.includes('VALIDACIÓN_MKD') || fileNameUpper.includes('VALIDACION_MKD');
+    // Nota: toUpperCase() convierte "Validación" a "VALIDACION", así que buscamos "VALIDACION_MKD"
+    // También buscamos en el nombre original por si acaso (aunque debería funcionar con mayúsculas)
+    const tieneValidacionMKD = fileNameUpper.includes('VALIDACION_MKD') || 
+                                fileName.includes('Validación_MKD') || 
+                                fileName.includes('Validacion_MKD');
     
     if (!tieneValidacionMKD) {
       alert(`El archivo "${file.name}" no es válido.\n\nSolo se procesan archivos Excel que contengan "Validación_MKD" o "Validacion_MKD" en el nombre.`);
@@ -124,8 +179,13 @@ export const processExcelPantallas = async (file) => {
       console.warn(`Se filtraron ${pantallasFromExcel.length - pantallasValidadas.length} pantallas que no cumplían el criterio "LED"`);
     }
 
-    // Crear entradas de fotos para cada pantalla del desglose (solo para pantallas validadas)
-    const fotosFromExcel = pantallasValidadas.map((pantalla) => ({
+    // ============================================
+    // FILTRO ANTI-DUPLICADOS: Eliminar duplicados por patrón SX
+    // ============================================
+    const { pantallasUnicas, duplicadosEliminados } = removeDuplicatesBySX(pantallasValidadas);
+
+    // Crear entradas de fotos para cada pantalla del desglose (solo para pantallas únicas)
+    const fotosFromExcel = pantallasUnicas.map((pantalla) => ({
       etiquetaPlano: pantalla.etiquetaPlano,
       fotoFrontal: { url: "", fileName: undefined, fileSize: undefined },
       fotoPlayer: { url: "", fileName: undefined, fileSize: undefined },
@@ -133,7 +193,11 @@ export const processExcelPantallas = async (file) => {
       nota: ""
     }));
 
-    return { pantallas: pantallasValidadas, fotos: fotosFromExcel };
+    return { 
+      pantallas: pantallasUnicas, 
+      fotos: fotosFromExcel,
+      duplicadosEliminados: duplicadosEliminados.length
+    };
   } catch (error) {
     console.error('Error al procesar el Excel:', error);
     alert('Error: ' + error.message);

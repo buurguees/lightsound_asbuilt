@@ -1,3 +1,4 @@
+import React, { useEffect, useRef } from 'react';
 import { Card } from '../UI/Card';
 import { Field } from '../UI/Field';
 import { Input } from '../UI/Input';
@@ -5,7 +6,142 @@ import { Textarea } from '../UI/Textarea';
 import { Button } from '../UI/Button';
 import { compressImage } from '../../utils/imageUtils';
 
-export const FotosPantallasEditor = ({ data, setData, imageInputRefs }) => {
+export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesFromFolder, onFotosProcessed }) => {
+  const processedFilesRef = useRef(new Set());
+  // Procesar archivos de fotos recibidos desde App.jsx (importación de carpeta)
+  useEffect(() => {
+    if (!fotoFilesFromFolder || fotoFilesFromFolder.length === 0) return;
+
+    const processFotoFiles = async () => {
+      // Parsear nombres de archivo y agrupar por pantalla
+      const fotosPorPantalla = {};
+      
+      for (const file of fotoFilesFromFolder) {
+        // Evitar procesar el mismo archivo dos veces
+        const fileKey = `${file.name}_${file.size}`;
+        if (processedFilesRef.current.has(fileKey)) {
+          console.log(`Archivo ya procesado: ${file.name}`);
+          continue;
+        }
+
+        const fileName = file.name.toUpperCase();
+        console.log('Procesando archivo de foto:', file.name, '->', fileName);
+        
+        // Buscar patrón S[0-9]+ (número de pantalla)
+        const pantallaMatch = fileName.match(/S(\d+)/);
+        if (!pantallaMatch) {
+          console.log('  No se encontró patrón S[0-9] en:', fileName);
+          processedFilesRef.current.add(fileKey);
+          continue;
+        }
+        
+        const numeroPantalla = pantallaMatch[1];
+        const pantallaKey = `S${numeroPantalla}`;
+        console.log('  Pantalla encontrada:', pantallaKey);
+        
+        if (!fotosPorPantalla[pantallaKey]) {
+          fotosPorPantalla[pantallaKey] = {};
+        }
+        
+        // Determinar tipo de foto
+        let tipoFoto = null;
+        if (fileName.includes('FRONTAL')) {
+          tipoFoto = 'fotoFrontal';
+        } else if (fileName.includes('PLAYER_SENDING') || fileName.includes('PLAYER+SENDING') || fileName.includes('PLAYER')) {
+          tipoFoto = 'fotoPlayer';
+        } else if (fileName.includes('_IP') || fileName.endsWith('IP') || (fileName.includes('IP') && !fileName.includes('PLAYER'))) {
+          tipoFoto = 'fotoIP';
+        }
+        
+        if (tipoFoto) {
+          console.log('  Tipo de foto:', tipoFoto);
+          fotosPorPantalla[pantallaKey][tipoFoto] = file;
+        } else {
+          console.log('  No se pudo determinar el tipo de foto');
+        }
+        
+        processedFilesRef.current.add(fileKey);
+      }
+      
+      console.log('Fotos agrupadas por pantalla:', fotosPorPantalla);
+
+      // Solo crear entradas para pantallas que tengan foto FRONTAL
+      // Ordenar por número de pantalla
+      const pantallasConFrontal = Object.entries(fotosPorPantalla)
+        .filter(([_, fotos]) => fotos.fotoFrontal) // Solo pantallas con foto frontal
+        .sort(([a], [b]) => {
+          const numA = parseInt(a.replace('S', ''));
+          const numB = parseInt(b.replace('S', ''));
+          return numA - numB;
+        });
+
+      if (pantallasConFrontal.length > 0) {
+        // Procesar y asignar fotos a las pantallas
+        console.log('Pantallas con frontal encontradas:', pantallasConFrontal.length);
+        
+        const nuevasFotos = [];
+        let fotosProcesadas = 0;
+        
+        for (const [pantallaKey, fotos] of pantallasConFrontal) {
+          // Usar "SX" como etiqueta de plano
+          const etiquetaPlano = pantallaKey; // S1, S2, S3, etc.
+          console.log(`Procesando pantalla ${pantallaKey} con fotos:`, Object.keys(fotos));
+          
+          const fotoData = {
+            etiquetaPlano: etiquetaPlano,
+            fotoFrontal: { url: "", fileName: undefined, fileSize: undefined },
+            fotoPlayer: { url: "", fileName: undefined, fileSize: undefined },
+            fotoIP: { url: "", fileName: undefined, fileSize: undefined },
+            nota: ""
+          };
+          
+          // Procesar cada tipo de foto
+          for (const [tipoFoto, file] of Object.entries(fotos)) {
+            try {
+              console.log(`  Comprimiendo ${tipoFoto}:`, file.name);
+              const base64 = await compressImage(file, { maxDim: 1600, quality: 0.85 });
+              fotoData[tipoFoto] = {
+                url: base64,
+                fileName: file.name,
+                fileSize: file.size
+              };
+              fotosProcesadas++;
+              console.log(`  ✓ ${tipoFoto} procesada correctamente`);
+            } catch (error) {
+              console.error(`Error procesando ${file.name}:`, error);
+            }
+          }
+          
+          nuevasFotos.push(fotoData);
+        }
+
+        // Actualizar el estado con las nuevas fotos
+        setData((d) => ({
+          ...d,
+          fotos: nuevasFotos
+        }));
+
+        // Notificar a App.jsx que las fotos fueron procesadas
+        if (onFotosProcessed) {
+          onFotosProcessed({
+            fotosProcesadas,
+            totalPantallas: nuevasFotos.length
+          });
+        }
+      } else {
+        console.log('No se encontraron fotos FRONTAL en la carpeta.');
+        if (onFotosProcessed) {
+          onFotosProcessed({
+            fotosProcesadas: 0,
+            totalPantallas: 0
+          });
+        }
+      }
+    };
+
+    processFotoFiles();
+  }, [fotoFilesFromFolder, setData, onFotosProcessed]);
+
   const addFoto = () => {
     setData((d) => ({
       ...d,

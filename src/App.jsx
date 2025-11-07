@@ -24,7 +24,7 @@ import { UnifilarVideoEditor } from './components/Editor/UnifilarVideoEditor';
 // Utils
 import { PAGE } from './utils/constants';
 import { fileToBase64 } from './utils/pdfUtils';
-import { processExcelPantallas } from './utils/excelUtils';
+// Nota: processExcelPantallas se usa solo en DesglosePantallasEditor.jsx
 
 // --- Utilidades simples ---
 const cls = (...c) => c.filter(Boolean).join(" ");
@@ -782,7 +782,10 @@ const Editor = ({
   loadingPDFs,
   setLoadingPDFs,
   currentLoadingPDF,
-  setCurrentLoadingPDF
+  setCurrentLoadingPDF,
+  excelFilesFromFolder,
+  fotoFilesFromFolder,
+  onFotosProcessed
 }) => {
   const imageInputRefs = useRef({});
 
@@ -793,8 +796,19 @@ const Editor = ({
         <MetadatosEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />
         <ObservacionesEditor data={data} setData={setData} />
         <EquipamientoEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />
-        <DesglosePantallasEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />
-        <FotosPantallasEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />
+        <DesglosePantallasEditor 
+          data={data} 
+          setData={setData} 
+          imageInputRefs={imageInputRefs}
+          excelFilesFromFolder={excelFilesFromFolder}
+        />
+        <FotosPantallasEditor 
+          data={data} 
+          setData={setData} 
+          imageInputRefs={imageInputRefs}
+          fotoFilesFromFolder={fotoFilesFromFolder}
+          onFotosProcessed={onFotosProcessed}
+        />
         <ProbadoresEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />
         <RackVideoEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />
         <RackAudioEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />
@@ -867,6 +881,9 @@ export default function App() {
   const [pdfPagesRendering, setPdfPagesRendering] = useState({}); // Rastrear páginas en renderizado
   const [loadingPDFs, setLoadingPDFs] = useState({});
   const [currentLoadingPDF, setCurrentLoadingPDF] = useState(null);
+  const [excelFilesFromFolder, setExcelFilesFromFolder] = useState([]);
+  const [fotoFilesFromFolder, setFotoFilesFromFolder] = useState([]);
+  const [fotosProcessedInfo, setFotosProcessedInfo] = useState(null);
   const inputFolder = useRef(null);
   
 
@@ -904,26 +921,15 @@ export default function App() {
     });
   };
 
-  // Función auxiliar para procesar Excel y extraer pantallas
-  // Ahora usa la función centralizada de excelUtils.js con los filtros correctos
-  const procesarExcelPantallas = async (file) => {
-    try {
-      const { pantallas } = await processExcelPantallas(file);
-      return pantallas;
-    } catch (error) {
-      console.error('Error al procesar el Excel:', error);
-      return [];
-    }
-  };
-
   // Función para importar carpeta y cargar fotos automáticamente
+  // NOTA: El procesamiento de Excel se hace exclusivamente desde DesglosePantallasEditor.jsx
   const importFolder = async (event) => {
     const files = Array.from(event.target.files || []);
     if (files.length === 0) return;
 
     console.log('Total de archivos seleccionados:', files.length);
     
-    // Filtrar archivos que estén en As Built/Fotos/
+    // Filtrar archivos que estén en As Built/Fotos/ y enviarlos a FotosPantallasEditor.jsx
     const fotoFiles = files.filter(file => {
       const path = file.webkitRelativePath || file.path || '';
       console.log('Archivo:', file.name, 'Ruta:', path);
@@ -933,108 +939,12 @@ export default function App() {
 
     console.log('Archivos filtrados en As Built/Fotos:', fotoFiles.length);
     
-    // Parsear nombres de archivo y agrupar por pantalla (solo si hay fotos)
-    const fotosPorPantalla = {};
-    let nuevasFotos = [];
-    let fotosProcesadas = 0;
-    
+    // Enviar archivos de fotos a FotosPantallasEditor.jsx para procesamiento
     if (fotoFiles.length > 0) {
-      for (const file of fotoFiles) {
-        const fileName = file.name.toUpperCase();
-        console.log('Procesando archivo:', file.name, '->', fileName);
-        
-        // Buscar patrón S[0-9]+ (número de pantalla)
-        const pantallaMatch = fileName.match(/S(\d+)/);
-        if (!pantallaMatch) {
-          console.log('  No se encontró patrón S[0-9] en:', fileName);
-          continue;
-        }
-        
-        const numeroPantalla = pantallaMatch[1];
-        const pantallaKey = `S${numeroPantalla}`;
-        console.log('  Pantalla encontrada:', pantallaKey);
-        
-        if (!fotosPorPantalla[pantallaKey]) {
-          fotosPorPantalla[pantallaKey] = {};
-        }
-        
-        // Determinar tipo de foto
-        let tipoFoto = null;
-        if (fileName.includes('FRONTAL')) {
-          tipoFoto = 'fotoFrontal';
-        } else if (fileName.includes('PLAYER_SENDING') || fileName.includes('PLAYER+SENDING') || fileName.includes('PLAYER')) {
-          tipoFoto = 'fotoPlayer';
-        } else if (fileName.includes('_IP') || fileName.endsWith('IP') || (fileName.includes('IP') && !fileName.includes('PLAYER'))) {
-          tipoFoto = 'fotoIP';
-        }
-        
-        if (tipoFoto) {
-          console.log('  Tipo de foto:', tipoFoto);
-          fotosPorPantalla[pantallaKey][tipoFoto] = file;
-        } else {
-          console.log('  No se pudo determinar el tipo de foto');
-        }
-      }
-      
-      console.log('Fotos agrupadas por pantalla:', fotosPorPantalla);
-
-      // Solo crear entradas para pantallas que tengan foto FRONTAL
-      // Ordenar por número de pantalla
-      const pantallasConFrontal = Object.entries(fotosPorPantalla)
-        .filter(([_, fotos]) => fotos.fotoFrontal) // Solo pantallas con foto frontal
-        .sort(([a], [b]) => {
-          const numA = parseInt(a.replace('S', ''));
-          const numB = parseInt(b.replace('S', ''));
-          return numA - numB;
-        });
-
-      if (pantallasConFrontal.length > 0) {
-        // Procesar y asignar fotos a las pantallas
-        console.log('Pantallas con frontal encontradas:', pantallasConFrontal.length);
-        
-        for (const [pantallaKey, fotos] of pantallasConFrontal) {
-          // Usar "SX" como etiqueta de plano
-          const etiquetaPlano = pantallaKey; // S1, S2, S3, etc.
-          console.log(`Procesando pantalla ${pantallaKey} con fotos:`, Object.keys(fotos));
-          
-          const fotoData = {
-            etiquetaPlano: etiquetaPlano,
-            fotoFrontal: { url: "", fileName: undefined, fileSize: undefined },
-            fotoPlayer: { url: "", fileName: undefined, fileSize: undefined },
-            fotoIP: { url: "", fileName: undefined, fileSize: undefined },
-            nota: ""
-          };
-          
-          // Procesar cada tipo de foto
-          for (const [tipoFoto, file] of Object.entries(fotos)) {
-            try {
-              console.log(`  Comprimiendo ${tipoFoto}:`, file.name);
-              const base64 = await compressImage(file, { maxDim: 1600, quality: 0.85 });
-              fotoData[tipoFoto] = {
-                url: base64,
-                fileName: file.name,
-                fileSize: file.size
-              };
-              fotosProcesadas++;
-              console.log(`  ✓ ${tipoFoto} procesada correctamente`);
-            } catch (error) {
-              console.error(`Error procesando ${file.name}:`, error);
-            }
-          }
-          
-          nuevasFotos.push(fotoData);
-        }
-      } else {
-        console.log('No se encontraron fotos FRONTAL en la carpeta. Continuando con procesamiento de Excel...');
-      }
-    } else {
-      console.log('No se encontraron fotos en As Built/Fotos/. Continuando con procesamiento de Excel...');
+      setFotoFilesFromFolder(fotoFiles);
     }
     
-    console.log('Total de fotos a guardar:', nuevasFotos.length);
-    console.log('Fotos procesadas:', fotosProcesadas);
-    
-    // Buscar y cargar foto de entrada de la tienda
+    // Buscar y cargar foto de entrada de la tienda (se procesa en App.jsx)
     const fotoEntradaFile = fotoFiles.find(file => {
       const fileName = file.name.toUpperCase();
       return fileName.includes('ENTRADA_TIENDA');
@@ -1089,7 +999,7 @@ export default function App() {
       console.log('No se encontró foto de entrada (ENTRADA_TIENDA)');
     }
     
-    // Buscar y procesar archivos Excel de validación MKD
+    // Filtrar y enviar archivos Excel de Documentación/Validaciones/ a DesglosePantallasEditor.jsx
     const validacionMKDFiles = files.filter(file => {
       const path = file.webkitRelativePath || file.path || '';
       const fileName = file.name.toUpperCase();
@@ -1098,37 +1008,23 @@ export default function App() {
                                 path.includes('Documentación\\Validaciones\\') ||
                                 path.includes('Documentacion/Validaciones/') ||
                                 path.includes('Documentacion\\Validaciones\\');
-      const hasMKD = fileName.includes('VALIDACIÓN_MKD') || fileName.includes('VALIDACION_MKD');
+      const hasMKD = fileName.includes('VALIDACION_MKD') || 
+                     file.name.includes('Validación_MKD') || 
+                     file.name.includes('Validacion_MKD');
       return isExcel && isInValidaciones && hasMKD;
     });
 
-    console.log('Archivos Excel de validación MKD encontrados:', validacionMKDFiles.length);
+    console.log('Archivos Excel de validación MKD encontrados para procesar:', validacionMKDFiles.length);
     
-    let pantallasActualizadasMKD = 0;
-    let datosValidacionMKD = [];
-
-    // Procesar cada archivo Excel de validación MKD
-    for (const excelFile of validacionMKDFiles) {
-      try {
-        console.log('Procesando archivo Excel de validación MKD:', excelFile.name);
-        const pantallasFromMKD = await procesarExcelPantallas(excelFile);
-        
-        if (pantallasFromMKD.length > 0) {
-          datosValidacionMKD = datosValidacionMKD.concat(pantallasFromMKD);
-          console.log(`✓ Se extrajeron ${pantallasFromMKD.length} pantallas del archivo ${excelFile.name}`);
-        }
-      } catch (error) {
-        console.error(`Error procesando archivo Excel de validación MKD ${excelFile.name}:`, error);
-      }
+    // Enviar archivos Excel a DesglosePantallasEditor.jsx para procesamiento
+    if (validacionMKDFiles.length > 0) {
+      setExcelFilesFromFolder(validacionMKDFiles);
     }
 
-    // Actualizar el estado con las nuevas fotos, foto de entrada y datos de validación MKD
+    // Actualizar el estado con la foto de entrada
+    // NOTA: Las fotos de pantallas se procesan en FotosPantallasEditor.jsx
     setData((d) => {
       const c = structuredClone(d);
-      // Reemplazar todas las fotos existentes con las nuevas importadas (solo si hay fotos nuevas)
-      if (nuevasFotos.length > 0) {
-        c.fotos = nuevasFotos;
-      }
       
       // Actualizar foto de entrada y metadatos si se encontró
       if (fotoEntradaProcesada) {
@@ -1149,89 +1045,16 @@ export default function App() {
           c.meta.codigo = codigoExtraido;
         }
       }
-
-      // Actualizar pantallas existentes con datos de validación MKD
-      if (datosValidacionMKD.length > 0) {
-        console.log('Actualizando pantallas con datos de validación MKD...');
-        
-        // Crear un mapa de datos MKD por etiqueta de plano
-        const mkdMap = {};
-        datosValidacionMKD.forEach(pantallaMKD => {
-          const etiqueta = String(pantallaMKD.etiquetaPlano || '').trim().toUpperCase();
-          if (etiqueta) {
-            mkdMap[etiqueta] = pantallaMKD;
-          }
-        });
-
-        // Actualizar pantallas existentes que coincidan
-        c.pantallas = c.pantallas.map(pantalla => {
-          const etiqueta = String(pantalla.etiquetaPlano || '').trim().toUpperCase();
-          if (mkdMap[etiqueta]) {
-            const datosMKD = mkdMap[etiqueta];
-            pantallasActualizadasMKD++;
-            console.log(`  Actualizando pantalla ${pantalla.etiquetaPlano} con datos MKD`);
-            
-            // Actualizar campos que estén vacíos en la pantalla pero tengan valor en MKD
-            return {
-              ...pantalla,
-              hostname: pantalla.hostname || datosMKD.hostname || '',
-              mac: pantalla.mac || datosMKD.mac || '',
-              serie: pantalla.serie || datosMKD.serie || '',
-              resolucion: pantalla.resolucion || datosMKD.resolucion || '',
-              fondo: pantalla.fondo || datosMKD.fondo || '',
-              puertoPatch: pantalla.puertoPatch || datosMKD.puertoPatch || '',
-              puertoSwitch: pantalla.puertoSwitch || datosMKD.puertoSwitch || '',
-              contrato: pantalla.contrato || datosMKD.contrato || '',
-              termicoPantalla: pantalla.termicoPantalla || datosMKD.termicoPantalla || '',
-              termicoPC: pantalla.termicoPC || datosMKD.termicoPC || '',
-              horas24: pantalla.horas24 || datosMKD.horas24 || '',
-            };
-          }
-          return pantalla;
-        });
-
-        // Agregar nuevas pantallas de MKD que no existan
-        const etiquetasExistentes = new Set(
-          c.pantallas.map(p => String(p.etiquetaPlano || '').trim().toUpperCase())
-        );
-        
-        let pantallasAgregadasMKD = 0;
-        datosValidacionMKD.forEach(pantallaMKD => {
-          const etiqueta = String(pantallaMKD.etiquetaPlano || '').trim().toUpperCase();
-          if (etiqueta && !etiquetasExistentes.has(etiqueta)) {
-            console.log(`  Agregando nueva pantalla desde MKD: ${pantallaMKD.etiquetaPlano}`);
-            c.pantallas.push(pantallaMKD);
-            pantallasAgregadasMKD++;
-            // Crear entrada de foto para la nueva pantalla
-            c.fotos.push({
-              etiquetaPlano: pantallaMKD.etiquetaPlano,
-              fotoFrontal: { url: "", fileName: undefined, fileSize: undefined },
-              fotoPlayer: { url: "", fileName: undefined, fileSize: undefined },
-              fotoIP: { url: "", fileName: undefined, fileSize: undefined },
-              nota: ""
-            });
-          }
-        });
-        
-        // Guardar contador para el mensaje final
-        c._pantallasAgregadasMKD = pantallasAgregadasMKD;
-      }
       
-      const pantallasAgregadasMKDCount = c._pantallasAgregadasMKD || 0;
-      console.log('Estado actualizado con', nuevasFotos.length, 'fotos' + 
-                  (fotoEntradaProcesada ? ', foto de entrada' : '') +
-                  (pantallasActualizadasMKD > 0 ? `, ${pantallasActualizadasMKD} pantalla(s) actualizada(s)` : '') +
-                  (pantallasAgregadasMKDCount > 0 ? `, ${pantallasAgregadasMKDCount} pantalla(s) nueva(s) agregada(s)` : ''));
-      // Eliminar propiedad temporal
-      delete c._pantallasAgregadasMKD;
+      console.log('Estado actualizado' + (fotoEntradaProcesada ? ' con foto de entrada' : ''));
       return c;
     });
     
-    // Construir mensaje final
+    // Construir mensaje inicial (las fotos se procesan de forma asíncrona en FotosPantallasEditor.jsx)
     let mensajeFinal = '';
     
-    if (fotosProcesadas > 0) {
-      mensajeFinal += `✅ ${fotosProcesadas} foto(s) procesada(s) de ${nuevasFotos.length} pantalla(s)`;
+    if (fotoFiles.length > 0) {
+      mensajeFinal += `✅ Se encontraron ${fotoFiles.length} archivo(s) de fotos\n   Los archivos se están procesando automáticamente...`;
     }
     
     if (fotoEntradaProcesada) {
@@ -1241,29 +1064,14 @@ export default function App() {
     
     if (validacionMKDFiles.length > 0) {
       if (mensajeFinal) mensajeFinal += '\n';
-      if (pantallasActualizadasMKD > 0 || datosValidacionMKD.length > 0) {
-        // Calcular pantallas agregadas: total de pantallas MKD menos las actualizadas
-        const pantallasAgregadas = datosValidacionMKD.length - pantallasActualizadasMKD;
-        mensajeFinal += `✅ Se procesaron ${validacionMKDFiles.length} archivo(s) de validación MKD`;
-        if (pantallasActualizadasMKD > 0) {
-          mensajeFinal += `\n   - ${pantallasActualizadasMKD} pantalla(s) actualizada(s)`;
-        }
-        if (pantallasAgregadas > 0) {
-          mensajeFinal += `\n   - ${pantallasAgregadas} pantalla(s) nueva(s) agregada(s)`;
-        }
-        if (datosValidacionMKD.length > 0 && pantallasActualizadasMKD === 0 && pantallasAgregadas === 0) {
-          mensajeFinal += `\n   - ${datosValidacionMKD.length} pantalla(s) encontrada(s) en el Excel`;
-        }
-      } else {
-        mensajeFinal += `⚠️ Se encontraron ${validacionMKDFiles.length} archivo(s) de validación MKD pero no se pudieron procesar`;
-      }
+      mensajeFinal += `✅ Se encontraron ${validacionMKDFiles.length} archivo(s) Excel de Validación_MKD\n   Los archivos se están procesando automáticamente...`;
     }
     
     if (!mensajeFinal) {
-      mensajeFinal = '⚠️ No se encontraron archivos para procesar. Verifica que:\n- Las fotos estén en As Built/Fotos/\n- Los Excel estén en Documentación/Validaciones/ con nombre que contenga "Validación_MKD"';
+      mensajeFinal = '⚠️ No se encontraron archivos para procesar. Verifica que:\n- Las fotos estén en As Built/Fotos/\n- Los Excel estén en Documentación/Validaciones/ con nombre que contenga "Validación_MKD" o "Validacion_MKD"';
     }
     
-    alert(`Importación completada:\n\n${mensajeFinal}`);
+    alert(`Importación iniciada:\n\n${mensajeFinal}`);
   };
 
   // Función para generar un reporte completamente limpio
@@ -1444,6 +1252,9 @@ export default function App() {
               setLoadingPDFs={setLoadingPDFs}
               currentLoadingPDF={currentLoadingPDF}
               setCurrentLoadingPDF={setCurrentLoadingPDF}
+              excelFilesFromFolder={excelFilesFromFolder}
+              fotoFilesFromFolder={fotoFilesFromFolder}
+              onFotosProcessed={setFotosProcessedInfo}
             />
           </div>
         </div>

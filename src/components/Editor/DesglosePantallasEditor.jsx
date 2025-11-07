@@ -1,53 +1,12 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Card } from '../UI/Card';
 import { Input } from '../UI/Input';
 import { Button } from '../UI/Button';
-import { processExcelPantallas } from '../../utils/excelUtils';
+import { processExcelPantallas, removeDuplicatesBySX } from '../../utils/excelUtils';
 
-export const DesglosePantallasEditor = ({ data, setData, imageInputRefs }) => {
+export const DesglosePantallasEditor = ({ data, setData, imageInputRefs, excelFilesFromFolder }) => {
   const lastImportedFileRef = useRef(null);
-
-  /**
-   * Extrae el patrón SX (S1, S2, S3, etc.) de una etiqueta de plano
-   * Ejemplo: "LED_CIRCLE_0F_ENT_S1" → "S1"
-   */
-  const extractSXPattern = (etiquetaPlano) => {
-    const nombre = String(etiquetaPlano || '').trim().toUpperCase();
-    // Buscar patrón S seguido de uno o más dígitos
-    const match = nombre.match(/S(\d+)/);
-    return match ? match[0] : null; // Retorna "S1", "S2", etc. o null
-  };
-
-  /**
-   * Elimina duplicados basados en el patrón SX
-   * Solo mantiene la primera ocurrencia de cada SX único
-   */
-  const removeDuplicatesBySX = (pantallas) => {
-    const seenSX = new Set();
-    const pantallasUnicas = [];
-    const duplicadosEliminados = [];
-
-    for (const pantalla of pantallas) {
-      const sxPattern = extractSXPattern(pantalla.etiquetaPlano);
-      
-      if (sxPattern) {
-        // Si ya existe un SX con este patrón, es un duplicado
-        if (seenSX.has(sxPattern)) {
-          duplicadosEliminados.push(pantalla.etiquetaPlano);
-          continue; // Saltar este duplicado
-        }
-        seenSX.add(sxPattern);
-      }
-      
-      pantallasUnicas.push(pantalla);
-    }
-
-    if (duplicadosEliminados.length > 0) {
-      console.warn(`Se eliminaron ${duplicadosEliminados.length} duplicados por patrón SX:`, duplicadosEliminados);
-    }
-
-    return { pantallasUnicas, duplicadosEliminados };
-  };
+  const processedFilesRef = useRef(new Set());
 
   const handleExcelUpload = async (file) => {
     // FILTRO DE SEGURIDAD: Evitar doble importación del mismo archivo
@@ -56,50 +15,100 @@ export const DesglosePantallasEditor = ({ data, setData, imageInputRefs }) => {
       return;
     }
 
-    const { pantallas, fotos } = await processExcelPantallas(file);
+    const { pantallas, fotos, duplicadosEliminados } = await processExcelPantallas(file);
     
     if (pantallas.length > 0) {
-      // Validación adicional: asegurarse de que todas las pantallas contengan "LED"
-      const pantallasFiltradas = pantallas.filter(p => {
-        const nombre = String(p.etiquetaPlano || '').trim().toUpperCase();
-        return nombre.includes('LED');
-      });
-
-      if (pantallasFiltradas.length !== pantallas.length) {
-        console.warn(`Se filtraron ${pantallas.length - pantallasFiltradas.length} pantallas que no cumplían el criterio "LED"`);
-        alert(`⚠️ Se importaron ${pantallasFiltradas.length} pantallas válidas (se filtraron ${pantallas.length - pantallasFiltradas.length} que no cumplían los criterios)`);
+      // El filtro anti-duplicados ya se aplicó en processExcelPantallas
+      if (duplicadosEliminados > 0) {
+        alert(`⚠️ Se eliminaron ${duplicadosEliminados} pantalla(s) duplicada(s) por patrón SX (S1, S2, etc.)\n\nSolo se mantiene una entrada por cada número SX único.`);
       }
-
-      // FILTRO ANTI-DUPLICADOS: Eliminar duplicados por patrón SX
-      const { pantallasUnicas, duplicadosEliminados } = removeDuplicatesBySX(pantallasFiltradas);
-
-      if (duplicadosEliminados.length > 0) {
-        alert(`⚠️ Se eliminaron ${duplicadosEliminados.length} pantalla(s) duplicada(s) por patrón SX (S1, S2, etc.)\n\nSolo se mantiene una entrada por cada número SX único.`);
-      }
-
-      // Crear fotos solo para las pantallas únicas
-      const fotosFiltradas = pantallasUnicas.map((pantalla) => ({
-        etiquetaPlano: pantalla.etiquetaPlano,
-        fotoFrontal: { url: "", fileName: undefined, fileSize: undefined },
-        fotoPlayer: { url: "", fileName: undefined, fileSize: undefined },
-        fotoIP: { url: "", fileName: undefined, fileSize: undefined },
-        nota: ""
-      }));
 
       // Marcar este archivo como importado
       lastImportedFileRef.current = file.name;
 
       setData((d) => ({
         ...d,
-        pantallas: pantallasUnicas, // Reemplazar completamente, no combinar
-        fotos: fotosFiltradas
+        pantallas: pantallas, // Ya están filtradas y sin duplicados
+        fotos: fotos
       }));
       
-      if (pantallasUnicas.length > 0) {
-        alert(`✅ Se han cargado ${pantallasUnicas.length} pantallas correctamente\n\nSe han creado ${fotosFiltradas.length} entradas de fotos`);
+      if (pantallas.length > 0) {
+        alert(`✅ Se han cargado ${pantallas.length} pantallas correctamente\n\nSe han creado ${fotos.length} entradas de fotos`);
       }
     }
   };
+
+  // Procesar archivos Excel recibidos desde App.jsx (importación de carpeta)
+  useEffect(() => {
+    if (!excelFilesFromFolder || excelFilesFromFolder.length === 0) return;
+
+    const processExcelFiles = async () => {
+      let todasPantallas = [];
+      let todasFotos = [];
+      let totalDuplicados = 0;
+      let archivosProcesados = 0;
+
+      for (const file of excelFilesFromFolder) {
+        // Evitar procesar el mismo archivo dos veces
+        const fileKey = `${file.name}_${file.size}`;
+        if (processedFilesRef.current.has(fileKey)) {
+          console.log(`Archivo ya procesado: ${file.name}`);
+          continue;
+        }
+
+        try {
+          console.log('Procesando archivo Excel desde carpeta:', file.name);
+          const { pantallas, fotos, duplicadosEliminados } = await processExcelPantallas(file);
+          
+          if (pantallas.length > 0) {
+            todasPantallas = todasPantallas.concat(pantallas);
+            todasFotos = todasFotos.concat(fotos);
+            totalDuplicados += duplicadosEliminados;
+            archivosProcesados++;
+            processedFilesRef.current.add(fileKey);
+          }
+        } catch (error) {
+          console.error(`Error procesando archivo Excel ${file.name}:`, error);
+        }
+      }
+
+      // Aplicar filtro anti-duplicados después de concatenar todos los archivos
+      if (todasPantallas.length > 0) {
+        const { pantallasUnicas, duplicadosEliminados: duplicadosAdicionales } = removeDuplicatesBySX(todasPantallas);
+        totalDuplicados += duplicadosAdicionales;
+
+        // Crear fotos solo para pantallas únicas
+        const fotosUnicas = pantallasUnicas.map((pantalla) => {
+          const fotoExistente = todasFotos.find(f => f.etiquetaPlano === pantalla.etiquetaPlano);
+          return fotoExistente || {
+            etiquetaPlano: pantalla.etiquetaPlano,
+            fotoFrontal: { url: "", fileName: undefined, fileSize: undefined },
+            fotoPlayer: { url: "", fileName: undefined, fileSize: undefined },
+            fotoIP: { url: "", fileName: undefined, fileSize: undefined },
+            nota: ""
+          };
+        });
+
+        setData((d) => ({
+          ...d,
+          pantallas: pantallasUnicas,
+          fotos: fotosUnicas
+        }));
+
+        if (archivosProcesados > 0) {
+          let mensaje = `✅ Se procesaron ${archivosProcesados} archivo(s) Excel desde la carpeta\n`;
+          mensaje += `✅ Se importaron ${pantallasUnicas.length} pantalla(s) únicas\n`;
+          mensaje += `✅ Se crearon ${fotosUnicas.length} entrada(s) de fotos`;
+          if (totalDuplicados > 0) {
+            mensaje += `\n⚠️ Se eliminaron ${totalDuplicados} pantalla(s) duplicada(s) por patrón SX`;
+          }
+          alert(mensaje);
+        }
+      }
+    };
+
+    processExcelFiles();
+  }, [excelFilesFromFolder, setData]);
 
   return (
     <Card title="Desglose de pantallas">
