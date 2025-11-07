@@ -150,22 +150,7 @@ const defaultReport = {
       horas24: "",
     },
   ],
-  fotos: [
-    { 
-      etiquetaPlano: "LED_DATUM 0F_BERSHKA_S1", 
-      fotoFrontal: { url: "", fileName: undefined, fileSize: undefined },
-      fotoPlayer: { url: "", fileName: undefined, fileSize: undefined },
-      fotoIP: { url: "", fileName: undefined, fileSize: undefined },
-      nota: "" 
-    },
-    { 
-      etiquetaPlano: "LED_DATUM 2F_MAN_S2", 
-      fotoFrontal: { url: "", fileName: undefined, fileSize: undefined },
-      fotoPlayer: { url: "", fileName: undefined, fileSize: undefined },
-      fotoIP: { url: "", fileName: undefined, fileSize: undefined },
-      nota: "" 
-    },
-  ],
+  fotos: [],
   probadores: {
     activo: false,
     probadorOcupado: { url: "", fileName: undefined, fileSize: undefined },
@@ -2612,6 +2597,7 @@ export default function App() {
   const [loadingPDFs, setLoadingPDFs] = useState({});
   const [currentLoadingPDF, setCurrentLoadingPDF] = useState(null);
   const inputFile = useRef(null);
+  const inputFolder = useRef(null);
   
   // Función para guardar JSON
   const saveJSON = () => {
@@ -2636,6 +2622,186 @@ export default function App() {
       catch { alert("No se pudo leer el JSON"); }
     };
     reader.readAsText(file);
+  };
+
+  // Función auxiliar para convertir archivo a Base64
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Función para comprimir imagen
+  const compressImage = (file, { maxDim = 1600, quality = 0.85 } = {}) => {
+    return new Promise((resolve, reject) => {
+      try {
+        if (file.size <= 2 * 1024 * 1024) {
+          return fileToBase64(file).then(resolve).catch(reject);
+        }
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+          const { naturalWidth: w, naturalHeight: h } = img;
+          const scale = Math.min(maxDim / w, maxDim / h, 1);
+          const targetW = Math.round(w * scale);
+          const targetH = Math.round(h * scale);
+          const canvas = document.createElement('canvas');
+          canvas.width = targetW;
+          canvas.height = targetH;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, targetW, targetH);
+          const dataUrl = canvas.toDataURL('image/jpeg', quality);
+          URL.revokeObjectURL(url);
+          resolve(dataUrl);
+        };
+        img.onerror = (e) => {
+          URL.revokeObjectURL(url);
+          reject(e);
+        };
+        img.src = url;
+      } catch (e) {
+        reject(e);
+      }
+    });
+  };
+
+  // Función para importar carpeta y cargar fotos automáticamente
+  const importFolder = async (event) => {
+    const files = Array.from(event.target.files || []);
+    if (files.length === 0) return;
+
+    console.log('Total de archivos seleccionados:', files.length);
+    
+    // Filtrar archivos que estén en As Built/Fotos/
+    const fotoFiles = files.filter(file => {
+      const path = file.webkitRelativePath || file.path || '';
+      console.log('Archivo:', file.name, 'Ruta:', path);
+      return path.includes('As Built/Fotos/') || path.includes('As Built\\Fotos\\') || 
+             path.includes('As Built/Fotos') || path.includes('As Built\\Fotos');
+    });
+
+    console.log('Archivos filtrados en As Built/Fotos:', fotoFiles.length);
+    
+    if (fotoFiles.length === 0) {
+      // Mostrar algunos ejemplos de rutas para debug
+      const samplePaths = files.slice(0, 5).map(f => f.webkitRelativePath || f.path || f.name);
+      console.log('Rutas de ejemplo:', samplePaths);
+      alert(`No se encontraron fotos en la carpeta As Built/Fotos/\n\nArchivos encontrados: ${files.length}\nRevisa la consola para ver las rutas.`);
+      return;
+    }
+
+    // Parsear nombres de archivo y agrupar por pantalla
+    const fotosPorPantalla = {};
+    
+    for (const file of fotoFiles) {
+      const fileName = file.name.toUpperCase();
+      console.log('Procesando archivo:', file.name, '->', fileName);
+      
+      // Buscar patrón S[0-9]+ (número de pantalla)
+      const pantallaMatch = fileName.match(/S(\d+)/);
+      if (!pantallaMatch) {
+        console.log('  No se encontró patrón S[0-9] en:', fileName);
+        continue;
+      }
+      
+      const numeroPantalla = pantallaMatch[1];
+      const pantallaKey = `S${numeroPantalla}`;
+      console.log('  Pantalla encontrada:', pantallaKey);
+      
+      if (!fotosPorPantalla[pantallaKey]) {
+        fotosPorPantalla[pantallaKey] = {};
+      }
+      
+      // Determinar tipo de foto
+      let tipoFoto = null;
+      if (fileName.includes('FRONTAL')) {
+        tipoFoto = 'fotoFrontal';
+      } else if (fileName.includes('PLAYER_SENDING') || fileName.includes('PLAYER+SENDING') || fileName.includes('PLAYER')) {
+        tipoFoto = 'fotoPlayer';
+      } else if (fileName.includes('_IP') || fileName.endsWith('IP') || (fileName.includes('IP') && !fileName.includes('PLAYER'))) {
+        tipoFoto = 'fotoIP';
+      }
+      
+      if (tipoFoto) {
+        console.log('  Tipo de foto:', tipoFoto);
+        fotosPorPantalla[pantallaKey][tipoFoto] = file;
+      } else {
+        console.log('  No se pudo determinar el tipo de foto');
+      }
+    }
+    
+    console.log('Fotos agrupadas por pantalla:', fotosPorPantalla);
+
+    // Solo crear entradas para pantallas que tengan foto FRONTAL
+    // Ordenar por número de pantalla
+    const pantallasConFrontal = Object.entries(fotosPorPantalla)
+      .filter(([_, fotos]) => fotos.fotoFrontal) // Solo pantallas con foto frontal
+      .sort(([a], [b]) => {
+        const numA = parseInt(a.replace('S', ''));
+        const numB = parseInt(b.replace('S', ''));
+        return numA - numB;
+      });
+
+    if (pantallasConFrontal.length === 0) {
+      alert('No se encontraron fotos FRONTAL en la carpeta. Se necesita al menos una foto con formato SX_FRONTAL');
+      return;
+    }
+
+    // Procesar y asignar fotos a las pantallas
+    let fotosProcesadas = 0;
+    const nuevasFotos = [];
+    
+    console.log('Pantallas con frontal encontradas:', pantallasConFrontal.length);
+    
+    for (const [pantallaKey, fotos] of pantallasConFrontal) {
+      // Usar "SX" como etiqueta de plano
+      const etiquetaPlano = pantallaKey; // S1, S2, S3, etc.
+      console.log(`Procesando pantalla ${pantallaKey} con fotos:`, Object.keys(fotos));
+      
+      const fotoData = {
+        etiquetaPlano: etiquetaPlano,
+        fotoFrontal: { url: "", fileName: undefined, fileSize: undefined },
+        fotoPlayer: { url: "", fileName: undefined, fileSize: undefined },
+        fotoIP: { url: "", fileName: undefined, fileSize: undefined },
+        nota: ""
+      };
+      
+      // Procesar cada tipo de foto
+      for (const [tipoFoto, file] of Object.entries(fotos)) {
+        try {
+          console.log(`  Comprimiendo ${tipoFoto}:`, file.name);
+          const base64 = await compressImage(file, { maxDim: 1600, quality: 0.85 });
+          fotoData[tipoFoto] = {
+            url: base64,
+            fileName: file.name,
+            fileSize: file.size
+          };
+          fotosProcesadas++;
+          console.log(`  ✓ ${tipoFoto} procesada correctamente`);
+        } catch (error) {
+          console.error(`Error procesando ${file.name}:`, error);
+        }
+      }
+      
+      nuevasFotos.push(fotoData);
+    }
+    
+    console.log('Total de fotos a guardar:', nuevasFotos.length);
+    console.log('Fotos procesadas:', fotosProcesadas);
+    
+    // Actualizar el estado con las nuevas fotos (reemplazar todas las existentes)
+    setData((d) => {
+      const c = structuredClone(d);
+      // Reemplazar todas las fotos existentes con las nuevas importadas
+      c.fotos = nuevasFotos;
+      console.log('Estado actualizado con', nuevasFotos.length, 'pantallas');
+      return c;
+    });
+    
+    alert(`Importación completada: ${fotosProcesadas} fotos procesadas de ${nuevasFotos.length} pantallas`);
   };
   
   // Función para manejar cuando una página PDF se termina de renderizar
@@ -2672,9 +2838,12 @@ export default function App() {
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold text-neutral-800">Generador de Informe As Built</h1>
             <div className="flex items-center gap-2">
+              <Button onClick={() => inputFolder.current?.click()}>📁 Importar Carpeta</Button>
               <Button onClick={() => window.print()}>Imprimir / Exportar PDF</Button>
               <Button onClick={saveJSON}>Guardar JSON</Button>
               <Button onClick={() => inputFile.current?.click()}>Cargar JSON</Button>
+              <input ref={inputFolder} type="file" className="hidden" webkitdirectory="true" directory="true"
+                     onChange={importFolder} />
               <input ref={inputFile} type="file" className="hidden" accept="application/json"
                      onChange={(e) => e.target.files?.[0] && loadJSON(e.target.files[0])} />
             </div>
