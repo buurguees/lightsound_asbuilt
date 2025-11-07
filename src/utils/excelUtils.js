@@ -1,0 +1,143 @@
+/**
+ * Procesa un archivo Excel y extrae datos de pantallas
+ * Reglas:
+ * - Archivo DEBE contener "Validación_MKD" o "Validacion_MKD" en el nombre (obligatorio)
+ * - Leer desde la fila 4 (índice 3)
+ * - FILTRO 1 (PRIMERO): Columna U (índice 20) debe contener "LED" (obligatorio)
+ * - FILTRO 2 (SEGUNDO): Columna C (índice 2) debe contener "Alta"
+ */
+export const processExcelPantallas = async (file) => {
+  if (!file) return { pantallas: [], fotos: [] };
+
+  try {
+    // Validar nombre del archivo - DEBE contener "Validación_MKD" o "Validacion_MKD"
+    const fileName = file.name;
+    const fileNameUpper = fileName.toUpperCase();
+    
+    // Validación estricta: el nombre del archivo debe contener el patrón
+    const tieneValidacionMKD = fileNameUpper.includes('VALIDACIÓN_MKD') || fileNameUpper.includes('VALIDACION_MKD');
+    
+    if (!tieneValidacionMKD) {
+      alert(`El archivo "${file.name}" no es válido.\n\nSolo se procesan archivos Excel que contengan "Validación_MKD" o "Validacion_MKD" en el nombre.`);
+      return { pantallas: [], fotos: [] };
+    }
+
+    const arrayBuffer = await file.arrayBuffer();
+    const XLSXLib = await import('xlsx');
+    const workbook = XLSXLib.read(arrayBuffer, { type: 'array', defval: '' });
+    
+    // Obtener la primera hoja
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    
+    // Obtener todas las filas como arrays
+    const allRows = XLSXLib.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+    
+    if (!allRows || allRows.length === 0) {
+      alert('El archivo Excel está vacío');
+      return { pantallas: [], fotos: [] };
+    }
+
+    // Leer desde la fila 4 (índice 3)
+    const startRowIndex = 3;
+    
+    if (allRows.length <= startRowIndex) {
+      alert('El archivo no tiene suficientes filas (mínimo 4 filas)');
+      return { pantallas: [], fotos: [] };
+    }
+
+    // Procesar las filas desde la fila 4
+    const pantallasFromExcel = [];
+    
+    for (let i = startRowIndex; i < allRows.length; i++) {
+      const row = allRows[i];
+      
+      // Validar que la fila tenga suficientes columnas (necesitamos al menos columna U = índice 20)
+      if (!row || row.length < 21) {
+        continue; // Saltar filas sin suficientes columnas
+      }
+      
+      // ============================================
+      // FILTRO 1 (PRIMERO Y OBLIGATORIO): Columna U (índice 20) debe contener "LED"
+      // ============================================
+      const columnaU = String(row[20] || '').trim();
+      
+      // Validar que la columna U tenga contenido
+      if (!columnaU || columnaU.length === 0) {
+        continue; // Saltar si está vacía
+      }
+      
+      // Validación OBLIGATORIA: debe contener "LED" en cualquier parte del texto (case insensitive)
+      const columnaUUpper = columnaU.toUpperCase();
+      if (!columnaUUpper.includes('LED')) {
+        continue; // Saltar esta fila si no contiene "LED" - ESTE ES EL PRIMER FILTRO
+      }
+      
+      // ============================================
+      // FILTRO 2 (SEGUNDO): Columna C (índice 2) debe contener "Alta"
+      // ============================================
+      const columnaC = String(row[2] || '').trim();
+      if (!columnaC || !columnaC.toUpperCase().includes('ALTA')) {
+        continue; // Saltar esta fila si no contiene "Alta"
+      }
+      
+      // Extraer datos según las columnas especificadas
+      const nombrePantalla = columnaU; // Columna U
+      const hostname = String(row[19] || '').trim(); // Columna T (índice 19)
+      const resolucion = String(row[12] || '').trim(); // Columna M (índice 12)
+      
+      // Campos externos (se llenan manualmente)
+      const contrato = '';
+      const puertoPatch = '';
+      const puertoSwitch = '';
+      const termicoPantalla = '';
+      const termicoPC = '';
+      
+      pantallasFromExcel.push({
+        etiquetaPlano: nombrePantalla,
+        hostname: hostname,
+        mac: '', // No se importa
+        serie: '', // No se importa
+        resolucion: resolucion,
+        fondo: '', // No se importa
+        puertoPatch: puertoPatch,
+        puertoSwitch: puertoSwitch,
+        contrato: contrato,
+        termicoPantalla: termicoPantalla,
+        termicoPC: termicoPC,
+        horas24: '', // No se importa
+      });
+    }
+
+    if (pantallasFromExcel.length === 0) {
+      alert('No se encontraron pantallas válidas que cumplan los criterios:\n- Columna U contiene "LED"\n- Columna C contiene "Alta"');
+      return { pantallas: [], fotos: [] };
+    }
+
+    // Validación final: asegurarse de que todas las pantallas importadas contengan "LED"
+    const pantallasValidadas = pantallasFromExcel.filter(pantalla => {
+      const nombre = String(pantalla.etiquetaPlano || '').trim().toUpperCase();
+      return nombre.includes('LED');
+    });
+
+    if (pantallasValidadas.length !== pantallasFromExcel.length) {
+      console.warn(`Se filtraron ${pantallasFromExcel.length - pantallasValidadas.length} pantallas que no cumplían el criterio "LED"`);
+    }
+
+    // Crear entradas de fotos para cada pantalla del desglose (solo para pantallas validadas)
+    const fotosFromExcel = pantallasValidadas.map((pantalla) => ({
+      etiquetaPlano: pantalla.etiquetaPlano,
+      fotoFrontal: { url: "", fileName: undefined, fileSize: undefined },
+      fotoPlayer: { url: "", fileName: undefined, fileSize: undefined },
+      fotoIP: { url: "", fileName: undefined, fileSize: undefined },
+      nota: ""
+    }));
+
+    return { pantallas: pantallasValidadas, fotos: fotosFromExcel };
+  } catch (error) {
+    console.error('Error al procesar el Excel:', error);
+    alert('Error: ' + error.message);
+    return { pantallas: [], fotos: [] };
+  }
+};
+

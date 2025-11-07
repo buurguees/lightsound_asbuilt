@@ -1,0 +1,217 @@
+import { Card } from '../UI/Card';
+import { Field } from '../UI/Field';
+import { Input } from '../UI/Input';
+import { Textarea } from '../UI/Textarea';
+import { Button } from '../UI/Button';
+import { compressImage } from '../../utils/imageUtils';
+
+export const FotosPantallasEditor = ({ data, setData, imageInputRefs }) => {
+  const addFoto = () => {
+    setData((d) => ({
+      ...d,
+      fotos: [...d.fotos, {
+        etiquetaPlano: "",
+        fotoFrontal: { url: "", fileName: undefined, fileSize: undefined },
+        fotoPlayer: { url: "", fileName: undefined, fileSize: undefined },
+        fotoIP: { url: "", fileName: undefined, fileSize: undefined },
+        nota: ""
+      }]
+    }));
+  };
+
+  return (
+    <Card title="Fotos de pantallas" right={<Button onClick={addFoto}>Añadir foto</Button>}>
+      <div className="grid grid-cols-1 gap-4">
+        {data.fotos.map((f, i) => (
+          <div key={i} className="rounded-lg border-2 border-neutral-300 p-4 bg-neutral-50">
+            <div className="flex justify-between items-center mb-3">
+              <Field className="flex-grow mr-4" label="Etiqueta de plano">
+                <Input
+                  value={f.etiquetaPlano}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setData((d) => {
+                      const c = structuredClone(d);
+                      c.fotos[i].etiquetaPlano = v;
+                      return c;
+                    });
+                  }}
+                />
+              </Field>
+              <div className="pt-6">
+                <Button onClick={() => {
+                  setData((d) => {
+                    const c = structuredClone(d);
+                    c.fotos.splice(i, 1);
+                    return c;
+                  });
+                }}>
+                  Borrar pantalla
+                </Button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+              {/* Foto Frontal */}
+              <div className="bg-white rounded-lg border p-3">
+                <div className="text-xs font-semibold text-neutral-700 mb-2">FOTO FRONTAL</div>
+                <div className="flex gap-2 mb-2">
+                  <Button onClick={() => imageInputRefs.current[`${i}_frontal`]?.click()}>
+                    Subir
+                  </Button>
+                  <input
+                    ref={el => imageInputRefs.current[`${i}_frontal`] = el}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      if (e.target.files?.[0]) {
+                        const base64 = await compressImage(e.target.files[0], { maxDim: 1600, quality: 0.85 });
+                        setData((d) => {
+                          const c = structuredClone(d);
+                          c.fotos[i].fotoFrontal = {
+                            url: base64,
+                            fileName: e.target.files[0].name,
+                            fileSize: e.target.files[0].size
+                          };
+                          return c;
+                        });
+                      }
+                    }}
+                  />
+                  {f.fotoFrontal?.url && (
+                    <Button onClick={() => {
+                      setData((d) => {
+                        const c = structuredClone(d);
+                        c.fotos[i].fotoFrontal = { url: '' };
+                        return c;
+                      });
+                    }}>
+                      Limpiar
+                    </Button>
+                  )}
+                </div>
+                {f.fotoFrontal?.url && (
+                  <div>
+                    <img loading="lazy" src={f.fotoFrontal.url} alt="Frontal" className="max-h-32 w-full object-contain rounded border" />
+                    <p className="text-xs text-neutral-600 mt-1">{f.fotoFrontal.fileName}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Foto Player + Sending */}
+              <div className="bg-white rounded-lg border p-3">
+                <div className="text-xs font-semibold text-neutral-700 mb-2">PLAYER + SENDING</div>
+                <div className="flex gap-2 mb-2">
+                  <Button onClick={() => imageInputRefs.current[`${i}_player`]?.click()}>
+                    Subir
+                  </Button>
+                  <input
+                    ref={el => imageInputRefs.current[`${i}_player`] = el}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      if (e.target.files?.[0]) {
+                        const base64 = await compressImage(e.target.files[0], { maxDim: 1600, quality: 0.85 });
+                        setData((d) => {
+                          const c = structuredClone(d);
+                          c.fotos[i].fotoPlayer = {
+                            url: base64,
+                            fileName: e.target.files[0].name,
+                            fileSize: e.target.files[0].size
+                          };
+                          return c;
+                        });
+                      }
+                    }}
+                  />
+                  {f.fotoPlayer?.url && (
+                    <Button onClick={() => {
+                      setData((d) => {
+                        const c = structuredClone(d);
+                        c.fotos[i].fotoPlayer = { url: '' };
+                        return c;
+                      });
+                    }}>
+                      Limpiar
+                    </Button>
+                  )}
+                </div>
+                {f.fotoPlayer?.url && (
+                  <div>
+                    <img loading="lazy" src={f.fotoPlayer.url} alt="Player" className="max-h-32 w-full object-contain rounded border" />
+                    <p className="text-xs text-neutral-600 mt-1">{f.fotoPlayer.fileName}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Foto IP */}
+              <div className="bg-white rounded-lg border p-3">
+                <div className="text-xs font-semibold text-neutral-700 mb-2">IP</div>
+                <div className="flex gap-2 mb-2">
+                  <Button onClick={() => imageInputRefs.current[`${i}_ip`]?.click()}>
+                    Subir
+                  </Button>
+                  <input
+                    ref={el => imageInputRefs.current[`${i}_ip`] = el}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      if (e.target.files?.[0]) {
+                        const base64 = await compressImage(e.target.files[0], { maxDim: 1600, quality: 0.85 });
+                        setData((d) => {
+                          const c = structuredClone(d);
+                          c.fotos[i].fotoIP = {
+                            url: base64,
+                            fileName: e.target.files[0].name,
+                            fileSize: e.target.files[0].size
+                          };
+                          return c;
+                        });
+                      }
+                    }}
+                  />
+                  {f.fotoIP?.url && (
+                    <Button onClick={() => {
+                      setData((d) => {
+                        const c = structuredClone(d);
+                        c.fotos[i].fotoIP = { url: '' };
+                        return c;
+                      });
+                    }}>
+                      Limpiar
+                    </Button>
+                  )}
+                </div>
+                {f.fotoIP?.url && (
+                  <div>
+                    <img loading="lazy" src={f.fotoIP.url} alt="IP" className="max-h-32 w-full object-contain rounded border" />
+                    <p className="text-xs text-neutral-600 mt-1">{f.fotoIP.fileName}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <Field label="Nota (opcional)">
+              <Textarea
+                rows={2}
+                value={f.nota}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setData((d) => {
+                    const c = structuredClone(d);
+                    c.fotos[i].nota = v;
+                    return c;
+                  });
+                }}
+              />
+            </Field>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+};
+
