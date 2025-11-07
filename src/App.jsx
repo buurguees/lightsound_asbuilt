@@ -922,7 +922,6 @@ const Editor = ({
   currentLoadingPDF,
   setCurrentLoadingPDF
 }) => {
-  const inputFile = useRef(null);
   const imageInputRefs = useRef({});
 
   const upd = (path, value) => {
@@ -1163,29 +1162,6 @@ const Editor = ({
     }));
   };
 
-  const saveJSON = () => {
-    const jsonString = JSON.stringify(data, null, 2);
-    const sizeInMB = (new Blob([jsonString]).size / (1024 * 1024)).toFixed(2);
-    
-    if (parseFloat(sizeInMB) > 10) {
-      const confirm = window.confirm(
-        `El archivo JSON es muy grande (${sizeInMB}MB). Esto puede ser debido a las imágenes en Base64. ¿Deseas continuar?`
-      );
-      if (!confirm) return;
-    }
-    
-    download(`asbuilt_${data.meta.proyecto || "informe"}.json`, jsonString);
-  };
-
-  const loadJSON = (file) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try { setData(JSON.parse(String(e.target?.result || "{}"))); }
-      catch { alert("No se pudo leer el JSON"); }
-    };
-    reader.readAsText(file);
-  };
-
   useEffect(() => {
     // Persistir en localStorage
     try { localStorage.setItem("asbuilt_report_draft", JSON.stringify(data)); } catch {}
@@ -1202,31 +1178,6 @@ const Editor = ({
   return (
     <>
       <LoadingModal isVisible={!!currentLoadingPDF} fileName={currentLoadingPDF} />
-      <div className="no-print sticky top-0 z-10 mb-4 rounded-2xl border bg-white/80 backdrop-blur">
-      <div className="flex flex-wrap items-center gap-2 p-3">
-        <Button onClick={() => window.print()}>Imprimir / Exportar PDF</Button>
-        <Button onClick={saveJSON}>Guardar JSON</Button>
-        <Button onClick={() => inputFile.current?.click()}>Cargar JSON</Button>
-        <input ref={inputFile} type="file" className="hidden" accept="application/json"
-               onChange={(e) => e.target.files?.[0] && loadJSON(e.target.files[0])} />
-        
-        {/* Información de estado */}
-        <div className="text-xs text-neutral-600 bg-neutral-100 px-2 py-1 rounded">
-          Pantallas: {data.fotos.length} | 
-          Fotos: {data.fotos.reduce((acc, f) => acc + (f.fotoFrontal?.url ? 1 : 0) + (f.fotoPlayer?.url ? 1 : 0) + (f.fotoIP?.url ? 1 : 0), 0)}/{data.fotos.length * 3} | 
-          Tamaño: {(new Blob([JSON.stringify(data)]).size / 1024).toFixed(0)}KB
-        </div>
-        
-        <div className="grow" />
-        <div className="flex items-center gap-3 text-sm">
-          {Object.entries(data.secciones).map(([k, v]) => (
-            <label key={k} className="flex items-center gap-2">
-              <input type="checkbox" checked={v} onChange={(e) => upd(`secciones.${k}`, e.target.checked)} />
-              <span className="capitalize">{k.replaceAll(/([A-Z])/g, ' $1').trim()}</span>
-            </label>
-          ))}
-        </div>
-      </div>
       <div className="grid grid-cols-1 gap-3 p-3">
         <Card title="Metadatos del informe">
           <div className="grid grid-cols-2 gap-3">
@@ -2287,7 +2238,6 @@ const Editor = ({
           )}
         </Card>
       </div>
-      </div>
     </>
   );
 };
@@ -2658,10 +2608,35 @@ const Printable = React.memo(({ data, onPageRendered }) => (
 
 export default function App() {
   const [data, setData] = useState(defaultReport);
-  const [showPreview, setShowPreview] = useState(false);
   const [pdfPagesRendering, setPdfPagesRendering] = useState({}); // Rastrear páginas en renderizado
   const [loadingPDFs, setLoadingPDFs] = useState({});
   const [currentLoadingPDF, setCurrentLoadingPDF] = useState(null);
+  const inputFile = useRef(null);
+  
+  // Función para guardar JSON
+  const saveJSON = () => {
+    const jsonString = JSON.stringify(data, null, 2);
+    const sizeInMB = (new Blob([jsonString]).size / (1024 * 1024)).toFixed(2);
+    
+    if (parseFloat(sizeInMB) > 10) {
+      const confirm = window.confirm(
+        `El archivo JSON es muy grande (${sizeInMB}MB). Esto puede ser debido a las imágenes en Base64. ¿Deseas continuar?`
+      );
+      if (!confirm) return;
+    }
+    
+    download(`asbuilt_${data.meta.proyecto || "informe"}.json`, jsonString);
+  };
+
+  // Función para cargar JSON
+  const loadJSON = (file) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try { setData(JSON.parse(String(e.target?.result || "{}"))); }
+      catch { alert("No se pudo leer el JSON"); }
+    };
+    reader.readAsText(file);
+  };
   
   // Función para manejar cuando una página PDF se termina de renderizar
   const handlePageRendered = React.useCallback((fileName, success) => {
@@ -2689,47 +2664,54 @@ export default function App() {
   }, []);
   
   return (
-    <div className="min-h-screen bg-neutral-100">
+    <div className="min-h-screen bg-neutral-100 flex flex-col">
       <PrintStyles />
 
-      <div className="no-print bg-white border-b shadow-sm sticky top-0 z-20">
-        <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-neutral-800">Generador de Informe As Built</h1>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setShowPreview(!showPreview)}
-              className="px-4 py-2 rounded-lg border text-sm font-medium bg-neutral-100 hover:bg-neutral-200 transition-colors"
-            >
-              {showPreview ? '📝 Ocultar Vista Previa' : '👁️ Ver Vista Previa'}
-            </button>
-            <div className="text-xs text-neutral-500">React + Tailwind · A4 imprimible</div>
+      <div className="no-print bg-white border-b shadow-sm sticky top-0 z-20 flex-shrink-0">
+        <div className="mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-bold text-neutral-800">Generador de Informe As Built</h1>
+            <div className="flex items-center gap-2">
+              <Button onClick={() => window.print()}>Imprimir / Exportar PDF</Button>
+              <Button onClick={saveJSON}>Guardar JSON</Button>
+              <Button onClick={() => inputFile.current?.click()}>Cargar JSON</Button>
+              <input ref={inputFile} type="file" className="hidden" accept="application/json"
+                     onChange={(e) => e.target.files?.[0] && loadJSON(e.target.files[0])} />
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="no-print mx-auto max-w-7xl p-4">
-        <Editor 
-          data={data} 
-          setData={setData} 
-          onPageRendered={handlePageRendered} 
-          pdfPagesRendering={pdfPagesRendering} 
-          setPdfPagesRendering={setPdfPagesRendering}
-          loadingPDFs={loadingPDFs}
-          setLoadingPDFs={setLoadingPDFs}
-          currentLoadingPDF={currentLoadingPDF}
-          setCurrentLoadingPDF={setCurrentLoadingPDF}
-        />
-      </div>
+      {/* Layout de dos columnas */}
+      <div className="no-print flex-1 flex overflow-hidden" style={{ height: 'calc(100vh - 80px)' }}>
+        {/* Columna izquierda: Formulario */}
+        <div className="w-1/2 border-r border-neutral-300 bg-white overflow-y-auto" style={{ maxHeight: 'calc(100vh - 80px)' }}>
+          <div className="p-4">
+            <Editor 
+              data={data} 
+              setData={setData} 
+              onPageRendered={handlePageRendered} 
+              pdfPagesRendering={pdfPagesRendering} 
+              setPdfPagesRendering={setPdfPagesRendering}
+              loadingPDFs={loadingPDFs}
+              setLoadingPDFs={setLoadingPDFs}
+              currentLoadingPDF={currentLoadingPDF}
+              setCurrentLoadingPDF={setCurrentLoadingPDF}
+            />
+          </div>
+        </div>
 
-      {showPreview && (
-        <div className="no-print bg-neutral-200 py-8">
-          <div className="text-center mb-4">
+        {/* Columna derecha: Vista Previa */}
+        <div className="w-1/2 bg-neutral-50 flex flex-col overflow-hidden" style={{ maxHeight: 'calc(100vh - 80px)' }}>
+          <div className="flex-shrink-0 bg-neutral-100 border-b border-neutral-300 px-4 py-3 shadow-sm">
             <h2 className="text-lg font-bold text-neutral-700">Vista Previa del Informe</h2>
             <p className="text-sm text-neutral-600">Esto es cómo se verá al imprimir</p>
           </div>
-          <Printable data={data} onPageRendered={handlePageRendered} />
+          <div className="flex-1 overflow-y-auto p-4">
+            <Printable data={data} onPageRendered={handlePageRendered} />
+          </div>
         </div>
-      )}
+      </div>
 
       {/* Vista imprimible oculta pero disponible para impresión */}
       <div className="hidden print:block">
