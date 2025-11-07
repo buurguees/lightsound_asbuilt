@@ -81,7 +81,7 @@ const CollapsibleSection = ({ title, children, defaultOpen = false }) => {
 
 const defaultReport = {
   meta: {
-    titulo: "INFORME FINAL DE OBRA",
+    titulo: "Informe Fin de Obra",
     cliente: "BERSHKA",
     proyecto: "BSK_8429_GR_VOLOS_ERMOU_MAKEUP",
     codigo: "8429",
@@ -385,15 +385,9 @@ const Portada = ({ meta, equipamiento, tipoInstalacionVideo, almacenExterno }) =
       <div className="flex items-start justify-between mb-3 pb-2 border-b-2 border-neutral-800">
         {/* Logo Light Sound Group (izquierda) */}
         <div>
-          {meta.logo?.url ? (
-            <div className="bg-neutral-900 px-2 py-1 inline-block rounded mb-1 flex items-center justify-center" style={{ height: '40px', maxWidth: '150px' }}>
-              <img src={meta.logo.url} alt="Logo" className="h-full w-auto object-contain" />
-            </div>
-          ) : (
-            <div className="bg-neutral-900 text-white px-3 py-1 inline-block rounded mb-1">
-              <span className="font-bold text-sm">LIGHT SOUND GROUP</span>
-            </div>
-          )}
+          <div className="bg-neutral-900 px-2 py-1 inline-block rounded mb-1 flex items-center justify-center" style={{ height: '40px', maxWidth: '150px' }}>
+            <img src="/logo.svg" alt="Logo" className="h-full w-auto object-contain" />
+          </div>
           <p className="uppercase tracking-widest text-xs text-neutral-500 mt-0.5">PV_P00</p>
         </div>
         
@@ -460,7 +454,7 @@ const Portada = ({ meta, equipamiento, tipoInstalacionVideo, almacenExterno }) =
       <div className="mb-2">
         <h2 className="text-base font-bold mb-2 text-neutral-800">EQUIPAMIENTO INSTALADO</h2>
         <div className="grid grid-cols-2 gap-2">
-          {equipamiento.map((item, i) => (
+          {equipamiento.filter(item => item.cantidad && item.cantidad !== "0").map((item, i) => (
             <div key={i} className="rounded-lg border border-neutral-300 bg-white px-3 py-2">
               <div className="text-xs font-semibold text-neutral-600 mb-0.5">{item.nombre}</div>
               <div className="text-xs font-medium">
@@ -702,8 +696,10 @@ const SeccionProbadores = ({ probadores }) => {
 };
 
 const SeccionAltavocesInstalacion = ({ equipamiento }) => {
-  // Agrupar todos los equipamientos con fotos en grupos de 4
-  const todosEquipamientos = equipamiento.filter(a => a.nombre);
+  // Filtrar equipamientos que tengan nombre y cantidad diferente de "0"
+  const todosEquipamientos = equipamiento.filter(a => 
+    a.nombre && a.cantidad && a.cantidad !== "0"
+  );
   const grupos = [];
   
   for (let i = 0; i < todosEquipamientos.length; i += 4) {
@@ -1166,7 +1162,9 @@ const Editor = ({
       <div className="grid grid-cols-1 gap-3 p-3">
         <Card title="Metadatos del informe">
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Título"><Input value={data.meta.titulo} onChange={(e)=>upd("meta.titulo", e.target.value)} /></Field>
+            <Field label="Título">
+              <Input value="Informe Fin de Obra" disabled className="bg-neutral-100 cursor-not-allowed" />
+            </Field>
             <Field label="Cliente"><Input value={data.meta.cliente} onChange={(e)=>upd("meta.cliente", e.target.value)} /></Field>
             <Field label="Proyecto"><Input value={data.meta.proyecto} onChange={(e)=>upd("meta.proyecto", e.target.value)} /></Field>
             <Field label="Código"><Input value={data.meta.codigo} onChange={(e)=>upd("meta.codigo", e.target.value)} /></Field>
@@ -1176,53 +1174,6 @@ const Editor = ({
             <Field label="Fecha"><Input value={data.meta.fecha} onChange={(e)=>upd("meta.fecha", e.target.value)} /></Field>
           </div>
           <div className="mt-4 pt-4 border-t">
-            <Field label="Logo de la empresa">
-              <div className="flex gap-2">
-                <Button onClick={() => imageInputRefs.current['logo']?.click()}>
-                  Subir logo
-                </Button>
-                <input
-                  ref={el => imageInputRefs.current['logo'] = el}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={async (e) => {
-                    if (e.target.files?.[0]) {
-                      const base64 = await compressImage(e.target.files[0], { preferPNG: true, maxDim: 1200, quality: 0.9 });
-                      setData((d)=>{
-                        const c=structuredClone(d); 
-                        c.meta.logo = {
-                          url: base64,
-                          fileName: e.target.files[0].name,
-                          fileSize: e.target.files[0].size
-                        };
-                        return c;
-                      });
-                    }
-                  }}
-                />
-                {data.meta.logo?.url && (
-                  <Button onClick={() => {
-                    setData((d)=>{const c=structuredClone(d); c.meta.logo={url:''}; return c;});
-                  }}>
-                    Limpiar
-                  </Button>
-                )}
-              </div>
-              {data.meta.logo?.url && (
-                <div className="mt-3">
-                  <div className="text-xs text-neutral-600 mb-2">Vista previa del logo</div>
-                  <div className="flex justify-center">
-                    <img 
-                      loading="lazy"
-                      src={data.meta.logo.url} 
-                      alt="Logo" 
-                      className="max-h-24 max-w-full rounded-lg border shadow-sm"
-                    />
-                  </div>
-                </div>
-              )}
-            </Field>
             <Field label="Foto de entrada de la tienda">
               <div className="flex gap-2">
                 <Button onClick={() => imageInputRefs.current['fotoEntrada']?.click()}>
@@ -2792,16 +2743,210 @@ export default function App() {
     console.log('Total de fotos a guardar:', nuevasFotos.length);
     console.log('Fotos procesadas:', fotosProcesadas);
     
-    // Actualizar el estado con las nuevas fotos (reemplazar todas las existentes)
+    // Buscar y cargar foto de entrada de la tienda
+    const fotoEntradaFile = fotoFiles.find(file => {
+      const fileName = file.name.toUpperCase();
+      return fileName.includes('ENTRADA_TIENDA');
+    });
+    
+    let fotoEntradaProcesada = false;
+    let fotoEntradaBase64 = null;
+    let fotoEntradaFileName = null;
+    let fotoEntradaFileSize = null;
+    let clienteExtraido = "";
+    let proyectoExtraido = "";
+    let codigoExtraido = "";
+    
+    if (fotoEntradaFile) {
+      try {
+        console.log('Procesando foto de entrada:', fotoEntradaFile.name);
+        fotoEntradaBase64 = await compressImage(fotoEntradaFile, { maxDim: 1600, quality: 0.85 });
+        fotoEntradaFileName = fotoEntradaFile.name;
+        fotoEntradaFileSize = fotoEntradaFile.size;
+        fotoEntradaProcesada = true;
+        console.log('✓ Foto de entrada procesada correctamente');
+        
+        // Extraer información del nombre del archivo
+        const nombreArchivo = fotoEntradaFile.name.toUpperCase();
+        
+        // Extraer Cliente
+        if (nombreArchivo.includes('BSK')) {
+          clienteExtraido = "BERSHKA";
+        } else if (nombreArchivo.includes('LFT')) {
+          clienteExtraido = "LEFTIES";
+        }
+        
+        // Extraer Código (números del nombre)
+        const codigoMatch = nombreArchivo.match(/\d+/);
+        if (codigoMatch) {
+          codigoExtraido = codigoMatch[0];
+        }
+        
+        // Extraer Proyecto: nombre completo sin prefijo (BSK/LFT) y sin "_ENTRADA_TIENDA" y extensión
+        let proyecto = nombreArchivo;
+        // Eliminar prefijo BSK_ o LFT_
+        proyecto = proyecto.replace(/^(BSK|LFT)_/, '');
+        // Eliminar _ENTRADA_TIENDA y extensión
+        proyecto = proyecto.replace(/_ENTRADA_TIENDA.*$/i, '');
+        proyectoExtraido = proyecto;
+        
+        console.log('Información extraída:', { clienteExtraido, proyectoExtraido, codigoExtraido });
+      } catch (error) {
+        console.error(`Error procesando foto de entrada ${fotoEntradaFile.name}:`, error);
+      }
+    } else {
+      console.log('No se encontró foto de entrada (ENTRADA_TIENDA)');
+    }
+    
+    // Actualizar el estado con las nuevas fotos y foto de entrada (una sola actualización)
     setData((d) => {
       const c = structuredClone(d);
       // Reemplazar todas las fotos existentes con las nuevas importadas
       c.fotos = nuevasFotos;
-      console.log('Estado actualizado con', nuevasFotos.length, 'pantallas');
+      // Actualizar foto de entrada y metadatos si se encontró
+      if (fotoEntradaProcesada) {
+        c.meta.fotoEntrada = {
+          url: fotoEntradaBase64,
+          fileName: fotoEntradaFileName,
+          fileSize: fotoEntradaFileSize
+        };
+        // Actualizar metadatos extraídos del nombre del archivo
+        c.meta.titulo = "Informe Fin de Obra";
+        if (clienteExtraido) {
+          c.meta.cliente = clienteExtraido;
+        }
+        if (proyectoExtraido) {
+          c.meta.proyecto = proyectoExtraido;
+        }
+        if (codigoExtraido) {
+          c.meta.codigo = codigoExtraido;
+        }
+      }
+      console.log('Estado actualizado con', nuevasFotos.length, 'pantallas' + (fotoEntradaProcesada ? ' y foto de entrada' : ''));
       return c;
     });
     
-    alert(`Importación completada: ${fotosProcesadas} fotos procesadas de ${nuevasFotos.length} pantallas`);
+    const mensajeFotoEntrada = fotoEntradaProcesada ? ' y foto de entrada cargada' : '';
+    alert(`Importación completada: ${fotosProcesadas} fotos procesadas de ${nuevasFotos.length} pantallas${mensajeFotoEntrada}`);
+  };
+
+  // Función para generar un reporte completamente limpio
+  const generarReporteLimpio = () => {
+    return {
+      meta: {
+        titulo: "Informe Fin de Obra",
+        cliente: "",
+        proyecto: "",
+        codigo: "",
+        pm: "",
+        direccion: "",
+        versionPlano: "",
+        fecha: new Date().toISOString().slice(0,10),
+        logo: { url: "/logo.svg", fileName: "logo.svg", fileSize: undefined },
+        fotoEntrada: { url: "", fileName: undefined, fileSize: undefined },
+      },
+      secciones: {
+        portada: true,
+        equipamiento: true,
+        observaciones: true,
+        desglosePantallas: true,
+        fotosPantallas: true,
+        probadores: false,
+        altavocesInstalacion: true,
+        rackVideo: true,
+        rackAudio: true,
+        cuadrosAV: true,
+        unifilarVideo: true,
+        planostienda: true,
+        medicionPartidas: false,
+      },
+      observaciones: "",
+      planostienda: {
+        pdfs: []
+      },
+      equipamiento: [
+        { nombre: "Altavoces tienda", cantidad: "0", modelo: "", ubicacion: "", url: "", nota: "" },
+        { nombre: "Subwoofers", cantidad: "0", modelo: "", ubicacion: "", url: "", nota: "" },
+        { nombre: "Micrófonos", cantidad: "0", modelo: "", ubicacion: "", url: "", nota: "" },
+        { nombre: "Altavoces almacén", cantidad: "0", modelo: "", ubicacion: "", url: "", nota: "" },
+        { nombre: "Columnas acústicas", cantidad: "0", modelo: "", ubicacion: "", url: "", nota: "" },
+      ],
+      tipoInstalacionVideo: "",
+      almacenExterno: "No",
+      pantallas: [],
+      fotos: [],
+      probadores: {
+        activo: false,
+        probadorOcupado: { url: "", fileName: undefined, fileSize: undefined },
+        probadorLiberado: { url: "", fileName: undefined, fileSize: undefined },
+        pasilloProbadores: { url: "", fileName: undefined, fileSize: undefined },
+      },
+      rackVideo: {
+        descripcion: "",
+        observaciones: "",
+        fotos: [
+          { url: "", fileName: undefined, fileSize: undefined, descripcion: "" }
+        ]
+      },
+      rackAudio: { 
+        descripcion: "", 
+        observaciones: "",
+        fotos: [
+          { url: "", fileName: undefined, fileSize: undefined, descripcion: "" }
+        ]
+      },
+      cuadrosAV: {
+        items: [
+          { 
+            titulo: "CUADRO ELÉCTRICO", 
+            detalle: "",
+            observaciones: "",
+            fotos: [
+              { url: "", fileName: undefined, fileSize: undefined, descripcion: "" }
+            ]
+          },
+          { 
+            titulo: "AV BOX", 
+            detalle: "",
+            observaciones: "",
+            fotos: [
+              { url: "", fileName: undefined, fileSize: undefined, descripcion: "" }
+            ]
+          },
+          { 
+            titulo: "DOC BOX", 
+            detalle: "",
+            observaciones: "",
+            fotos: [
+              { url: "", fileName: undefined, fileSize: undefined, descripcion: "" }
+            ]
+          },
+        ],
+      },
+      unifilarVideo: { 
+        detalle: "",
+        observaciones: "",
+        fotos: [
+          { url: "", fileName: undefined, fileSize: undefined, descripcion: "" }
+        ]
+      },
+    };
+  };
+
+  // Función para limpiar la plantilla y resetear al estado inicial
+  const limpiarPlantilla = () => {
+    const confirmar = window.confirm(
+      '¿Estás seguro de que quieres limpiar toda la plantilla?\n\nEsto eliminará TODOS los datos actuales:\n- Metadatos del informe\n- Observaciones\n- Pantallas y fotos\n- Equipamiento\n- Todos los bloques de texto\n\nLa aplicación será reseteada completamente al estado inicial vacío.\n\nEsta acción no se puede deshacer.'
+    );
+    
+    if (confirmar) {
+      const reporteLimpio = generarReporteLimpio();
+      setData(reporteLimpio);
+      setPdfPagesRendering({});
+      setLoadingPDFs({});
+      setCurrentLoadingPDF(null);
+      alert('Plantilla limpiada correctamente. Todos los datos han sido eliminados y la aplicación ha sido reseteada al estado inicial vacío.');
+    }
   };
   
   // Función para manejar cuando una página PDF se termina de renderizar
@@ -2839,6 +2984,7 @@ export default function App() {
             <h1 className="text-xl font-bold text-neutral-800">Generador de Informe As Built</h1>
             <div className="flex items-center gap-2">
               <Button onClick={() => inputFolder.current?.click()}>📁 Importar Carpeta</Button>
+              <Button onClick={limpiarPlantilla} className="bg-red-500 hover:bg-red-600 text-white">🗑️ Limpiar Plantilla</Button>
               <Button onClick={() => window.print()}>Imprimir / Exportar PDF</Button>
               <Button onClick={saveJSON}>Guardar JSON</Button>
               <Button onClick={() => inputFile.current?.click()}>Cargar JSON</Button>
