@@ -1,5 +1,16 @@
 node_modules
 dist
+DISTRIBUIBLE
 *.log
 .DS_Store
 vite.svg
+
+# Scripts de desarrollo local
+*.bat
+*.ps1
+*.sh
+
+# Documentación de distribución local
+COMPILACION.md
+EJECUTABLE_LISTO.md
+INSTRUCCIONES_DISTRIBUCION.md

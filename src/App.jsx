@@ -1,10 +1,18 @@
 ﻿import React, { useRef, useState, useEffect } from "react";
 import * as XLSX from 'xlsx';
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
-import * as pdfjsWorker from 'pdfjs-dist/legacy/build/pdf.worker';
+// Componentes PDF
+import { PDFUploader } from './components/PDF/PDFUploader';
+import { SeccionPlanostienda } from './components/PDF/SeccionPlanostienda';
+// Componentes UI
+import { Button } from './components/UI/Button';
+// Componentes Page
+import { PageHeader } from './components/Page/PageHeader';
+import { PageFooter } from './components/Page/PageFooter';
+// Utils
+import { PAGE } from './utils/constants';
+import { fileToBase64 } from './utils/pdfUtils';
 
 // --- Utilidades simples ---
-const PAGE = "page";
 const cls = (...c) => c.filter(Boolean).join(" ");
 const download = (filename, text) => {
   const blob = new Blob([text], { type: "application/json;charset=utf-8" });
@@ -82,12 +90,12 @@ const CollapsibleSection = ({ title, children, defaultOpen = false }) => {
 const defaultReport = {
   meta: {
     titulo: "Informe Fin de Obra",
-    cliente: "BERSHKA",
-    proyecto: "BSK_8429_GR_VOLOS_ERMOU_MAKEUP",
-    codigo: "8429",
-    pm: "Armando Pi",
-    direccion: "ERMOU Nº 137, 38221 Volos",
-    versionPlano: "V3",
+    cliente: "",
+    proyecto: "",
+    codigo: "",
+    pm: "",
+    direccion: "",
+    versionPlano: "",
     fecha: new Date().toISOString().slice(0,10),
     logo: { url: "/logo.svg", fileName: "logo.svg", fileSize: undefined },
     fotoEntrada: { url: "", fileName: undefined, fileSize: undefined },
@@ -120,36 +128,7 @@ const defaultReport = {
   ],
   tipoInstalacionVideo: "",
   almacenExterno: "No",
-  pantallas: [
-    {
-      etiquetaPlano: "LED_DATUM 0F_BERSHKA_S1",
-      hostname: "V3F01004A511C",
-      mac: "00-10-F3-C1-15-A5",
-      serie: "",
-      resolucion: "384x864",
-      fondo: "1920x1080",
-      puertoPatch: "5",
-      puertoSwitch: "20",
-      contrato: "250110",
-      termicoPantalla: "15",
-      termicoPC: "",
-      horas24: "",
-    },
-    {
-      etiquetaPlano: "LED_DATUM 2F_MAN_S2",
-      hostname: "V3F010064511C",
-      mac: "00-10-F3-C1-15-47",
-      serie: "",
-      resolucion: "384x768",
-      fondo: "1920x1080",
-      puertoPatch: "20",
-      puertoSwitch: "21",
-      contrato: "250110",
-      termicoPantalla: "17",
-      termicoPC: "",
-      horas24: "",
-    },
-  ],
+  pantallas: [],
   fotos: [],
   probadores: {
     activo: false,
@@ -158,7 +137,7 @@ const defaultReport = {
     pasilloProbadores: { url: "", fileName: undefined, fileSize: undefined },
   },
   rackVideo: {
-    descripcion: "SENDING MCTRL300, MiniPC por pantalla, patch al switch (puertos 20/21).",
+    descripcion: "",
     observaciones: "",
     fotos: [
       { url: "", fileName: undefined, fileSize: undefined, descripcion: "" }
@@ -200,7 +179,7 @@ const defaultReport = {
     ],
   },
   unifilarVideo: { 
-    detalle: "Unifilar de vídeo (entradas/salidas, tomas, potencia).",
+    detalle: "",
     observaciones: "",
     fotos: [
       { url: "", fileName: undefined, fileSize: undefined, descripcion: "" }
@@ -297,16 +276,6 @@ const PrintStyles = () => (
 );
 
 // --- Componentes UI básicos (sin dependencias externas) ---
-const Button = ({ className, ...props }) => (
-  <button
-    className={cls(
-      "px-3 py-2 rounded-xl border text-sm shadow-sm",
-      "bg-white/70 hover:bg-white border-neutral-300",
-      className
-    )}
-    {...props}
-  />
-);
 
 const Card = ({ title, children, right }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -358,23 +327,7 @@ const Textarea = (props) => (
 );
 
 // --- Componentes de página ---
-const PageHeader = ({ title, subtitle }) => (
-  <div className="page-header">
-    <div className="border-b-2 border-neutral-800 pb-3">
-      <h2 className="text-xl font-bold text-neutral-800">{title}</h2>
-      {subtitle && <p className="text-sm text-neutral-600 mt-1">{subtitle}</p>}
-    </div>
-  </div>
-);
-
-const PageFooter = () => (
-  <div className="page-footer">
-    <div className="flex items-center justify-between text-xs text-neutral-500">
-      <div>(+34) 902 090 031 | info@lightsoundgroup.com</div>
-      <div>www.lightsoundgroup.com</div>
-    </div>
-  </div>
-);
+// (PageHeader y PageFooter ahora están en components/Page/)
 
 // --- Secciones del informe ---
 const Portada = ({ meta, equipamiento, tipoInstalacionVideo, almacenExterno }) => (
@@ -916,16 +869,6 @@ const Editor = ({
     });
   };
 
-  // Función para convertir archivo a Base64
-  const fileToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  };
-
   // Comprimir imagen: redimensiona y convierte a JPEG (o mantiene PNG si se pide)
   const compressImage = (file, { maxDim = 1600, quality = 0.85, preferPNG = false } = {}) => {
     return new Promise((resolve, reject) => {
@@ -1143,18 +1086,6 @@ const Editor = ({
     }));
   };
 
-  useEffect(() => {
-    // Persistir en localStorage
-    try { localStorage.setItem("asbuilt_report_draft", JSON.stringify(data)); } catch {}
-  }, [data]);
-
-  useEffect(() => {
-    // Cargar borrador si existe
-    try {
-      const raw = localStorage.getItem("asbuilt_report_draft");
-      if (raw) setData(JSON.parse(raw));
-    } catch {}
-  }, []);
 
   return (
     <>
@@ -2039,139 +1970,15 @@ const Editor = ({
         </Card>
 
         <Card title="Planos de tienda">
-          <div className="mb-3 p-3 bg-purple-50 border border-purple-200 rounded-lg">
-            <p className="text-sm font-semibold text-purple-800 mb-1">Subir archivos PDF de planos</p>
-            <p className="text-xs text-purple-700 mb-3">Los archivos PDF se incluirán como páginas en el informe final</p>
-            <Button onClick={() => imageInputRefs.current['pdf_upload']?.click()}>
-              📄 Subir PDF de planos
-            </Button>
-            <input
-              ref={el => imageInputRefs.current['pdf_upload'] = el}
-              type="file"
-              accept=".pdf"
-              multiple
-              className="hidden"
-              onChange={async (e) => {
-                if (e.target.files) {
-                  for (let i = 0; i < e.target.files.length; i++) {
-                    const file = e.target.files[i];
-                    if (file.type === 'application/pdf') {
-                      try {
-                        // Mostrar indicador de carga global
-                        setCurrentLoadingPDF(file.name);
-                        setLoadingPDFs(prev => ({ ...prev, [file.name]: true }));
-                        
-                        const base64 = await fileToBase64(file);
-                        
-                        // Obtener número de páginas del PDF
-                        pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
-                        let base64Data = base64;
-                        if (base64.includes(',')) {
-                          base64Data = base64.split(',')[1];
-                        }
-                        const binaryString = atob(base64Data);
-                        const bytes = new Uint8Array(binaryString.length);
-                        for (let j = 0; j < binaryString.length; j++) {
-                          bytes[j] = binaryString.charCodeAt(j);
-                        }
-                        const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
-                        const numPages = pdf.numPages;
-                        
-                        // Inicializar contador de páginas a renderizar
-                        setPdfPagesRendering(prev => ({
-                          ...prev,
-                          [file.name]: numPages
-                        }));
-                        
-                        setData((d)=>{
-                          const c=structuredClone(d);
-                          c.planostienda.pdfs.push({
-                            url: base64,
-                            fileName: file.name,
-                            fileSize: file.size
-                          });
-                          return c;
-                        });
-                      } catch (error) {
-                        alert(`Error al procesar ${file.name}: ${error.message}`);
-                        setCurrentLoadingPDF(null);
-                        setLoadingPDFs(prev => {
-                          const newState = { ...prev };
-                          delete newState[file.name];
-                          return newState;
-                        });
-                        setPdfPagesRendering(prev => {
-                          const newState = { ...prev };
-                          delete newState[file.name];
-                          return newState;
-                        });
-                      }
-                    } else {
-                      alert(`${file.name} no es un PDF válido`);
-                    }
-                  }
-                  // Limpiar el input
-                  e.target.value = '';
-                }
-              }}
-            />
-          </div>
-
-          {Object.keys(loadingPDFs).length > 0 && (
-            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <style>{`
-                @keyframes spin-mini {
-                  0% { transform: rotate(0deg); }
-                  100% { transform: rotate(360deg); }
-                }
-              `}</style>
-              <p className="text-sm font-semibold text-blue-800 mb-2">Cargando PDFs...</p>
-              <div className="space-y-2">
-                {Object.entries(loadingPDFs).map(([fileName, isLoading]) => (
-                  <div key={fileName} className="flex items-center gap-2">
-                    <div style={{
-                      display: 'inline-block',
-                      width: '16px',
-                      height: '16px',
-                      border: '2px solid #dbeafe',
-                      borderTop: '2px solid #3b82f6',
-                      borderRadius: '50%',
-                      animation: 'spin-mini 0.8s linear infinite'
-                    }}></div>
-                    <span className="text-sm text-blue-700">{fileName}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {data.planostienda.pdfs && data.planostienda.pdfs.length > 0 && (
-            <div>
-              <h3 className="text-sm font-semibold mb-3 text-neutral-700">PDFs cargados ({data.planostienda.pdfs.length})</h3>
-              <div className="space-y-2">
-                {data.planostienda.pdfs.map((pdf, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-3 bg-neutral-50 border border-neutral-300 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">📄</span>
-                      <div>
-                        <p className="text-sm font-medium text-neutral-800">{pdf.fileName}</p>
-                        <p className="text-xs text-neutral-500">{(pdf.fileSize / 1024 / 1024).toFixed(2)}MB</p>
-                      </div>
-                    </div>
-                    <Button onClick={() => {
-                      setData((d)=>{
-                        const c=structuredClone(d);
-                        c.planostienda.pdfs.splice(idx, 1);
-                        return c;
-                      });
-                    }}>
-                      Eliminar
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <PDFUploader
+            data={data}
+            setData={setData}
+            imageInputRefs={imageInputRefs}
+            loadingPDFs={loadingPDFs}
+            setLoadingPDFs={setLoadingPDFs}
+            setCurrentLoadingPDF={setCurrentLoadingPDF}
+            setPdfPagesRendering={setPdfPagesRendering}
+          />
         </Card>
       </div>
     </>
@@ -2179,325 +1986,7 @@ const Editor = ({
 };
 
 // --- Vista imprimible basada en los toggles ---
-// Componente para renderizar una página del PDF
-const PaginaPDF = React.memo(({ pdfData, pageNumber, onPageRendered }) => {
-  const [imageSrc, setImageSrc] = useState(null);
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const renderPDF = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        if (!pdfData) {
-          setError('Sin datos PDF');
-          setLoading(false);
-          if (onPageRendered) onPageRendered(false);
-          return;
-        }
-
-        // Configurar worker
-        pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
-        
-        // Convertir base64 a bytes
-        let base64Data = pdfData;
-        if (pdfData.includes(',')) {
-          base64Data = pdfData.split(',')[1];
-        }
-        
-        const binaryString = atob(base64Data);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
-
-        // Cargar PDF
-        const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
-        
-        if (pageNumber > pdf.numPages) {
-          setError(`Página ${pageNumber} no existe`);
-          setLoading(false);
-          if (onPageRendered) onPageRendered(false);
-          return;
-        }
-
-        const page = await pdf.getPage(pageNumber);
-        
-        // Renderizar a canvas con mayor escala para mejor calidad
-        const canvas = document.createElement('canvas');
-        const viewport = page.getViewport({ scale: 2 });
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        
-        const context = canvas.getContext('2d');
-        const renderContext = {
-          canvasContext: context,
-          viewport: viewport
-        };
-        
-        await page.render(renderContext).promise;
-        
-        // Convertir canvas a imagen JPEG comprimida para reducir tamaño
-        const imageData = canvas.toDataURL('image/jpeg', 0.85);
-        setImageSrc(imageData);
-        setLoading(false);
-        if (onPageRendered) onPageRendered(true);
-      } catch (error) {
-        console.error('Error renderizando PDF:', error);
-        setError(error.message);
-        setLoading(false);
-        if (onPageRendered) onPageRendered(false);
-      }
-    };
-
-    renderPDF();
-  }, [pdfData, pageNumber, onPageRendered]);
-
-  if (error) {
-    return <div style={{ color: 'red', padding: '20px', textAlign: 'center' }}>❌ Error: {error}</div>;
-  }
-
-  if (loading) {
-    return (
-      <div style={{ padding: '40px', textAlign: 'center' }}>
-        <style>{`
-          @keyframes spin-loader {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
-        <div style={{
-          display: 'inline-block',
-          width: '50px',
-          height: '50px',
-          border: '4px solid #e5e7eb',
-          borderTop: '4px solid #3b82f6',
-          borderRadius: '50%',
-          animation: 'spin-loader 1s linear infinite'
-        }}>
-        </div>
-        <p style={{ marginTop: '15px', color: '#666', fontWeight: '500' }}>
-          Cargando página {pageNumber}...
-        </p>
-      </div>
-    );
-  }
-
-  if (!imageSrc) {
-    return <div style={{ padding: '20px', textAlign: 'center', color: '#999' }}>No hay imagen</div>;
-  }
-
-  return (
-    <img
-      loading="lazy"
-      src={imageSrc}
-      style={{
-        width: '100%',
-        height: 'auto',
-        display: 'block',
-        imageRendering: 'crisp-edges',
-        WebkitUserSelect: 'none',
-        userSelect: 'none'
-      }}
-      alt={`Página ${pageNumber}`}
-      draggable="false"
-    />
-  );
-});
-
-// Componente wrapper para PaginaPDF con zoom interactivo
-const PaginaPDFConZoom = React.memo(({ pdfData, pageNumber, onPageRendered }) => {
-  const [zoom, setZoom] = useState(100);
-  const containerRef = useRef(null);
-
-  const handleWheel = (e) => {
-    if (e.ctrlKey || e.metaKey) {
-      e.preventDefault();
-      const delta = e.deltaY > 0 ? -10 : 10;
-      setZoom(prev => Math.max(50, Math.min(300, prev + delta)));
-    }
-  };
-
-  return (
-    <div
-      ref={containerRef}
-      onWheel={handleWheel}
-      style={{
-        overflow: 'auto',
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: 'grab'
-      }}
-    >
-      <div style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'top center', transition: 'transform 0.1s' }}>
-        <PaginaPDF pdfData={pdfData} pageNumber={pageNumber} onPageRendered={onPageRendered} />
-      </div>
-      {zoom !== 100 && (
-        <div style={{
-          position: 'fixed',
-          bottom: '20px',
-          right: '20px',
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          color: 'white',
-          padding: '8px 12px',
-          borderRadius: '6px',
-          fontSize: '14px',
-          pointerEvents: 'none',
-          zIndex: 1000
-        }}>
-          {zoom}%
-        </div>
-      )}
-    </div>
-  );
-});
-
-// Hook para obtener el número de páginas de un PDF
-const usePDFPages = (pdfData) => {
-  const [numPages, setNumPages] = useState(0);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let mounted = true;
-
-    const getPDFPages = async () => {
-      try {
-        if (!pdfData) {
-          setNumPages(0);
-          setLoading(false);
-          return;
-        }
-
-        // Configurar worker
-        pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
-        
-        let base64Data = pdfData;
-        if (pdfData.includes(',')) {
-          base64Data = pdfData.split(',')[1];
-        }
-        
-        const binaryString = atob(base64Data);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
-
-        console.log('Contando páginas del PDF...');
-        const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
-        
-        if (mounted) {
-          console.log('PDF tiene', pdf.numPages, 'páginas');
-          setNumPages(pdf.numPages);
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error('Error obteniendo páginas del PDF:', error);
-        if (mounted) {
-          setNumPages(0);
-          setLoading(false);
-        }
-      }
-    };
-
-    setLoading(true);
-    getPDFPages();
-
-    return () => {
-      mounted = false;
-    };
-  }, [pdfData]);
-
-  return { numPages, loading };
-};
-
-const PDFDocument = ({ pdf, pdfIdx, onPageRendered }) => {
-  const { numPages, loading } = usePDFPages(pdf.url);
-
-  // Mientras se está cargando el PDF
-  if (loading) {
-    return (
-      <section className={PAGE} style={{ pageBreakInside: 'avoid' }}>
-        <style>{`
-          @keyframes spin-pdf {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
-        <PageHeader 
-          title={`PLANOS DE TIENDA`} 
-          subtitle={`${pdf.fileName} - Analizando documento...`}
-        />
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px', flexDirection: 'column', gap: '20px' }}>
-          <div style={{
-            display: 'inline-block',
-            width: '60px',
-            height: '60px',
-            border: '4px solid #e5e7eb',
-            borderTop: '4px solid #0ea5e9',
-            borderRight: '4px solid #0ea5e9',
-            borderRadius: '50%',
-            animation: 'spin-pdf 1s linear infinite'
-          }}></div>
-          <p style={{ color: '#666', fontWeight: '500', fontSize: '16px' }}>Cargando documento PDF...</p>
-        </div>
-        <PageFooter />
-      </section>
-    );
-  }
-
-  // Si no tiene páginas
-  if (numPages === 0) {
-    return (
-      <section className={PAGE} style={{ pageBreakInside: 'avoid' }}>
-        <PageHeader 
-          title={`PLANOS DE TIENDA`} 
-          subtitle={`${pdf.fileName}`}
-        />
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px', color: '#dc2626' }}>
-          <div style={{ textAlign: 'center' }}>
-            <p style={{ fontSize: '24px', marginBottom: '10px' }}>⚠️</p>
-            <p style={{ fontWeight: '500' }}>Error cargando el PDF</p>
-          </div>
-        </div>
-        <PageFooter />
-      </section>
-    );
-  }
-
-  return (
-    <React.Fragment key={pdfIdx}>
-      {Array.from({ length: numPages }).map((_, pageIdx) => (
-        <section className={PAGE} key={`${pdfIdx}-${pageIdx}`} style={{ pageBreakInside: 'avoid' }}>
-          <PageHeader 
-            title={`PLANOS DE TIENDA`} 
-            subtitle={`${pdf.fileName}${numPages > 1 ? ` - Página ${pageIdx + 1} de ${numPages}` : ''}`}
-          />
-          <div className="page-content" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-            <PaginaPDFConZoom pdfData={pdf.url} pageNumber={pageIdx + 1} onPageRendered={(success) => onPageRendered && onPageRendered(pdf.fileName, success)} />
-          </div>
-          <PageFooter />
-        </section>
-      ))}
-    </React.Fragment>
-  );
-};
-
-const SeccionPlanostienda = ({ planostienda, onPageRendered }) => {
-  if (!planostienda.pdfs || planostienda.pdfs.length === 0) return null;
-
-  return (
-    <>
-      {planostienda.pdfs.map((pdf, pdfIdx) => (
-        <PDFDocument key={pdfIdx} pdf={pdf} pdfIdx={pdfIdx} onPageRendered={onPageRendered} />
-      ))}
-    </>
-  );
-};
+// (Componentes PDF ahora están en components/PDF/)
 
 const Printable = React.memo(({ data, onPageRendered }) => (
   <div>
@@ -2547,43 +2036,8 @@ export default function App() {
   const [pdfPagesRendering, setPdfPagesRendering] = useState({}); // Rastrear páginas en renderizado
   const [loadingPDFs, setLoadingPDFs] = useState({});
   const [currentLoadingPDF, setCurrentLoadingPDF] = useState(null);
-  const inputFile = useRef(null);
   const inputFolder = useRef(null);
   
-  // Función para guardar JSON
-  const saveJSON = () => {
-    const jsonString = JSON.stringify(data, null, 2);
-    const sizeInMB = (new Blob([jsonString]).size / (1024 * 1024)).toFixed(2);
-    
-    if (parseFloat(sizeInMB) > 10) {
-      const confirm = window.confirm(
-        `El archivo JSON es muy grande (${sizeInMB}MB). Esto puede ser debido a las imágenes en Base64. ¿Deseas continuar?`
-      );
-      if (!confirm) return;
-    }
-    
-    download(`asbuilt_${data.meta.proyecto || "informe"}.json`, jsonString);
-  };
-
-  // Función para cargar JSON
-  const loadJSON = (file) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try { setData(JSON.parse(String(e.target?.result || "{}"))); }
-      catch { alert("No se pudo leer el JSON"); }
-    };
-    reader.readAsText(file);
-  };
-
-  // Función auxiliar para convertir archivo a Base64
-  const fileToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  };
 
   // Función para comprimir imagen
   const compressImage = (file, { maxDim = 1600, quality = 0.85 } = {}) => {
@@ -2731,108 +2185,102 @@ export default function App() {
 
     console.log('Archivos filtrados en As Built/Fotos:', fotoFiles.length);
     
-    if (fotoFiles.length === 0) {
-      // Mostrar algunos ejemplos de rutas para debug
-      const samplePaths = files.slice(0, 5).map(f => f.webkitRelativePath || f.path || f.name);
-      console.log('Rutas de ejemplo:', samplePaths);
-      alert(`No se encontraron fotos en la carpeta As Built/Fotos/\n\nArchivos encontrados: ${files.length}\nRevisa la consola para ver las rutas.`);
-      return;
-    }
-
-    // Parsear nombres de archivo y agrupar por pantalla
+    // Parsear nombres de archivo y agrupar por pantalla (solo si hay fotos)
     const fotosPorPantalla = {};
-    
-    for (const file of fotoFiles) {
-      const fileName = file.name.toUpperCase();
-      console.log('Procesando archivo:', file.name, '->', fileName);
-      
-      // Buscar patrón S[0-9]+ (número de pantalla)
-      const pantallaMatch = fileName.match(/S(\d+)/);
-      if (!pantallaMatch) {
-        console.log('  No se encontró patrón S[0-9] en:', fileName);
-        continue;
-      }
-      
-      const numeroPantalla = pantallaMatch[1];
-      const pantallaKey = `S${numeroPantalla}`;
-      console.log('  Pantalla encontrada:', pantallaKey);
-      
-      if (!fotosPorPantalla[pantallaKey]) {
-        fotosPorPantalla[pantallaKey] = {};
-      }
-      
-      // Determinar tipo de foto
-      let tipoFoto = null;
-      if (fileName.includes('FRONTAL')) {
-        tipoFoto = 'fotoFrontal';
-      } else if (fileName.includes('PLAYER_SENDING') || fileName.includes('PLAYER+SENDING') || fileName.includes('PLAYER')) {
-        tipoFoto = 'fotoPlayer';
-      } else if (fileName.includes('_IP') || fileName.endsWith('IP') || (fileName.includes('IP') && !fileName.includes('PLAYER'))) {
-        tipoFoto = 'fotoIP';
-      }
-      
-      if (tipoFoto) {
-        console.log('  Tipo de foto:', tipoFoto);
-        fotosPorPantalla[pantallaKey][tipoFoto] = file;
-      } else {
-        console.log('  No se pudo determinar el tipo de foto');
-      }
-    }
-    
-    console.log('Fotos agrupadas por pantalla:', fotosPorPantalla);
-
-    // Solo crear entradas para pantallas que tengan foto FRONTAL
-    // Ordenar por número de pantalla
-    const pantallasConFrontal = Object.entries(fotosPorPantalla)
-      .filter(([_, fotos]) => fotos.fotoFrontal) // Solo pantallas con foto frontal
-      .sort(([a], [b]) => {
-        const numA = parseInt(a.replace('S', ''));
-        const numB = parseInt(b.replace('S', ''));
-        return numA - numB;
-      });
-
-    if (pantallasConFrontal.length === 0) {
-      alert('No se encontraron fotos FRONTAL en la carpeta. Se necesita al menos una foto con formato SX_FRONTAL');
-      return;
-    }
-
-    // Procesar y asignar fotos a las pantallas
+    let nuevasFotos = [];
     let fotosProcesadas = 0;
-    const nuevasFotos = [];
     
-    console.log('Pantallas con frontal encontradas:', pantallasConFrontal.length);
-    
-    for (const [pantallaKey, fotos] of pantallasConFrontal) {
-      // Usar "SX" como etiqueta de plano
-      const etiquetaPlano = pantallaKey; // S1, S2, S3, etc.
-      console.log(`Procesando pantalla ${pantallaKey} con fotos:`, Object.keys(fotos));
-      
-      const fotoData = {
-        etiquetaPlano: etiquetaPlano,
-        fotoFrontal: { url: "", fileName: undefined, fileSize: undefined },
-        fotoPlayer: { url: "", fileName: undefined, fileSize: undefined },
-        fotoIP: { url: "", fileName: undefined, fileSize: undefined },
-        nota: ""
-      };
-      
-      // Procesar cada tipo de foto
-      for (const [tipoFoto, file] of Object.entries(fotos)) {
-        try {
-          console.log(`  Comprimiendo ${tipoFoto}:`, file.name);
-          const base64 = await compressImage(file, { maxDim: 1600, quality: 0.85 });
-          fotoData[tipoFoto] = {
-            url: base64,
-            fileName: file.name,
-            fileSize: file.size
-          };
-          fotosProcesadas++;
-          console.log(`  ✓ ${tipoFoto} procesada correctamente`);
-        } catch (error) {
-          console.error(`Error procesando ${file.name}:`, error);
+    if (fotoFiles.length > 0) {
+      for (const file of fotoFiles) {
+        const fileName = file.name.toUpperCase();
+        console.log('Procesando archivo:', file.name, '->', fileName);
+        
+        // Buscar patrón S[0-9]+ (número de pantalla)
+        const pantallaMatch = fileName.match(/S(\d+)/);
+        if (!pantallaMatch) {
+          console.log('  No se encontró patrón S[0-9] en:', fileName);
+          continue;
+        }
+        
+        const numeroPantalla = pantallaMatch[1];
+        const pantallaKey = `S${numeroPantalla}`;
+        console.log('  Pantalla encontrada:', pantallaKey);
+        
+        if (!fotosPorPantalla[pantallaKey]) {
+          fotosPorPantalla[pantallaKey] = {};
+        }
+        
+        // Determinar tipo de foto
+        let tipoFoto = null;
+        if (fileName.includes('FRONTAL')) {
+          tipoFoto = 'fotoFrontal';
+        } else if (fileName.includes('PLAYER_SENDING') || fileName.includes('PLAYER+SENDING') || fileName.includes('PLAYER')) {
+          tipoFoto = 'fotoPlayer';
+        } else if (fileName.includes('_IP') || fileName.endsWith('IP') || (fileName.includes('IP') && !fileName.includes('PLAYER'))) {
+          tipoFoto = 'fotoIP';
+        }
+        
+        if (tipoFoto) {
+          console.log('  Tipo de foto:', tipoFoto);
+          fotosPorPantalla[pantallaKey][tipoFoto] = file;
+        } else {
+          console.log('  No se pudo determinar el tipo de foto');
         }
       }
       
-      nuevasFotos.push(fotoData);
+      console.log('Fotos agrupadas por pantalla:', fotosPorPantalla);
+
+      // Solo crear entradas para pantallas que tengan foto FRONTAL
+      // Ordenar por número de pantalla
+      const pantallasConFrontal = Object.entries(fotosPorPantalla)
+        .filter(([_, fotos]) => fotos.fotoFrontal) // Solo pantallas con foto frontal
+        .sort(([a], [b]) => {
+          const numA = parseInt(a.replace('S', ''));
+          const numB = parseInt(b.replace('S', ''));
+          return numA - numB;
+        });
+
+      if (pantallasConFrontal.length > 0) {
+        // Procesar y asignar fotos a las pantallas
+        console.log('Pantallas con frontal encontradas:', pantallasConFrontal.length);
+        
+        for (const [pantallaKey, fotos] of pantallasConFrontal) {
+          // Usar "SX" como etiqueta de plano
+          const etiquetaPlano = pantallaKey; // S1, S2, S3, etc.
+          console.log(`Procesando pantalla ${pantallaKey} con fotos:`, Object.keys(fotos));
+          
+          const fotoData = {
+            etiquetaPlano: etiquetaPlano,
+            fotoFrontal: { url: "", fileName: undefined, fileSize: undefined },
+            fotoPlayer: { url: "", fileName: undefined, fileSize: undefined },
+            fotoIP: { url: "", fileName: undefined, fileSize: undefined },
+            nota: ""
+          };
+          
+          // Procesar cada tipo de foto
+          for (const [tipoFoto, file] of Object.entries(fotos)) {
+            try {
+              console.log(`  Comprimiendo ${tipoFoto}:`, file.name);
+              const base64 = await compressImage(file, { maxDim: 1600, quality: 0.85 });
+              fotoData[tipoFoto] = {
+                url: base64,
+                fileName: file.name,
+                fileSize: file.size
+              };
+              fotosProcesadas++;
+              console.log(`  ✓ ${tipoFoto} procesada correctamente`);
+            } catch (error) {
+              console.error(`Error procesando ${file.name}:`, error);
+            }
+          }
+          
+          nuevasFotos.push(fotoData);
+        }
+      } else {
+        console.log('No se encontraron fotos FRONTAL en la carpeta. Continuando con procesamiento de Excel...');
+      }
+    } else {
+      console.log('No se encontraron fotos en As Built/Fotos/. Continuando con procesamiento de Excel...');
     }
     
     console.log('Total de fotos a guardar:', nuevasFotos.length);
@@ -2929,8 +2377,10 @@ export default function App() {
     // Actualizar el estado con las nuevas fotos, foto de entrada y datos de validación MKD
     setData((d) => {
       const c = structuredClone(d);
-      // Reemplazar todas las fotos existentes con las nuevas importadas
-      c.fotos = nuevasFotos;
+      // Reemplazar todas las fotos existentes con las nuevas importadas (solo si hay fotos nuevas)
+      if (nuevasFotos.length > 0) {
+        c.fotos = nuevasFotos;
+      }
       
       // Actualizar foto de entrada y metadatos si se encontró
       if (fotoEntradaProcesada) {
@@ -2997,11 +2447,13 @@ export default function App() {
           c.pantallas.map(p => String(p.etiquetaPlano || '').trim().toUpperCase())
         );
         
+        let pantallasAgregadasMKD = 0;
         datosValidacionMKD.forEach(pantallaMKD => {
           const etiqueta = String(pantallaMKD.etiquetaPlano || '').trim().toUpperCase();
           if (etiqueta && !etiquetasExistentes.has(etiqueta)) {
             console.log(`  Agregando nueva pantalla desde MKD: ${pantallaMKD.etiquetaPlano}`);
             c.pantallas.push(pantallaMKD);
+            pantallasAgregadasMKD++;
             // Crear entrada de foto para la nueva pantalla
             c.fotos.push({
               etiquetaPlano: pantallaMKD.etiquetaPlano,
@@ -3012,22 +2464,58 @@ export default function App() {
             });
           }
         });
+        
+        // Guardar contador para el mensaje final
+        c._pantallasAgregadasMKD = pantallasAgregadasMKD;
       }
-
-      console.log('Estado actualizado con', nuevasFotos.length, 'pantallas' + 
-                  (fotoEntradaProcesada ? ' y foto de entrada' : '') +
-                  (pantallasActualizadasMKD > 0 ? `, ${pantallasActualizadasMKD} pantallas actualizadas con datos MKD` : ''));
+      
+      const pantallasAgregadasMKDCount = c._pantallasAgregadasMKD || 0;
+      console.log('Estado actualizado con', nuevasFotos.length, 'fotos' + 
+                  (fotoEntradaProcesada ? ', foto de entrada' : '') +
+                  (pantallasActualizadasMKD > 0 ? `, ${pantallasActualizadasMKD} pantalla(s) actualizada(s)` : '') +
+                  (pantallasAgregadasMKDCount > 0 ? `, ${pantallasAgregadasMKDCount} pantalla(s) nueva(s) agregada(s)` : ''));
+      // Eliminar propiedad temporal
+      delete c._pantallasAgregadasMKD;
       return c;
     });
     
-    const mensajeFotoEntrada = fotoEntradaProcesada ? ' y foto de entrada cargada' : '';
-    const mensajeMKD = pantallasActualizadasMKD > 0 
-      ? `\n\n✅ Se procesaron ${validacionMKDFiles.length} archivo(s) de validación MKD y se actualizaron ${pantallasActualizadasMKD} pantalla(s)`
-      : validacionMKDFiles.length > 0 
-        ? `\n\n⚠️ Se encontraron ${validacionMKDFiles.length} archivo(s) de validación MKD pero no se pudieron actualizar pantallas`
-        : '';
+    // Construir mensaje final
+    let mensajeFinal = '';
     
-    alert(`Importación completada: ${fotosProcesadas} fotos procesadas de ${nuevasFotos.length} pantallas${mensajeFotoEntrada}${mensajeMKD}`);
+    if (fotosProcesadas > 0) {
+      mensajeFinal += `✅ ${fotosProcesadas} foto(s) procesada(s) de ${nuevasFotos.length} pantalla(s)`;
+    }
+    
+    if (fotoEntradaProcesada) {
+      if (mensajeFinal) mensajeFinal += '\n';
+      mensajeFinal += '✅ Foto de entrada cargada';
+    }
+    
+    if (validacionMKDFiles.length > 0) {
+      if (mensajeFinal) mensajeFinal += '\n';
+      if (pantallasActualizadasMKD > 0 || datosValidacionMKD.length > 0) {
+        // Calcular pantallas agregadas: total de pantallas MKD menos las actualizadas
+        const pantallasAgregadas = datosValidacionMKD.length - pantallasActualizadasMKD;
+        mensajeFinal += `✅ Se procesaron ${validacionMKDFiles.length} archivo(s) de validación MKD`;
+        if (pantallasActualizadasMKD > 0) {
+          mensajeFinal += `\n   - ${pantallasActualizadasMKD} pantalla(s) actualizada(s)`;
+        }
+        if (pantallasAgregadas > 0) {
+          mensajeFinal += `\n   - ${pantallasAgregadas} pantalla(s) nueva(s) agregada(s)`;
+        }
+        if (datosValidacionMKD.length > 0 && pantallasActualizadasMKD === 0 && pantallasAgregadas === 0) {
+          mensajeFinal += `\n   - ${datosValidacionMKD.length} pantalla(s) encontrada(s) en el Excel`;
+        }
+      } else {
+        mensajeFinal += `⚠️ Se encontraron ${validacionMKDFiles.length} archivo(s) de validación MKD pero no se pudieron procesar`;
+      }
+    }
+    
+    if (!mensajeFinal) {
+      mensajeFinal = '⚠️ No se encontraron archivos para procesar. Verifica que:\n- Las fotos estén en As Built/Fotos/\n- Los Excel estén en Documentación/Validaciones/ con nombre que contenga "Validación_MKD"';
+    }
+    
+    alert(`Importación completada:\n\n${mensajeFinal}`);
   };
 
   // Función para generar un reporte completamente limpio
@@ -3186,12 +2674,8 @@ export default function App() {
               <Button onClick={() => inputFolder.current?.click()}>📁 Importar Carpeta</Button>
               <Button onClick={limpiarPlantilla} className="bg-red-500 hover:bg-red-600 text-white">🗑️ Limpiar Plantilla</Button>
               <Button onClick={() => window.print()}>Imprimir / Exportar PDF</Button>
-              <Button onClick={saveJSON}>Guardar JSON</Button>
-              <Button onClick={() => inputFile.current?.click()}>Cargar JSON</Button>
               <input ref={inputFolder} type="file" className="hidden" webkitdirectory="true" directory="true"
                      onChange={importFolder} />
-              <input ref={inputFile} type="file" className="hidden" accept="application/json"
-                     onChange={(e) => e.target.files?.[0] && loadJSON(e.target.files[0])} />
             </div>
           </div>
         </div>
