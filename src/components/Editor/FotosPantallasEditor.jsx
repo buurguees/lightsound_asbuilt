@@ -56,11 +56,18 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
 
   // Procesar archivos de fotos recibidos desde App.jsx (importación de carpeta)
   useEffect(() => {
-    if (!fotoFilesFromFolder || fotoFilesFromFolder.length === 0) return;
+    if (!fotoFilesFromFolder || fotoFilesFromFolder.length === 0) {
+      console.log('⚠️ No hay archivos de fotos para procesar');
+      return;
+    }
     if (!data.pantallas || data.pantallas.length === 0) {
       console.log('⚠️ No hay pantallas importadas. Importa primero el Excel en "Desglose de pantallas"');
       return;
     }
+    
+    console.log(`\n🔄 Verificando sincronización...`);
+    console.log(`   Pantallas: ${data.pantallas.length}`);
+    console.log(`   Fotos: ${data.fotos?.length || 0}`);
     
     // Verificar que las fotos estén sincronizadas con las pantallas
     const etiquetasPantallas = new Set(
@@ -77,9 +84,18 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
     
     if (!todasPantallasTienenFoto || !data.fotos || data.fotos.length === 0) {
       console.log('⚠️ Las entradas de fotos aún no están sincronizadas. Esperando sincronización...');
-      console.log(`   Pantallas: ${data.pantallas.length}, Fotos: ${data.fotos?.length || 0}`);
+      const pantallasSinFoto = Array.from(etiquetasPantallas).filter(e => !etiquetasFotos.has(e));
+      if (pantallasSinFoto.length > 0) {
+        console.log(`   Pantallas sin foto:`, pantallasSinFoto);
+      }
+      // No procesar hasta que las fotos estén sincronizadas
       return;
     }
+
+    console.log(`✅ Sincronización OK. Iniciando procesamiento de fotos...`);
+    console.log(`   Archivos de fotos: ${fotoFilesFromFolder.length}`);
+    console.log(`   Pantallas: ${data.pantallas.length}`);
+    console.log(`   Entradas de fotos: ${data.fotos.length}`);
 
     // Resetear archivos procesados cuando cambian las pantallas o los archivos
     processedFilesRef.current.clear();
