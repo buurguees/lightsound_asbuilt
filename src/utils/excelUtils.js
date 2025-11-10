@@ -324,21 +324,27 @@ export const processExcelProbadores = async (file) => {
       return { tabla: [] };
     }
 
-    // La primera fila son los encabezados
-    const encabezados = allRows[0] || [];
+    // Los encabezados están en la fila 3 (índice 2)
+    // Fila 1: "MASTERS PROVISION"
+    // Fila 2: "Tablet"
+    // Fila 3: Encabezados reales (Master, MAC, Master Location, etc.)
+    const headerRowIndex = 2;
+    const encabezados = allRows[headerRowIndex] || [];
     
-    console.log(`\n Procesando Excel de Probadores: ${file.name}`);
+    console.log(`\n📊 Procesando Excel de Probadores: ${file.name}`);
     console.log(`   Total de filas en el archivo: ${allRows.length}`);
-    console.log(`   Importando tabla completa desde la fila 1`);
+    console.log(`   Encabezados en fila ${headerRowIndex + 1}:`, encabezados);
+    console.log(`   Importando datos desde la fila ${headerRowIndex + 2}`);
     
-    // Procesar todas las filas de datos (desde la fila 2, índice 1)
+    // Procesar todas las filas de datos (desde la fila 4, índice 3)
+    const startDataRowIndex = headerRowIndex + 1;
     const tablaProbadores = [];
     const sensoresFitting = []; // Array para almacenar valores de columna G que contengan "Fitting"
     
     // Columna G = índice 6 (0-indexed)
     const columnaGIndex = 6;
     
-    for (let i = 1; i < allRows.length; i++) {
+    for (let i = startDataRowIndex; i < allRows.length; i++) {
       const row = allRows[i];
       
       // Si la fila está completamente vacía, saltarla
