@@ -7,9 +7,10 @@ export const SeccionProbadores = ({ probadores }) => {
   const tieneImagenes = probadores.probadorOcupado?.url || 
                         probadores.probadorLiberado?.url || 
                         probadores.pasilloProbadores?.url;
-  const tieneTabla = probadores.tablaProbadores && probadores.tablaProbadores.length > 0;
+  const tieneMasters = probadores.masters && probadores.masters.length > 0;
+  const tieneProbadores = probadores.probadores && probadores.probadores.length > 0;
   
-  if (!tieneImagenes && !tieneTabla) return null;
+  if (!tieneImagenes && !tieneMasters && !tieneProbadores) return null;
 
   return (
     <section className={PAGE}>
@@ -64,37 +65,48 @@ export const SeccionProbadores = ({ probadores }) => {
         </div>
       </div>
 
-      {/* Tabla de probadores importada del Excel */}
-      {tieneTabla && (
+      {/* Tabla de Masters (sin duplicados) */}
+      {tieneMasters && (
         <div className="mt-4">
-          <h3 className="text-sm font-semibold text-neutral-700 mb-2">Tabla de Probadores</h3>
+          <h3 className="text-sm font-semibold text-neutral-700 mb-2">Masters</h3>
           <div className="overflow-auto border rounded-lg">
             <table className="w-full text-xs">
               <thead>
                 <tr className="bg-neutral-100 text-[11px]">
-                  {probadores.encabezados && probadores.encabezados.length > 0 ? (
-                    probadores.encabezados.map((h, i) => (
-                      <th key={i} className="border px-2 py-1 text-left font-semibold">{h || `Columna ${i + 1}`}</th>
-                    ))
-                  ) : (
-                    probadores.tablaProbadores[0]?._rowData?.map((_, i) => (
-                      <th key={i} className="border px-2 py-1 text-left font-semibold">Columna {i + 1}</th>
-                    ))
-                  )}
+                  <th className="border px-2 py-1 text-left font-semibold">Master</th>
+                  <th className="border px-2 py-1 text-left font-semibold">MAC</th>
+                  <th className="border px-2 py-1 text-left font-semibold">Master Location</th>
                 </tr>
               </thead>
               <tbody>
-                {probadores.tablaProbadores.map((fila, i) => (
+                {probadores.masters.map((master, i) => (
                   <tr key={i} className="odd:bg-white even:bg-neutral-50">
-                    {fila._rowData ? (
-                      fila._rowData.map((cell, j) => (
-                        <td key={j} className="border px-2 py-1">{cell}</td>
-                      ))
-                    ) : (
-                      probadores.encabezados?.map((header, j) => (
-                        <td key={j} className="border px-2 py-1">{fila[header] || ''}</td>
-                      ))
-                    )}
+                    <td className="border px-2 py-1">{master.master}</td>
+                    <td className="border px-2 py-1">{master.mac}</td>
+                    <td className="border px-2 py-1">{master.location}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Tabla de Probadores/Sensores */}
+      {tieneProbadores && (
+        <div className="mt-4">
+          <h3 className="text-sm font-semibold text-neutral-700 mb-2">Probadores</h3>
+          <div className="overflow-auto border rounded-lg">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-neutral-100 text-[11px]">
+                  <th className="border px-2 py-1 text-left font-semibold">Probador</th>
+                </tr>
+              </thead>
+              <tbody>
+                {probadores.probadores.map((probador, i) => (
+                  <tr key={i} className="odd:bg-white even:bg-neutral-50">
+                    <td className="border px-2 py-1">{probador}</td>
                   </tr>
                 ))}
               </tbody>

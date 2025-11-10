@@ -112,6 +112,8 @@ const defaultReport = {
         pasilloProbadores: { url: "", fileName: undefined, fileSize: undefined },
         tablaProbadores: [],
         encabezados: [],
+        masters: [],
+        probadores: [],
       },
   rackVideo: {
     descripcion: "",
@@ -1075,6 +1077,8 @@ export default function App() {
         pasilloProbadores: { url: "", fileName: undefined, fileSize: undefined },
         tablaProbadores: [],
         encabezados: [],
+        masters: [],
+        probadores: [],
       },
       rackVideo: {
         descripcion: "",
