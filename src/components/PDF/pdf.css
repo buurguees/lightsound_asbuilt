@@ -108,6 +108,18 @@
   columns: 3;
 }
 
+/* Contenedor para la vista previa que ajusta el zoom automáticamente */
+.pdf-preview-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
 /* Estilos adicionales para vista previa en pantalla */
 .pdf-preview {
   /* Dimensiones exactas de A4 horizontal: 297mm x 210mm */
@@ -118,6 +130,9 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   margin: 0 auto;
   padding: 0;
+  /* Escalar automáticamente para que quepa en el contenedor */
+  transform-origin: top center;
+  transition: transform 0.2s ease;
 }
 
 /* Páginas en vista previa con dimensiones exactas */

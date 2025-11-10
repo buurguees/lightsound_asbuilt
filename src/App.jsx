@@ -3,6 +3,7 @@ import * as XLSX from 'xlsx';
 // Componentes PDF
 import { SeccionPlanostienda } from './components/PDF/SeccionPlanostienda';
 import { Printable as PDFPrintable } from './components/PDF/Printable';
+import { PDFPreviewWrapper } from './components/PDF/PDFPreviewWrapper';
 // Componentes UI
 import { Button } from './components/UI/Button';
 import { LoadingModal } from './components/UI/LoadingModal';
@@ -1179,12 +1180,11 @@ export default function App() {
         <div className="w-1/2 bg-neutral-200 flex flex-col overflow-hidden" style={{ maxHeight: 'calc(100vh - 80px)' }}>
           <div className="flex-shrink-0 bg-neutral-100 border-b border-neutral-300 px-4 py-3 shadow-sm">
             <h2 className="font-bold text-neutral-700">Vista Previa del Informe</h2>
-            <p className="text-neutral-600">Vista exacta A4 horizontal (297mm x 210mm)</p>
           </div>
-          <div className="flex-1 overflow-y-auto overflow-x-auto p-4">
-            <div className="pdf-preview">
+          <div className="flex-1 overflow-hidden">
+            <PDFPreviewWrapper>
               <PDFPrintable data={data} onPageRendered={handlePageRendered} />
-            </div>
+            </PDFPreviewWrapper>
           </div>
         </div>
       </div>
