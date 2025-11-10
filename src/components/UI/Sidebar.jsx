@@ -2,8 +2,8 @@ export const Sidebar = ({ activeModule, setActiveModule }) => {
   const modules = [
     { id: 'metadatos', label: 'Metadatos' },
     { id: 'elementos', label: 'Elementos Instalados' },
-    { id: 'desglose', label: 'Desglose de Pantallas' },
-    { id: 'fotos', label: 'MKD' },
+    { id: 'desglose', label: 'MKD' },
+    { id: 'fotos', label: 'Pantallas' },
     { id: 'banners', label: 'Banners' },
     { id: 'probadores', label: 'Probadores' },
     { id: 'audio', label: 'Audio' },

@@ -21,7 +21,7 @@ export const SeccionFotosPantallas = ({ fotos }) => {
         <section className={PAGE} key={grupoIdx}>
           <div className="page-header">
             <div className="border-b-2 border-neutral-800 pb-3">
-              <h2 className="text-xl font-bold text-neutral-800">MKD</h2>
+              <h2 className="text-xl font-bold text-neutral-800">PANTALLAS</h2>
               <p className="text-sm text-neutral-600 mt-1">Página {grupoIdx + 1} de {grupos.length}</p>
             </div>
           </div>

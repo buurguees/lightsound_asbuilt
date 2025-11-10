@@ -107,7 +107,7 @@ export const DesglosePantallasEditor = ({ data, setData, imageInputRefs, excelFi
 
   return (
     <div>
-      <h2 className="font-semibold text-neutral-800 mb-4">Desglose de pantallas</h2>
+      <h2 className="font-semibold text-neutral-800 mb-4">MKD</h2>
       <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
         <div className="flex gap-2 items-center">
           <div className="flex-1">

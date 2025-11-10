@@ -149,40 +149,22 @@ export const processExcelPantallas = async (file) => {
     
     for (let i = startRowIndex; i < allRows.length; i++) {
       const row = allRows[i];
+      if (!row || row.length === 0) continue;
+      
       filasProcesadas++;
       
-      // Validar que la fila tenga suficientes columnas (necesitamos al menos columna U = índice 20)
-      if (!row || row.length < 21) {
-        console.log(`   Fila ${i + 1}: Insuficientes columnas (${row?.length || 0} columnas, se necesitan al menos 21)`);
-        continue; // Saltar filas sin suficientes columnas
-      }
-      
-      // ============================================
-      // FILTRO 1 (PRIMERO Y OBLIGATORIO): Columna U (índice 20) debe contener "LED"
-      // ============================================
+      // FILTRO 1 (PRIMERO): Columna U (índice 20) debe contener "LED"
       const columnaU = String(row[20] || '').trim();
-      
-      // Validar que la columna U tenga contenido
-      if (!columnaU || columnaU.length === 0) {
-        console.log(`   Fila ${i + 1}: Columna U vacía`);
-        continue; // Saltar si está vacía
-      }
-      
-      // Validación OBLIGATORIA: debe contener "LED" en cualquier parte del texto (case insensitive)
-      const columnaUUpper = columnaU.toUpperCase();
-      if (!columnaUUpper.includes('LED')) {
-        console.log(`   Fila ${i + 1}: Columna U no contiene "LED" → "${columnaU}"`);
-        continue; // Saltar esta fila si no contiene "LED" - ESTE ES EL PRIMER FILTRO
+      if (!columnaU || !columnaU.toUpperCase().includes('LED')) {
+        // No es una fila válida, saltar
+        continue;
       }
       
       filasConLED++;
       
-      // ============================================
       // FILTRO 2 (SEGUNDO): Columna C (índice 2) debe contener "Alta"
-      // ============================================
       const columnaC = String(row[2] || '').trim();
       if (!columnaC || !columnaC.toUpperCase().includes('ALTA')) {
-        console.log(`   Fila ${i + 1}: Columna C no contiene "Alta" → "${columnaC}" (Columna U: "${columnaU}")`);
         filasFiltradas++;
         continue; // Saltar esta fila si no contiene "Alta"
       }
@@ -278,6 +260,88 @@ export const processExcelPantallas = async (file) => {
 };
 
 /**
+ * Procesa un archivo Excel de banners y extrae datos
+ * Reglas:
+ * - Archivo DEBE contener "BANNERS" en el nombre (obligatorio)
+ * - Leer desde la fila 4 (índice 3)
+ * - Por ahora, importa todas las filas (se puede añadir filtros específicos después)
+ */
+export const processExcelBanners = async (file) => {
+  if (!file) return { banners: [] };
+
+  try {
+    // Validar nombre del archivo - DEBE contener "BANNERS"
+    const fileName = file.name;
+    const fileNameUpper = fileName.toUpperCase();
+    
+    const tieneBanners = fileNameUpper.includes('BANNERS');
+    
+    if (!tieneBanners) {
+      alert(`El archivo "${file.name}" no es válido.\n\nSolo se procesan archivos Excel que contengan "BANNERS" en el nombre.`);
+      return { banners: [] };
+    }
+
+    const arrayBuffer = await file.arrayBuffer();
+    const XLSXLib = await import('xlsx');
+    const workbook = XLSXLib.read(arrayBuffer, { type: 'array', defval: '' });
+    
+    // Obtener la primera hoja
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    
+    // Obtener todas las filas como arrays
+    const allRows = XLSXLib.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+    
+    if (!allRows || allRows.length === 0) {
+      alert('El archivo Excel está vacío');
+      return { banners: [] };
+    }
+
+    // Leer desde la fila 4 (índice 3)
+    const startRowIndex = 3;
+    
+    if (allRows.length <= startRowIndex) {
+      alert('El archivo no tiene suficientes filas (mínimo 4 filas)');
+      return { banners: [] };
+    }
+
+    // Procesar las filas desde la fila 4
+    const bannersFromExcel = [];
+    
+    console.log(`\n📊 Procesando Excel de Banners: ${file.name}`);
+    console.log(`   Total de filas en el archivo: ${allRows.length}`);
+    console.log(`   Leyendo desde la fila ${startRowIndex + 1} (índice ${startRowIndex})`);
+    
+    for (let i = startRowIndex; i < allRows.length; i++) {
+      const row = allRows[i];
+      if (!row || row.length === 0) continue;
+      
+      // Por ahora, tomar la primera columna como etiqueta
+      // Se puede ajustar según la estructura real del Excel
+      const etiqueta = String(row[0] || '').trim();
+      
+      if (!etiqueta) continue; // Saltar filas vacías
+      
+      bannersFromExcel.push({
+        etiqueta: etiqueta,
+        imagen: { url: "", fileName: undefined, fileSize: undefined }
+      });
+    }
+    
+    console.log(`\n✅ Banners importados: ${bannersFromExcel.length}`);
+    bannersFromExcel.forEach((b, idx) => {
+      console.log(`   ${idx + 1}. ${b.etiqueta}`);
+    });
+
+    return { banners: bannersFromExcel };
+  } catch (error) {
+    console.error('Error al procesar el Excel de Banners:', error);
+    alert('Error: ' + error.message);
+    return { banners: [] };
+  }
+};
+
+/**
  * Procesa un archivo Excel de probadores y extrae la tabla completa
  * Reglas:
  * - Archivo DEBE contener "PROBADORES" en el nombre (obligatorio)
@@ -329,87 +393,53 @@ export const processExcelProbadores = async (file) => {
     // Fila 2: "Tablet"
     // Fila 3: Encabezados reales (Tablet, Master, MAC, Master Location, etc.)
     const headerRowIndex = 2;
-    const encabezadosCompletos = allRows[headerRowIndex] || [];
+    const encabezadosCompletos = allRows[headerRowIndex];
     
-    // Filtrar columnas: eliminar Tablet (índice 0), columna 7 (índice 6), columna 8 (índice 7)
-    const indicesAEliminar = [0, 6, 7]; // Tablet, columna 7, columna 8
-    const encabezados = encabezadosCompletos.filter((_, idx) => !indicesAEliminar.includes(idx));
-    
-    console.log(`\n📊 Procesando Excel de Probadores: ${file.name}`);
-    console.log(`   Total de filas en el archivo: ${allRows.length}`);
-    console.log(`   Encabezados originales:`, encabezadosCompletos);
-    console.log(`   Encabezados filtrados:`, encabezados);
-    console.log(`   Importando datos desde la fila ${headerRowIndex + 2}`);
-    
-    // Procesar todas las filas de datos (desde la fila 4, índice 3)
-    const startDataRowIndex = headerRowIndex + 1;
-    const tablaProbadores = [];
-    
-    // Columna G (Master Service) = índice 5 en el Excel original (antes de filtrar columnas)
-    const columnaGIndexOriginal = 5; // Master Service en el Excel original
-    
-    for (let i = startDataRowIndex; i < allRows.length; i++) {
-      const row = allRows[i];
-      
-      // Si la fila está completamente vacía, saltarla
-      if (!row || row.every(cell => !cell || String(cell).trim() === '')) {
-        continue;
-      }
-      
-      // Filtrar solo las filas que contengan "Fitting" en Master Service (columna G, índice 5)
-      if (row.length > columnaGIndexOriginal) {
-        const columnaG = String(row[columnaGIndexOriginal] || '').trim();
-        if (!columnaG || !columnaG.toUpperCase().includes('FITTING')) {
-          // Saltar esta fila si no contiene "Fitting" en Master Service
-          continue;
-        }
-      } else {
-        // Si no hay columna G, saltar la fila
-        continue;
-      }
-      
-      // Filtrar las columnas de la fila (eliminar índices 0, 6, 7)
-      const filaFiltrada = row.filter((_, idx) => !indicesAEliminar.includes(idx));
-      
-      // Crear un objeto con los datos de la fila filtrada
-      const filaData = {};
-      
-      if (encabezados.length > 0) {
-        encabezados.forEach((header, idx) => {
-          const key = String(header || `Columna${idx + 1}`).trim();
-          filaData[key] = String(filaFiltrada[idx] || '').trim();
-        });
-      } else {
-        filaFiltrada.forEach((cell, idx) => {
-          filaData[`Columna${idx + 1}`] = String(cell || '').trim();
-        });
-      }
-      
-      // También guardar la fila filtrada como array para mantener el orden
-      filaData._rowData = filaFiltrada.map(cell => String(cell || '').trim());
-      
-      tablaProbadores.push(filaData);
-    }
-    
-    console.log(`\n📊 Resumen del procesamiento:`);
-    console.log(`   Filas procesadas (solo con "Fitting" en Master Service): ${tablaProbadores.length}`);
-    console.log(`   Columnas detectadas: ${encabezados.length || (tablaProbadores[0]?._rowData?.length || 0)}`);
-    
-    if (tablaProbadores.length === 0) {
-      const mensaje = `No se encontraron filas con "Fitting" en Master Service en el archivo Excel.\n\nTotal de filas en el archivo: ${allRows.length - 1}`;
-      console.error(mensaje);
-      alert(mensaje);
+    if (!encabezadosCompletos || encabezadosCompletos.length === 0) {
+      alert('No se encontraron encabezados en la fila 3');
       return { tabla: [], encabezados: [] };
     }
 
-    return { 
-      tabla: tablaProbadores,
-      encabezados: encabezados.map(h => String(h || '').trim())
-    };
+    // Eliminar columnas "Tablet" (índice 0), 7 (índice 6), y 8 (índice 7)
+    const indicesAEliminar = [0, 6, 7]; // Tablet, columna 7, columna 8
+    const encabezados = encabezadosCompletos
+      .map((enc, idx) => ({ enc, idx }))
+      .filter((_, idx) => !indicesAEliminar.includes(idx))
+      .map(({ enc }) => String(enc || '').trim());
+
+    console.log(`📋 Encabezados (después de eliminar columnas):`, encabezados);
+
+    // Los datos empiezan desde la fila 4 (índice 3)
+    const startDataRowIndex = headerRowIndex + 1;
+    const tablaProbadores = [];
+
+    for (let i = startDataRowIndex; i < allRows.length; i++) {
+      const row = allRows[i];
+      if (!row || row.length === 0) continue;
+
+      // Filtrar por "Fitting" en la columna G (Master Service, índice 5)
+      const columnaG = String(row[5] || '').trim();
+      if (!columnaG.toUpperCase().includes('FITTING')) {
+        continue; // Saltar esta fila si no contiene "Fitting"
+      }
+
+      // Eliminar las columnas especificadas (Tablet, 7, 8)
+      const filaFiltrada = row
+        .map((cell, idx) => ({ cell, idx }))
+        .filter((_, idx) => !indicesAEliminar.includes(idx))
+        .map(({ cell }) => String(cell || '').trim());
+
+      if (filaFiltrada.length === encabezados.length) {
+        tablaProbadores.push(filaFiltrada);
+      }
+    }
+
+    console.log(`✅ Filas importadas: ${tablaProbadores.length}`);
+
+    return { tabla: tablaProbadores, encabezados: encabezados };
   } catch (error) {
     console.error('Error al procesar el Excel de probadores:', error);
     alert('Error: ' + error.message);
     return { tabla: [], encabezados: [] };
   }
 };
-

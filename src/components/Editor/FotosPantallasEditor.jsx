@@ -298,7 +298,7 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
 
   return (
     <div>
-      <h2 className="font-semibold text-neutral-800 mb-4">MKD</h2>
+      <h2 className="font-semibold text-neutral-800 mb-4">Pantallas</h2>
       <div className="grid grid-cols-1 gap-4">
         <div className="mb-2">
           <Button onClick={addFoto}>Añadir foto</Button>

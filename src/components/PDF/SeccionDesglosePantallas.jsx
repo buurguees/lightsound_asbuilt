@@ -66,7 +66,7 @@ export const SeccionDesglosePantallas = ({ pantallas }) => {
   if (!debeSeparar) {
     return (
       <section className={PAGE}>
-        <PageHeader title="DESGLOSE DE PANTALLAS" subtitle="Información técnica de todas las pantallas instaladas" />
+        <PageHeader title="MKD" subtitle="Información técnica de todas las pantallas instaladas" />
         <div className="page-content">
           <div className="overflow-auto">
             <div className="mb-4">
@@ -89,7 +89,7 @@ export const SeccionDesglosePantallas = ({ pantallas }) => {
     <>
       {/* Primera página: Información de los Players */}
       <section className={PAGE}>
-        <PageHeader title="DESGLOSE DE PANTALLAS" subtitle="Información técnica de todas las pantallas instaladas" />
+        <PageHeader title="MKD" subtitle="Información técnica de todas las pantallas instaladas" />
         <div className="page-content">
           <div className="overflow-auto">
             <div>
@@ -103,7 +103,7 @@ export const SeccionDesglosePantallas = ({ pantallas }) => {
 
       {/* Segunda página: Conexionado e información relevante */}
       <section className={PAGE}>
-        <PageHeader title="DESGLOSE DE PANTALLAS" subtitle="Información técnica de todas las pantallas instaladas" />
+        <PageHeader title="MKD" subtitle="Información técnica de todas las pantallas instaladas" />
         <div className="page-content">
           <div className="overflow-auto">
             <div>

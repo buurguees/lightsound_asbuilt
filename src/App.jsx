@@ -737,6 +737,7 @@ const Editor = ({
             setData={setData} 
             imageInputRefs={imageInputRefs}
             bannerFilesFromFolder={bannerFilesFromFolder}
+            bannerExcelFilesFromFolder={bannerExcelFilesFromFolder}
           />
         );
       case 'probadores':
@@ -838,6 +839,7 @@ export default function App() {
   const [excelFilesFromFolder, setExcelFilesFromFolder] = useState([]);
   const [fotoFilesFromFolder, setFotoFilesFromFolder] = useState([]);
   const [bannerFilesFromFolder, setBannerFilesFromFolder] = useState([]);
+  const [bannerExcelFilesFromFolder, setBannerExcelFilesFromFolder] = useState([]);
   const [probadorFilesFromFolder, setProbadorFilesFromFolder] = useState([]);
   const [probadorExcelFilesFromFolder, setProbadorExcelFilesFromFolder] = useState([]);
   const [audioFilesFromFolder, setAudioFilesFromFolder] = useState([]);
@@ -1224,6 +1226,11 @@ export default function App() {
     if (validacionMKDFiles.length > 0) {
       if (mensajeFinal) mensajeFinal += '\n';
       mensajeFinal += `✅ Se encontraron ${validacionMKDFiles.length} archivo(s) Excel de Validación_MKD\n   Los archivos se están procesando automáticamente...`;
+    }
+    
+    if (bannerExcelFiles.length > 0) {
+      if (mensajeFinal) mensajeFinal += '\n';
+      mensajeFinal += `✅ Se encontraron ${bannerExcelFiles.length} archivo(s) Excel de BANNERS\n   Los archivos se están procesando automáticamente...`;
     }
     
     if (!mensajeFinal) {

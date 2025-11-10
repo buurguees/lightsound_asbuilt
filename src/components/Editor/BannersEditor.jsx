@@ -3,11 +3,72 @@ import { Field } from '../UI/Field';
 import { Input } from '../UI/Input';
 import { Button } from '../UI/Button';
 import { compressImage } from '../../utils/imageUtils';
+import { processExcelBanners } from '../../utils/excelUtils';
 
-export const BannersEditor = ({ data, setData, imageInputRefs, bannerFilesFromFolder }) => {
+export const BannersEditor = ({ data, setData, imageInputRefs, bannerFilesFromFolder, bannerExcelFilesFromFolder }) => {
   const processedFilesRef = useRef(new Set());
+  const processedExcelFilesRef = useRef(new Set());
+  const lastImportedFileRef = useRef(null);
 
-  // Procesar archivos de banners recibidos desde App.jsx (importación de carpeta)
+  // Procesar archivos Excel de banners recibidos desde App.jsx (importación de carpeta)
+  useEffect(() => {
+    if (!bannerExcelFilesFromFolder || bannerExcelFilesFromFolder.length === 0) {
+      return;
+    }
+    
+    // Si ya hay banners importados, no volver a procesar el Excel automáticamente
+    if (data.banners && data.banners.length > 0) {
+      console.log('⚠️ Ya hay banners importados. No se volverá a procesar el Excel automáticamente.');
+      return;
+    }
+
+    const processExcelFiles = async () => {
+      let todosBanners = [];
+      let archivosProcesados = 0;
+
+      for (const file of bannerExcelFilesFromFolder) {
+        // Evitar procesar el mismo archivo dos veces
+        const fileKey = `${file.name}_${file.size}`;
+        if (processedExcelFilesRef.current.has(fileKey)) {
+          console.log(`Archivo Excel ya procesado: ${file.name}`);
+          continue;
+        }
+
+        try {
+          console.log('Procesando archivo Excel de banners desde carpeta:', file.name);
+          const { banners } = await processExcelBanners(file);
+          
+          if (banners.length > 0) {
+            todosBanners = todosBanners.concat(banners);
+            archivosProcesados++;
+            processedExcelFilesRef.current.add(fileKey);
+          }
+        } catch (error) {
+          console.error(`Error procesando archivo Excel ${file.name}:`, error);
+        }
+      }
+
+      if (todosBanners.length > 0) {
+        setData((d) => {
+          const c = structuredClone(d);
+          if (!c.banners) {
+            c.banners = [];
+          }
+          c.banners = todosBanners;
+          c.secciones.banners = true;
+          return c;
+        });
+
+        if (archivosProcesados > 0) {
+          alert(`✅ Se procesaron ${archivosProcesados} archivo(s) Excel de banners desde la carpeta\n✅ Se importaron ${todosBanners.length} banner(es)`);
+        }
+      }
+    };
+
+    processExcelFiles();
+  }, [bannerExcelFilesFromFolder, data.banners, setData]);
+
+  // Procesar archivos de imágenes de banners recibidos desde App.jsx (importación de carpeta)
   useEffect(() => {
     if (!bannerFilesFromFolder || bannerFilesFromFolder.length === 0) {
       return;
@@ -15,7 +76,7 @@ export const BannersEditor = ({ data, setData, imageInputRefs, bannerFilesFromFo
 
     // Si ya hay banners importados, no volver a procesar automáticamente
     if (data.banners && data.banners.length > 0) {
-      console.log('⚠️ Ya hay banners importados. No se volverá a procesar automáticamente.');
+      console.log('⚠️ Ya hay banners importados. No se volverá a procesar las imágenes automáticamente.');
       return;
     }
 
@@ -66,6 +127,35 @@ export const BannersEditor = ({ data, setData, imageInputRefs, bannerFilesFromFo
     processBannerFiles();
   }, [bannerFilesFromFolder, data.banners, setData]);
 
+  const handleExcelUpload = async (file) => {
+    // FILTRO DE SEGURIDAD: Evitar doble importación del mismo archivo
+    if (lastImportedFileRef.current === file.name) {
+      alert(`⚠️ Este archivo ya fue importado: "${file.name}"\n\nPara importar un archivo diferente, selecciona otro archivo Excel.`);
+      return;
+    }
+
+    const { banners } = await processExcelBanners(file);
+    
+    if (banners.length > 0) {
+      // Marcar este archivo como importado
+      lastImportedFileRef.current = file.name;
+
+      setData((d) => {
+        const c = structuredClone(d);
+        if (!c.banners) {
+          c.banners = [];
+        }
+        c.banners = banners;
+        c.secciones.banners = true;
+        return c;
+      });
+      
+      if (banners.length > 0) {
+        alert(`✅ Se han cargado ${banners.length} banner(es) correctamente`);
+      }
+    }
+  };
+
   const addBanner = () => {
     setData((d) => {
       const c = structuredClone(d);
@@ -83,6 +173,36 @@ export const BannersEditor = ({ data, setData, imageInputRefs, bannerFilesFromFo
   return (
     <div>
       <h2 className="font-semibold text-neutral-800 mb-4">Banners</h2>
+      
+      {/* Cargar desde Excel */}
+      <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="flex gap-2 items-center">
+          <div className="flex-1">
+            <h3 className="font-semibold text-blue-800 mb-1">Cargar desde Excel</h3>
+            <p className="text-blue-700">Sube el archivo Excel con terminación "BANNERS"</p>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={() => imageInputRefs.current['banner_excel']?.click()}>
+              Cargar Excel
+            </Button>
+            <input
+              ref={el => imageInputRefs.current['banner_excel'] = el}
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              className="hidden"
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  await handleExcelUpload(file);
+                  // Resetear el input para permitir seleccionar el mismo archivo de nuevo si es necesario
+                  e.target.value = '';
+                }
+              }}
+            />
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 gap-4">
         <div className="mb-2">
           <Button onClick={addBanner}>Añadir banner</Button>
@@ -170,4 +290,3 @@ export const BannersEditor = ({ data, setData, imageInputRefs, bannerFilesFromFo
     </div>
   );
 };
-
