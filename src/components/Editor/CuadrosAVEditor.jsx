@@ -15,14 +15,14 @@ export const CuadrosAVEditor = ({ data, setData, imageInputRefs, cuadrosAVFilesF
     processedFilesRef.current.clear();
 
     const processCuadrosAVFiles = async () => {
-      console.log(`\n🚀 Iniciando procesamiento de ${cuadrosAVFilesFromFolder.length} archivo(s) de cuadros AV...`);
+      console.log(`\n Iniciando procesamiento de ${cuadrosAVFilesFromFolder.length} archivo(s) de cuadros AV...`);
       
       const c = structuredClone(data);
       let fotosProcesadas = 0;
 
       for (const file of cuadrosAVFilesFromFolder) {
         const fileName = file.name.toUpperCase();
-        console.log(`\n📷 Procesando archivo: ${file.name}`);
+        console.log(`\n Procesando archivo: ${file.name}`);
         console.log(`   Nombre normalizado: ${fileName}`);
         
         // Determinar tipo de foto según el contenido del nombre del archivo
@@ -53,8 +53,8 @@ export const CuadrosAVEditor = ({ data, setData, imageInputRefs, cuadrosAVFilesF
         
         if (tipoFoto) {
           try {
-            console.log(`  📤 Importando imagen al bloque "${tipoNombre}":`);
-            console.log(`     Archivo: ${file.name}`);
+            console.log(`   Importando imagen al bloque "${tipoNombre}":`);
+            console.log(`   Archivo: ${file.name}`);
             const base64 = await compressImage(file, { maxDim: 1600, quality: 0.85 });
             
             // Si no existe el array de fotos para este tipo, crearlo
@@ -243,7 +243,7 @@ export const CuadrosAVEditor = ({ data, setData, imageInputRefs, cuadrosAVFilesF
 
   return (
     <div>
-      <h2 className="font-semibold text-neutral-800 mb-4">Cuadros AV</h2>
+      <h2 className="font-semibold text-neutral-800 mb-4">Cuadro Eléctrico</h2>
 
       {/* Botón general para subir múltiples imágenes */}
       <div className="mt-4 mb-4 p-4 bg-neutral-50 rounded-lg border border-neutral-300">

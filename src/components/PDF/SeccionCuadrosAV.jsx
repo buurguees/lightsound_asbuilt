@@ -25,7 +25,7 @@ export const SeccionCuadrosAV = ({ cuadrosAV }) => {
 
   return (
     <section className={PAGE}>
-      <PageHeader title="CUADROS AV" />
+      <PageHeader title="CUADRO ELÉCTRICO" />
       <div className="page-content">
         <div className="grid grid-cols-3 gap-3">
           {imagenes.map((imagen, i) => (
