@@ -53,36 +53,64 @@ const TablaPantallasManuales = ({ filas }) => (
   </table>
 );
 
-export const SeccionDesglosePantallas = ({ pantallas }) => (
-  <>
-    {/* Primera página: Información de los Players */}
-    <section className={PAGE}>
-      <PageHeader title="DESGLOSE DE PANTALLAS" subtitle="Información técnica de todas las pantallas instaladas" />
-      <div className="page-content">
-        <div className="overflow-auto">
-          <div>
-            <h3 className="text-sm font-semibold text-neutral-700 mb-2">Información de los Players</h3>
-            <TablaPantallasImportadas filas={pantallas} />
-          </div>
-        </div>
-      </div>
-      <PageFooter />
-    </section>
+export const SeccionDesglosePantallas = ({ pantallas }) => {
+  const numFilas = pantallas?.length || 0;
+  const debeSeparar = numFilas > 10;
 
-    {/* Segunda página: Conexionado e información relevante */}
-    <section className={PAGE}>
-      <PageHeader title="DESGLOSE DE PANTALLAS" subtitle="Información técnica de todas las pantallas instaladas" />
-      <div className="page-content">
-        <div className="overflow-auto">
-          <div>
-            <h3 className="text-sm font-semibold text-neutral-700 mb-2">Conexionado e información relevante</h3>
-            <TablaPantallasManuales filas={pantallas} />
+  // Si hay 10 o menos líneas, mostrar ambas tablas en la misma página
+  if (!debeSeparar) {
+    return (
+      <section className={PAGE}>
+        <PageHeader title="DESGLOSE DE PANTALLAS" subtitle="Información técnica de todas las pantallas instaladas" />
+        <div className="page-content">
+          <div className="overflow-auto">
+            <div className="mb-4">
+              <h3 className="text-sm font-semibold text-neutral-700 mb-2">Información de los Players</h3>
+              <TablaPantallasImportadas filas={pantallas} />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-neutral-700 mb-2">Conexionado e información relevante</h3>
+              <TablaPantallasManuales filas={pantallas} />
+            </div>
           </div>
         </div>
-      </div>
-      <PageFooter />
-    </section>
-  </>
-);
+        <PageFooter />
+      </section>
+    );
+  }
+
+  // Si hay más de 10 líneas, separar en páginas distintas
+  return (
+    <>
+      {/* Primera página: Información de los Players */}
+      <section className={PAGE}>
+        <PageHeader title="DESGLOSE DE PANTALLAS" subtitle="Información técnica de todas las pantallas instaladas" />
+        <div className="page-content">
+          <div className="overflow-auto">
+            <div>
+              <h3 className="text-sm font-semibold text-neutral-700 mb-2">Información de los Players</h3>
+              <TablaPantallasImportadas filas={pantallas} />
+            </div>
+          </div>
+        </div>
+        <PageFooter />
+      </section>
+
+      {/* Segunda página: Conexionado e información relevante */}
+      <section className={PAGE}>
+        <PageHeader title="DESGLOSE DE PANTALLAS" subtitle="Información técnica de todas las pantallas instaladas" />
+        <div className="page-content">
+          <div className="overflow-auto">
+            <div>
+              <h3 className="text-sm font-semibold text-neutral-700 mb-2">Conexionado e información relevante</h3>
+              <TablaPantallasManuales filas={pantallas} />
+            </div>
+          </div>
+        </div>
+        <PageFooter />
+      </section>
+    </>
+  );
+};
 
 
