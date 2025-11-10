@@ -82,7 +82,8 @@ export const Portada = ({ meta, equipamiento, tipoInstalacionVideo, almacenExter
           return false;
         }).length > 0 && (
           <div className="mb-4">
-            <h2 className="text-lg font-bold mb-3 text-neutral-800">ELEMENTOS INSTALADOS</h2>
+            <h1 className="text-2xl font-bold text-neutral-800 mb-2">ELEMENTOS INSTALADOS</h1>
+            <div className="h-1 w-16 bg-neutral-800 mb-3"></div>
             <ul className="lista-elementos-instalados">
               {Object.keys(equipamiento)
                 .filter(nombre => {
