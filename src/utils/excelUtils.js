@@ -324,25 +324,12 @@ export const processExcelProbadores = async (file) => {
       return { tabla: [] };
     }
 
-    // Procesar todas las filas desde la primera (índice 0)
-    const tablaProbadores = [];
+    // La primera fila son los encabezados
+    const encabezados = allRows[0] || [];
     
     console.log(`\n📊 Procesando Excel de Probadores: ${file.name}`);
     console.log(`   Total de filas en el archivo: ${allRows.length}`);
     console.log(`   Importando tabla completa desde la fila 1`);
-    
-    // La primera fila son los encabezados
-    const encabezados = allRows[0] || [];
-    
-    // Buscar índices de las columnas clave (case-insensitive)
-    const findColumnIndex = (searchTerm) => {
-      return encabezados.findIndex(h => 
-        String(h || '').toUpperCase().trim() === searchTerm.toUpperCase().trim()
-      );
-    };
-    
-    // La primera fila son los encabezados
-    const encabezados = allRows[0] || [];
     
     // Procesar todas las filas de datos (desde la fila 2, índice 1)
     const tablaProbadores = [];
