@@ -41,7 +41,7 @@ export const Portada = ({ meta, equipamiento, tipoInstalacionVideo, almacenExter
               <h1 className="text-neutral-800">{meta.versionPlano}</h1>
             </div>
             <div>
-              <h2 className="text-neutral-500 mb-1">FECHA</h2>
+              <h2 className="text-neutral-500 mb-1">FECHA DE APERTURA</h2>
               <h1 className="text-neutral-800">{meta.fecha}</h1>
             </div>
           </div>
