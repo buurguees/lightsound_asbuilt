@@ -28,8 +28,7 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
             etiquetaPlano: etiqueta,
             fotoFrontal: { url: "", fileName: undefined, fileSize: undefined },
             fotoPlayer: { url: "", fileName: undefined, fileSize: undefined },
-            fotoIP: { url: "", fileName: undefined, fileSize: undefined },
-            nota: ""
+            fotoIP: { url: "", fileName: undefined, fileSize: undefined }
           });
           nuevasEntradas++;
         }
@@ -292,8 +291,7 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
         etiquetaPlano: "",
         fotoFrontal: { url: "", fileName: undefined, fileSize: undefined },
         fotoPlayer: { url: "", fileName: undefined, fileSize: undefined },
-        fotoIP: { url: "", fileName: undefined, fileSize: undefined },
-        nota: ""
+        fotoIP: { url: "", fileName: undefined, fileSize: undefined }
       }]
     }));
   };
@@ -471,21 +469,6 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
                 )}
               </div>
             </div>
-
-            <Field label="Nota (opcional)">
-              <Textarea
-                rows={2}
-                value={f.nota}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setData((d) => {
-                    const c = structuredClone(d);
-                    c.fotos[i].nota = v;
-                    return c;
-                  });
-                }}
-              />
-            </Field>
           </div>
         ))}
       </div>

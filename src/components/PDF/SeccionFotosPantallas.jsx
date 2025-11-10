@@ -3,6 +3,7 @@ import { PAGE } from '../../utils/constants';
 import { PageFooter } from '../Page/PageFooter';
 
 export const SeccionFotosPantallas = ({ fotos }) => {
+  // Agrupar fotos de 2 en 2 (máximo 2 bloques por página)
   const grupos = [];
   for (let i = 0; i < fotos.length; i += 2) {
     grupos.push(fotos.slice(i, i + 2));
@@ -67,12 +68,6 @@ export const SeccionFotosPantallas = ({ fotos }) => {
                     </div>
                   </div>
                 </div>
-                {f.nota && (
-                  <div className="mx-3 mb-3 p-2 bg-amber-50 border border-amber-200 rounded-lg">
-                    <p className="text-xs font-semibold text-amber-800 mb-1">NOTA:</p>
-                    <p className="text-xs text-amber-900">{f.nota}</p>
-                  </div>
-                )}
               </div>
             ))}
           </div>
