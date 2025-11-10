@@ -17,22 +17,15 @@ export const PDFPreviewWrapper = ({ children }) => {
 
       // Dimensiones del contenedor disponible (con padding)
       const containerWidth = container.clientWidth - 40; // 20px padding a cada lado
-      const containerHeight = container.clientHeight - 40; // 20px padding arriba y abajo
 
       // Dimensiones del contenido (A4 horizontal: 1123px x 794px)
       const contentWidth = 1123;
-      const contentHeight = 794;
 
-      // Calcular escala para que quepa tanto en ancho como en alto
-      const scaleX = containerWidth / contentWidth;
-      const scaleY = containerHeight / contentHeight;
+      // Calcular escala SOLO por ancho para que cada página ocupe el ancho disponible
+      const newScale = containerWidth / contentWidth;
 
-      // Usar la escala más pequeña para asegurar que quepa completamente
-      // Permitir escalar hasta el 100% si el contenedor es más grande
-      const newScale = Math.min(scaleX, scaleY);
-      
-      // Asegurar que la escala sea al menos 0.1 para evitar que sea demasiado pequeña
-      const finalScale = Math.max(0.1, newScale);
+      // Limitar entre 0.3 y 1 para evitar escalas extremas
+      const finalScale = Math.max(0.3, Math.min(1, newScale));
 
       setScale(finalScale);
     };
