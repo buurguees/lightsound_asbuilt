@@ -97,7 +97,6 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
       let todasTablas = [];
       let encabezados = [];
       let archivosProcesados = 0;
-      const sensoresFittingSet = new Set(); // Para evitar duplicados
 
       for (const file of probadorExcelFilesFromFolder) {
         // Evitar procesar el mismo archivo dos veces
@@ -109,19 +108,12 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
 
         try {
           console.log('Procesando archivo Excel de probadores desde carpeta:', file.name);
-          const { tabla, encabezados: enc, sensoresFitting } = await processExcelProbadores(file);
+          const { tabla, encabezados: enc } = await processExcelProbadores(file);
           
           if (tabla.length > 0) {
             todasTablas = todasTablas.concat(tabla);
             if (enc.length > 0 && encabezados.length === 0) {
               encabezados = enc; // Usar los encabezados del primer archivo
-            }
-            
-            // Acumular sensores con "Fitting" de la columna G
-            if (sensoresFitting && sensoresFitting.length > 0) {
-              sensoresFitting.forEach(sensor => {
-                sensoresFittingSet.add(sensor);
-              });
             }
             
             archivosProcesados++;
@@ -132,41 +124,11 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
         }
       }
 
-      // Convertir Set a array ordenado
-      const sensoresFittingArray = Array.from(sensoresFittingSet).sort((a, b) => {
-        const numA = parseInt(a.match(/\d+/)?.[0] || '0');
-        const numB = parseInt(b.match(/\d+/)?.[0] || '0');
-        return numA - numB;
-      });
-
-      if (todasTablas.length > 0 || sensoresFittingArray.length > 0) {
+      if (todasTablas.length > 0) {
         setData((d) => {
           const c = structuredClone(d);
           c.probadores.tablaProbadores = todasTablas;
           c.probadores.encabezados = encabezados;
-          
-          // Añadir sensores a la tabla manual (sin duplicar los que ya existen)
-          if (sensoresFittingArray.length > 0) {
-            if (!c.probadores.sensoresManual) {
-              c.probadores.sensoresManual = [];
-            }
-            
-            // Crear un Set con los probadores existentes para evitar duplicados
-            const probadoresExistentes = new Set(
-              c.probadores.sensoresManual.map(s => s.probador)
-            );
-            
-            // Añadir solo los nuevos sensores
-            sensoresFittingArray.forEach(sensor => {
-              if (!probadoresExistentes.has(sensor)) {
-                c.probadores.sensoresManual.push({
-                  probador: sensor,
-                  sn: '',
-                  masterLink: ''
-                });
-              }
-            });
-          }
           
           // Activar automáticamente la sección si hay datos
           c.secciones.probadores = true;
@@ -177,10 +139,7 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
         if (archivosProcesados > 0) {
           let mensaje = `✅ Se procesaron ${archivosProcesados} archivo(s) Excel de probadores desde la carpeta\n`;
           if (todasTablas.length > 0) {
-            mensaje += `✅ Se importaron ${todasTablas.length} fila(s) de la tabla\n`;
-          }
-          if (sensoresFittingArray.length > 0) {
-            mensaje += `✅ Se importaron ${sensoresFittingArray.length} sensor(es) a la tabla manual`;
+            mensaje += `✅ Se importaron ${todasTablas.length} fila(s) de la tabla (solo filas con "Fitting" en Master Service)`;
           }
           alert(mensaje);
         }
@@ -193,85 +152,6 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
   return (
     <div>
       <h2 className="font-semibold text-neutral-800 mb-4">Probadores</h2>
-
-      {/* Tablas manuales */}
-      <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Sensores manual */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-neutral-700">Sensores (manual)</h3>
-            <Button onClick={() => setData(d => { const c = structuredClone(d); (c.probadores.sensoresManual ||= []).push({ probador:'', sn:'', masterLink:'' }); return c; })}>Añadir fila</Button>
-          </div>
-          <div className="overflow-auto border rounded-lg">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="bg-neutral-100 text-[11px]">
-                  <th className="border px-2 py-1 text-left font-semibold">Nº de Probador</th>
-                  <th className="border px-2 py-1 text-left font-semibold">Nº de Serie</th>
-                  <th className="border px-2 py-1 text-left font-semibold">Master Link</th>
-                  <th className="border px-2 py-1 text-left"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {(data.probadores.sensoresManual || []).map((row, i) => (
-                  <tr key={i} className="odd:bg-white even:bg-neutral-50">
-                    <td className="border px-2 py-1">
-                      <input className="w-full outline-none" value={row.probador || ''} onChange={e => setData(d => { const c = structuredClone(d); c.probadores.sensoresManual[i].probador = e.target.value; return c; })} />
-                    </td>
-                    <td className="border px-2 py-1">
-                      <input className="w-full outline-none" value={row.sn || ''} onChange={e => setData(d => { const c = structuredClone(d); c.probadores.sensoresManual[i].sn = e.target.value; return c; })} />
-                    </td>
-                    <td className="border px-2 py-1">
-                      <input className="w-full outline-none" value={row.masterLink || ''} onChange={e => setData(d => { const c = structuredClone(d); c.probadores.sensoresManual[i].masterLink = e.target.value; return c; })} />
-                    </td>
-                    <td className="border px-2 py-1 text-right">
-                      <Button onClick={() => setData(d => { const c = structuredClone(d); c.probadores.sensoresManual.splice(i,1); return c; })}>Eliminar</Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Masters manual */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-neutral-700">Master (manual)</h3>
-            <Button onClick={() => setData(d => { const c = structuredClone(d); (c.probadores.mastersManual ||= []).push({ master:'', mac:'', ubicacion:'' }); return c; })}>Añadir fila</Button>
-          </div>
-          <div className="overflow-auto border rounded-lg">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="bg-neutral-100 text-[11px]">
-                  <th className="border px-2 py-1 text-left font-semibold">Master</th>
-                  <th className="border px-2 py-1 text-left font-semibold">MAC</th>
-                  <th className="border px-2 py-1 text-left font-semibold">Ubicación</th>
-                  <th className="border px-2 py-1 text-left"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {(data.probadores.mastersManual || []).map((row, i) => (
-                  <tr key={i} className="odd:bg-white even:bg-neutral-50">
-                    <td className="border px-2 py-1">
-                      <input className="w-full outline-none" value={row.master || ''} onChange={e => setData(d => { const c = structuredClone(d); c.probadores.mastersManual[i].master = e.target.value; return c; })} />
-                    </td>
-                    <td className="border px-2 py-1">
-                      <input className="w-full outline-none" value={row.mac || ''} onChange={e => setData(d => { const c = structuredClone(d); c.probadores.mastersManual[i].mac = e.target.value; return c; })} />
-                    </td>
-                    <td className="border px-2 py-1">
-                      <input className="w-full outline-none" value={row.ubicacion || ''} onChange={e => setData(d => { const c = structuredClone(d); c.probadores.mastersManual[i].ubicacion = e.target.value; return c; })} />
-                    </td>
-                    <td className="border px-2 py-1 text-right">
-                      <Button onClick={() => setData(d => { const c = structuredClone(d); c.probadores.mastersManual.splice(i,1); return c; })}>Eliminar</Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
 
       {/* Tabla de probadores importada del Excel */}
       {data.probadores.tablaProbadores && data.probadores.tablaProbadores.length > 0 && (

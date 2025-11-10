@@ -344,10 +344,8 @@ export const processExcelProbadores = async (file) => {
     // Procesar todas las filas de datos (desde la fila 4, índice 3)
     const startDataRowIndex = headerRowIndex + 1;
     const tablaProbadores = [];
-    const sensoresFitting = []; // Array para almacenar valores de columna G que contengan "Fitting"
     
-    // Columna G (Master Service) = índice 5 en los datos filtrados (era índice 6 antes de filtrar)
-    // Pero necesitamos el índice original antes de filtrar para extraer los valores
+    // Columna G (Master Service) = índice 5 en el Excel original (antes de filtrar columnas)
     const columnaGIndexOriginal = 5; // Master Service en el Excel original
     
     for (let i = startDataRowIndex; i < allRows.length; i++) {
@@ -355,6 +353,18 @@ export const processExcelProbadores = async (file) => {
       
       // Si la fila está completamente vacía, saltarla
       if (!row || row.every(cell => !cell || String(cell).trim() === '')) {
+        continue;
+      }
+      
+      // Filtrar solo las filas que contengan "Fitting" en Master Service (columna G, índice 5)
+      if (row.length > columnaGIndexOriginal) {
+        const columnaG = String(row[columnaGIndexOriginal] || '').trim();
+        if (!columnaG || !columnaG.toUpperCase().includes('FITTING')) {
+          // Saltar esta fila si no contiene "Fitting" en Master Service
+          continue;
+        }
+      } else {
+        // Si no hay columna G, saltar la fila
         continue;
       }
       
@@ -379,48 +389,27 @@ export const processExcelProbadores = async (file) => {
       filaData._rowData = filaFiltrada.map(cell => String(cell || '').trim());
       
       tablaProbadores.push(filaData);
-      
-      // Extraer valores de columna G (Master Service) que contengan "Fitting"
-      // Usar el índice original antes de filtrar
-      if (row.length > columnaGIndexOriginal) {
-        const columnaG = String(row[columnaGIndexOriginal] || '').trim();
-        if (columnaG && columnaG.toUpperCase().includes('FITTING')) {
-          // Evitar duplicados
-          if (!sensoresFitting.includes(columnaG)) {
-            sensoresFitting.push(columnaG);
-          }
-        }
-      }
     }
     
-    // Ordenar sensores por número
-    sensoresFitting.sort((a, b) => {
-      const numA = parseInt(a.match(/\d+/)?.[0] || '0');
-      const numB = parseInt(b.match(/\d+/)?.[0] || '0');
-      return numA - numB;
-    });
-    
     console.log(`\n📊 Resumen del procesamiento:`);
-    console.log(`   Filas procesadas: ${tablaProbadores.length}`);
+    console.log(`   Filas procesadas (solo con "Fitting" en Master Service): ${tablaProbadores.length}`);
     console.log(`   Columnas detectadas: ${encabezados.length || (tablaProbadores[0]?._rowData?.length || 0)}`);
-    console.log(`   Sensores con "Fitting" encontrados: ${sensoresFitting.length}`);
     
     if (tablaProbadores.length === 0) {
-      const mensaje = `No se encontraron datos en el archivo Excel.\n\nFilas procesadas: ${allRows.length - 1}`;
+      const mensaje = `No se encontraron filas con "Fitting" en Master Service en el archivo Excel.\n\nTotal de filas en el archivo: ${allRows.length - 1}`;
       console.error(mensaje);
       alert(mensaje);
-      return { tabla: [], sensoresFitting: [] };
+      return { tabla: [], encabezados: [] };
     }
 
     return { 
       tabla: tablaProbadores,
-      encabezados: encabezados.map(h => String(h || '').trim()),
-      sensoresFitting: sensoresFitting
+      encabezados: encabezados.map(h => String(h || '').trim())
     };
   } catch (error) {
     console.error('Error al procesar el Excel de probadores:', error);
     alert('Error: ' + error.message);
-    return { tabla: [], sensoresFitting: [] };
+    return { tabla: [], encabezados: [] };
   }
 };
 
