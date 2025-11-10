@@ -26,30 +26,67 @@ export const AudioEditor = ({ data, setData, imageInputRefs, audioFilesFromFolde
         console.log(`   Nombre normalizado: ${fileName}`);
         
         // Determinar tipo de foto según el contenido del nombre del archivo
+        // Orden importante: detectar nomenclaturas más específicas primero
         let tipoFoto = null;
         let tipoNombre = '';
         
-        // Detectar ALTAVOZ
-        if (fileName.includes('ALTAVOZ')) {
+        // Detectar tipos específicos de ALTAVOZ (orden específico primero)
+        if (fileName.includes('ALTAVOZ ESPECIAL')) {
+          tipoFoto = 'altavozEspecial';
+          tipoNombre = 'ALTAVOZ ESPECIAL';
+        }
+        else if (fileName.includes('ALTAVOZ KITCHEN OFFICE')) {
+          tipoFoto = 'altavozKitchenOffice';
+          tipoNombre = 'ALTAVOZ KITCHEN OFFICE';
+        }
+        else if (fileName.includes('ALTAVOZ ZONA COMÚN') || fileName.includes('ALTAVOZ ZONA COMUN')) {
+          tipoFoto = 'altavozZonaComun';
+          tipoNombre = 'ALTAVOZ ZONA COMÚN';
+        }
+        else if (fileName.includes('ALTAVOZ FULL RANGE')) {
+          tipoFoto = 'altavozFullRange';
+          tipoNombre = 'ALTAVOZ FULL RANGE';
+        }
+        else if (fileName.includes('ALTAVOZ ALMACÉN') || fileName.includes('ALTAVOZ ALMACEN')) {
+          tipoFoto = 'altavozAlmacen';
+          tipoNombre = 'ALTAVOZ ALMACÉN';
+        }
+        else if (fileName.includes('ALTAVOZ PROBADORES')) {
+          tipoFoto = 'altavozProbadores';
+          tipoNombre = 'ALTAVOZ PROBADORES';
+        }
+        else if (fileName.includes('ALTAVOZ OFFICE')) {
+          tipoFoto = 'altavozOffice';
+          tipoNombre = 'ALTAVOZ OFFICE';
+        }
+        else if (fileName.includes('ALTAVOZ')) {
           tipoFoto = 'altavoz';
           tipoNombre = 'ALTAVOZ';
-        } 
-        // Detectar TORRE
+        }
+        // Detectar TORRE ACÚSTICA
+        else if (fileName.includes('TORRE ACÚSTICA') || fileName.includes('TORRE ACUSTICA')) {
+          tipoFoto = 'torreAcustica';
+          tipoNombre = 'TORRE ACÚSTICA';
+        }
         else if (fileName.includes('TORRE')) {
           tipoFoto = 'torre';
           tipoNombre = 'TORRE';
-        } 
+        }
         // Detectar CLUSTER
         else if (fileName.includes('CLUSTER')) {
           tipoFoto = 'cluster';
           tipoNombre = 'CLUSTER';
-        } 
+        }
         // Detectar SUBWOOFER
         else if (fileName.includes('SUBWOOFER')) {
           tipoFoto = 'subwoofer';
           tipoNombre = 'SUBWOOFER';
-        } 
-        // Detectar SUB-GRABE (puede estar como SUB-GRABE, SUBGRABE, SUB_GRABE)
+        }
+        // Detectar SUB-GRAVE o SUB-GRABE (puede estar como SUB-GRAVE, SUB-GRABE, SUBGRAVE, SUBGRABE, SUB_GRAVE, SUB_GRABE)
+        else if (fileName.includes('SUB-GRAVE') || fileName.includes('SUBGRAVE') || fileName.includes('SUB_GRAVE')) {
+          tipoFoto = 'subGrave';
+          tipoNombre = 'SUB-GRAVE';
+        }
         else if (fileName.includes('SUB-GRABE') || fileName.includes('SUBGRABE') || fileName.includes('SUB_GRABE')) {
           tipoFoto = 'subGrabe';
           tipoNombre = 'SUB-GRABE';
@@ -97,7 +134,7 @@ export const AudioEditor = ({ data, setData, imageInputRefs, audioFilesFromFolde
           }
         } else {
           console.log(`  ❌ No se pudo determinar el tipo de foto para: ${file.name}`);
-          console.log(`     Buscando: "ALTAVOZ", "TORRE", "CLUSTER", "SUBWOOFER", o "SUB-GRABE" en el nombre`);
+          console.log(`     Buscando nomenclaturas de audio en el nombre`);
         }
       }
       
@@ -184,13 +221,31 @@ export const AudioEditor = ({ data, setData, imageInputRefs, audioFilesFromFolde
     });
   };
 
-  const tiposAudio = [
+  // Obtener todos los tipos de audio que tienen fotos, ordenados
+  const tiposAudioOrdenados = [
+    { key: 'altavozEspecial', label: 'Altavoz Especial' },
+    { key: 'altavozOffice', label: 'Altavoz Office' },
+    { key: 'altavozZonaComun', label: 'Altavoz Zona Común' },
+    { key: 'altavozKitchenOffice', label: 'Altavoz Kitchen Office' },
+    { key: 'torreAcustica', label: 'Torre Acústica' },
+    { key: 'altavozAlmacen', label: 'Altavoz Almacén' },
+    { key: 'altavozFullRange', label: 'Altavoz Full Range' },
+    { key: 'subGrave', label: 'Sub-grave' },
+    { key: 'altavozProbadores', label: 'Altavoz Probadores' },
+    { key: 'cluster', label: 'Cluster' },
     { key: 'altavoz', label: 'Altavoz' },
     { key: 'torre', label: 'Torre' },
-    { key: 'cluster', label: 'Cluster' },
     { key: 'subwoofer', label: 'Subwoofer' },
     { key: 'subGrabe', label: 'Sub-grabe' }
   ];
+
+  // Filtrar solo los tipos que tienen fotos
+  const tiposAudio = tiposAudioOrdenados.filter(tipo => {
+    const fotos = Array.isArray(data.audio[tipo.key]) 
+      ? data.audio[tipo.key] 
+      : (data.audio[tipo.key]?.url ? [data.audio[tipo.key]] : []);
+    return fotos.length > 0;
+  });
 
   return (
     <div>
@@ -236,7 +291,7 @@ export const AudioEditor = ({ data, setData, imageInputRefs, audioFilesFromFolde
                   {fotos.map((foto, index) => (
                     <div key={index} className="relative border rounded p-2 bg-neutral-50">
                       <div className="text-xs font-semibold text-neutral-600 mb-1">
-                        Foto {index + 1}
+                        {tipo.label} {fotos.length > 1 ? `_${index + 1}` : ''}
                       </div>
                       <img 
                         loading="lazy" 
