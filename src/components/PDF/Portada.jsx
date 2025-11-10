@@ -72,7 +72,14 @@ export const Portada = ({ meta, equipamiento, tipoInstalacionVideo, almacenExter
         {/* Elementos Instalados */}
         {Object.keys(equipamiento || {}).filter(nombre => {
           const elemento = equipamiento[nombre];
-          return elemento && (elemento.instalado === true || (typeof elemento === 'object' && elemento.instalado));
+          // Compatibilidad con estructura antigua (true/false) y nueva (objeto)
+          if (typeof elemento === 'boolean') {
+            return elemento === true;
+          }
+          if (typeof elemento === 'object' && elemento !== null) {
+            return elemento.instalado === true;
+          }
+          return false;
         }).length > 0 && (
           <div className="mb-4">
             <h2 className="text-lg font-bold mb-3 text-neutral-800">ELEMENTOS INSTALADOS</h2>
@@ -80,11 +87,22 @@ export const Portada = ({ meta, equipamiento, tipoInstalacionVideo, almacenExter
               {Object.keys(equipamiento)
                 .filter(nombre => {
                   const elemento = equipamiento[nombre];
-                  return elemento && (elemento.instalado === true || (typeof elemento === 'object' && elemento.instalado));
+                  // Compatibilidad con estructura antigua (true/false) y nueva (objeto)
+                  if (typeof elemento === 'boolean') {
+                    return elemento === true;
+                  }
+                  if (typeof elemento === 'object' && elemento !== null) {
+                    return elemento.instalado === true;
+                  }
+                  return false;
                 })
                 .map((nombre, i) => {
                   const elemento = equipamiento[nombre];
-                  const cantidad = (typeof elemento === 'object' && elemento.cantidad) ? elemento.cantidad : 1;
+                  // Obtener cantidad: si es objeto nuevo, usar cantidad; si es boolean antiguo, usar 1
+                  let cantidad = 1;
+                  if (typeof elemento === 'object' && elemento !== null && elemento.cantidad) {
+                    cantidad = elemento.cantidad || 1;
+                  }
                   const texto = cantidad > 1 ? `${nombre} (${cantidad})` : nombre;
                   return <li key={i}>{texto}</li>;
                 })}
