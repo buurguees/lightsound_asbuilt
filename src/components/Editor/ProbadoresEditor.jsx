@@ -153,46 +153,8 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
     <div>
       <h2 className="font-semibold text-neutral-800 mb-4">Probadores</h2>
 
-      {/* Tabla de probadores importada del Excel */}
-      {data.probadores.tablaProbadores && data.probadores.tablaProbadores.length > 0 && (
-        <div className="mb-4">
-          <h3 className="font-semibold text-neutral-700 mb-2">Tabla de Probadores</h3>
-          <div className="overflow-auto border rounded-lg">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="bg-neutral-100 text-[11px]">
-                  {data.probadores.encabezados && data.probadores.encabezados.length > 0 ? (
-                    data.probadores.encabezados.map((h, i) => (
-                      <th key={i} className="border px-2 py-1 text-left font-semibold">{h || `Columna ${i + 1}`}</th>
-                    ))
-                  ) : (
-                    data.probadores.tablaProbadores[0]?._rowData?.map((_, i) => (
-                      <th key={i} className="border px-2 py-1 text-left font-semibold">Columna {i + 1}</th>
-                    ))
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {data.probadores.tablaProbadores.map((fila, i) => (
-                  <tr key={i} className="odd:bg-white even:bg-neutral-50">
-                    {fila._rowData ? (
-                      fila._rowData.map((cell, j) => (
-                        <td key={j} className="border px-2 py-1">{cell}</td>
-                      ))
-                    ) : (
-                      data.probadores.encabezados?.map((header, j) => (
-                        <td key={j} className="border px-2 py-1">{fila[header] || ''}</td>
-                      ))
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Imágenes de probadores */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         {/* Probador Ocupado */}
         <div className="bg-white rounded-lg border p-3">
           <h3 className="font-semibold text-neutral-700 mb-2">PROBADOR OCUPADO</h3>
@@ -334,6 +296,45 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
           )}
         </div>
       </div>
+
+      {/* Tabla de probadores importada del Excel */}
+      {data.probadores.tablaProbadores && data.probadores.tablaProbadores.length > 0 && (
+        <div className="mb-4">
+          <h3 className="font-semibold text-neutral-700 mb-2">Tabla de Probadores</h3>
+          <div className="overflow-auto border rounded-lg">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-neutral-100 text-[11px]">
+                  {data.probadores.encabezados && data.probadores.encabezados.length > 0 ? (
+                    data.probadores.encabezados.map((h, i) => (
+                      <th key={i} className="border px-2 py-1 text-left font-semibold">{h || `Columna ${i + 1}`}</th>
+                    ))
+                  ) : (
+                    data.probadores.tablaProbadores[0]?._rowData?.map((_, i) => (
+                      <th key={i} className="border px-2 py-1 text-left font-semibold">Columna {i + 1}</th>
+                    ))
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {data.probadores.tablaProbadores.map((fila, i) => (
+                  <tr key={i} className="odd:bg-white even:bg-neutral-50">
+                    {fila._rowData ? (
+                      fila._rowData.map((cell, j) => (
+                        <td key={j} className="border px-2 py-1">{cell}</td>
+                      ))
+                    ) : (
+                      data.probadores.encabezados?.map((header, j) => (
+                        <td key={j} className="border px-2 py-1">{fila[header] || ''}</td>
+                      ))
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
