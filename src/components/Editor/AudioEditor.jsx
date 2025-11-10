@@ -321,31 +321,22 @@ export const AudioEditor = ({ data, setData, imageInputRefs, audioFilesFromFolde
     });
   };
 
-  // Obtener todos los tipos de audio que tienen fotos, ordenados
+  // Obtener todos los tipos de audio específicos que se deben mostrar siempre
   const tiposAudioOrdenados = [
-    { key: 'altavozEspecial', label: 'Altavoz Especial' },
-    { key: 'altavozOffice', label: 'Altavoz Office' },
-    { key: 'altavozZonaComun', label: 'Altavoz Zona Común' },
-    { key: 'altavozKitchenOffice', label: 'Altavoz Kitchen Office' },
-    { key: 'torreAcustica', label: 'Torre Acústica' },
-    { key: 'altavozAlmacen', label: 'Altavoz Almacén' },
-    { key: 'altavozFullRange', label: 'Altavoz Full Range' },
-    { key: 'subGrave', label: 'Sub-grave' },
-    { key: 'altavozProbadores', label: 'Altavoz Probadores' },
-    { key: 'cluster', label: 'Cluster' },
-    { key: 'altavoz', label: 'Altavoz' },
-    { key: 'torre', label: 'Torre' },
-    { key: 'subwoofer', label: 'Subwoofer' },
-    { key: 'subGrabe', label: 'Sub-grabe' }
+    { key: 'altavozOffice', label: 'ALTAVOZ OFFICE' },
+    { key: 'altavozZonaComun', label: 'ALTAVOZ ZONA COMÚN' },
+    { key: 'altavozKitchenOffice', label: 'ALTAVOZ KITCHEN OFFICE' },
+    { key: 'torreAcustica', label: 'TORRE ACÚSTICA' },
+    { key: 'altavozAlmacen', label: 'ALTAVOZ ALMACÉN' },
+    { key: 'altavozEspecial', label: 'ALTAVOZ ESPECIAL' },
+    { key: 'altavozFullRange', label: 'ALTAVOZ FULL RANGE' },
+    { key: 'subGrave', label: 'SUB-GRAVE' },
+    { key: 'altavozProbadores', label: 'ALTAVOZ PROBADORES' },
+    { key: 'cluster', label: 'CLUSTER' }
   ];
 
-  // Filtrar solo los tipos que tienen fotos
-  const tiposAudio = tiposAudioOrdenados.filter(tipo => {
-    const fotos = Array.isArray(data.audio[tipo.key]) 
-      ? data.audio[tipo.key] 
-      : (data.audio[tipo.key]?.url ? [data.audio[tipo.key]] : []);
-    return fotos.length > 0;
-  });
+  // Mostrar todos los tipos específicos, no solo los que tienen fotos
+  const tiposAudio = tiposAudioOrdenados;
 
   return (
     <div>
@@ -388,7 +379,7 @@ export const AudioEditor = ({ data, setData, imageInputRefs, audioFilesFromFolde
           
           return (
             <div key={tipo.key} className="bg-white rounded-lg border p-3">
-              <h3 className="font-semibold text-neutral-700 mb-2">{tipo.label.toUpperCase()}</h3>
+              <h3 className="font-semibold text-neutral-700 mb-2">{tipo.label}</h3>
               <div className="flex gap-2 mb-2">
                 <Button onClick={() => imageInputRefs.current[`audio_${tipo.key}`]?.click()}>
                   Subir {fotos.length > 0 && `(${fotos.length})`}
