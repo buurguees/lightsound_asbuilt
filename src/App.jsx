@@ -139,13 +139,17 @@ const defaultReport = {
     descripcion: "",
     observaciones: "",
     frontal: [],
+    frontalComunicaciones: [],
     trasera: [],
     fotos: [
       { url: "", fileName: undefined, fileSize: undefined, descripcion: "" }
     ]
   },
   rackAudio: { 
-    descripcion: "", 
+    descripcion: "",
+    observaciones: "",
+    frontal: [],
+    trasera: [],
     fotos: [
       { url: "", fileName: undefined, fileSize: undefined, descripcion: "" }
     ]
@@ -695,6 +699,7 @@ const Editor = ({
   probadorExcelFilesFromFolder,
   audioFilesFromFolder,
   rackVideoFilesFromFolder,
+  rackAudioFilesFromFolder,
   onFotosProcessed
 }) => {
   const imageInputRefs = useRef({});
@@ -731,7 +736,7 @@ const Editor = ({
       case 'rackVideo':
         return <RackVideoEditor data={data} setData={setData} imageInputRefs={imageInputRefs} rackVideoFilesFromFolder={rackVideoFilesFromFolder} />;
       case 'rackAudio':
-        return <RackAudioEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />;
+        return <RackAudioEditor data={data} setData={setData} imageInputRefs={imageInputRefs} rackAudioFilesFromFolder={rackAudioFilesFromFolder} />;
       case 'cuadrosAV':
         return <CuadrosAVEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />;
       case 'unifilar':
@@ -823,6 +828,7 @@ export default function App() {
   const [probadorExcelFilesFromFolder, setProbadorExcelFilesFromFolder] = useState([]);
   const [audioFilesFromFolder, setAudioFilesFromFolder] = useState([]);
   const [rackVideoFilesFromFolder, setRackVideoFilesFromFolder] = useState([]);
+  const [rackAudioFilesFromFolder, setRackAudioFilesFromFolder] = useState([]);
   const [fotosProcessedInfo, setFotosProcessedInfo] = useState(null);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [activeModule, setActiveModule] = useState('metadatos'); // Módulo activo en el sidebar
@@ -946,6 +952,9 @@ export default function App() {
       const fileName = file.name.toUpperCase();
       return fileName.includes('FRONTAL_RACK_VIDEO') || 
              fileName.includes('FRONTAL RACK VIDEO') ||
+             fileName.includes('FRONTAL_RACK_COMUNICACIONES') ||
+             fileName.includes('FRONTAL RACK COMUNICACIONES') ||
+             fileName.includes('FRONTAL_RACK_COMUNICACION') ||
              fileName.includes('TRASERA_RACK_VIDEO') || 
              fileName.includes('TRASERA RACK VIDEO');
     });
@@ -955,6 +964,22 @@ export default function App() {
     // Enviar archivos de rack video a RackVideoEditor.jsx para procesamiento
     if (rackVideoFiles.length > 0) {
       setRackVideoFilesFromFolder(rackVideoFiles);
+    }
+    
+    // Filtrar archivos de rack audio (misma carpeta As Built/Fotos/)
+    const rackAudioFiles = fotoFiles.filter(file => {
+      const fileName = file.name.toUpperCase();
+      return fileName.includes('FRONTAL_RACK_AUDIO') || 
+             fileName.includes('FRONTAL RACK AUDIO') ||
+             fileName.includes('TRASERA_RACK_AUDIO') || 
+             fileName.includes('TRASERA RACK AUDIO');
+    });
+    
+    console.log('Archivos de rack audio encontrados:', rackAudioFiles.length);
+    
+    // Enviar archivos de rack audio a RackAudioEditor.jsx para procesamiento
+    if (rackAudioFiles.length > 0) {
+      setRackAudioFilesFromFolder(rackAudioFiles);
     }
     
     // Buscar y cargar foto de entrada de la tienda (se procesa en App.jsx)
@@ -1315,6 +1340,7 @@ export default function App() {
           probadorExcelFilesFromFolder={probadorExcelFilesFromFolder}
           audioFilesFromFolder={audioFilesFromFolder}
           rackVideoFilesFromFolder={rackVideoFilesFromFolder}
+          rackAudioFilesFromFolder={rackAudioFilesFromFolder}
           onFotosProcessed={setFotosProcessedInfo}
             />
         </div>

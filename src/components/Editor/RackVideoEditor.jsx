@@ -30,11 +30,17 @@ export const RackVideoEditor = ({ data, setData, imageInputRefs, rackVideoFilesF
         console.log(`   Nombre normalizado: ${fileName}`);
         
         // Determinar tipo de foto según el contenido del nombre del archivo
+        // Orden importante: detectar nomenclaturas más específicas primero
         let tipoFoto = null;
         let tipoNombre = '';
         
+        // Detectar FRONTAL_RACK_COMUNICACIONES (más específico, debe ir primero)
+        if (fileName.includes('FRONTAL_RACK_COMUNICACIONES') || fileName.includes('FRONTAL RACK COMUNICACIONES') || fileName.includes('FRONTAL_RACK_COMUNICACION')) {
+          tipoFoto = 'frontalComunicaciones';
+          tipoNombre = 'FRONTAL RACK COMUNICACIONES';
+        }
         // Detectar FRONTAL_RACK_VIDEO
-        if (fileName.includes('FRONTAL_RACK_VIDEO') || fileName.includes('FRONTAL RACK VIDEO')) {
+        else if (fileName.includes('FRONTAL_RACK_VIDEO') || fileName.includes('FRONTAL RACK VIDEO')) {
           tipoFoto = 'frontal';
           tipoNombre = 'FRONTAL RACK VIDEO';
         } 
@@ -107,7 +113,11 @@ export const RackVideoEditor = ({ data, setData, imageInputRefs, rackVideoFilesF
   const detectarTipoRackVideo = (fileName) => {
     const nombreUpper = fileName.toUpperCase();
     
-    if (nombreUpper.includes('FRONTAL_RACK_VIDEO') || nombreUpper.includes('FRONTAL RACK VIDEO')) {
+    // Orden importante: detectar nomenclaturas más específicas primero
+    if (nombreUpper.includes('FRONTAL_RACK_COMUNICACIONES') || nombreUpper.includes('FRONTAL RACK COMUNICACIONES') || nombreUpper.includes('FRONTAL_RACK_COMUNICACION')) {
+      return { key: 'frontalComunicaciones', label: 'Frontal Rack Comunicaciones' };
+    }
+    else if (nombreUpper.includes('FRONTAL_RACK_VIDEO') || nombreUpper.includes('FRONTAL RACK VIDEO')) {
       return { key: 'frontal', label: 'Frontal Rack Video' };
     }
     else if (nombreUpper.includes('TRASERA_RACK_VIDEO') || nombreUpper.includes('TRASERA RACK VIDEO')) {
@@ -208,6 +218,7 @@ export const RackVideoEditor = ({ data, setData, imageInputRefs, rackVideoFilesF
       
       // Si no hay imágenes, desactivar la sección
       const tieneImagenes = (c.rackVideo.frontal && c.rackVideo.frontal.length > 0) ||
+                            (c.rackVideo.frontalComunicaciones && c.rackVideo.frontalComunicaciones.length > 0) ||
                             (c.rackVideo.trasera && c.rackVideo.trasera.length > 0);
       
       if (!tieneImagenes) {
@@ -220,6 +231,7 @@ export const RackVideoEditor = ({ data, setData, imageInputRefs, rackVideoFilesF
 
   const tiposRackVideo = [
     { key: 'frontal', label: 'Frontal Rack Video' },
+    { key: 'frontalComunicaciones', label: 'Frontal Rack Comunicaciones' },
     { key: 'trasera', label: 'Trasera Rack Video' }
   ];
 
