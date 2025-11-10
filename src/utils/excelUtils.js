@@ -303,9 +303,18 @@ export const processExcelProbadores = async (file) => {
     const XLSXLib = await import('xlsx');
     const workbook = XLSXLib.read(arrayBuffer, { type: 'array', defval: '' });
     
-    // Obtener la primera hoja
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
+    // Buscar la hoja "MASTER" (case-insensitive)
+    const masterSheetName = workbook.SheetNames.find(name => 
+      name.toUpperCase().trim() === 'MASTER'
+    );
+    
+    if (!masterSheetName) {
+      alert(`El archivo "${file.name}" no contiene una hoja llamada "MASTER".\n\nHojas disponibles: ${workbook.SheetNames.join(', ')}`);
+      return { tabla: [] };
+    }
+    
+    console.log(`📋 Hoja encontrada: "${masterSheetName}"`);
+    const worksheet = workbook.Sheets[masterSheetName];
     
     // Obtener todas las filas como arrays
     const allRows = XLSXLib.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
