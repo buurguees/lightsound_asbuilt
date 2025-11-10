@@ -231,6 +231,28 @@ export const BannersEditor = ({ data, setData, imageInputRefs, bannerExcelFilesF
             </tbody>
           </table>
         </div>
+        <div className="mt-2">
+          <Button onClick={() => {
+            setData((d) => {
+              const c = structuredClone(d);
+              if (!c.banners) c.banners = [];
+              c.banners.push({
+                etiquetaPlano: '',
+                modelo: '',
+                resolucion: '',
+                tamanoLineal: '',
+                puertoPatch: '',
+                puertoSwitch: '',
+                contrato: '',
+                termicoPantalla: '',
+                termicoPC: ''
+              });
+              return c;
+            });
+          }}>
+            + Añadir línea
+          </Button>
+        </div>
       </div>
     </div>
   );

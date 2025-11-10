@@ -119,29 +119,39 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
           console.log('Procesando archivo Excel de probadores desde carpeta:', file.name);
           const { tabla, encabezados: enc } = await processExcelProbadores(file);
           
-          if (tabla.length > 0) {
+          // Guardar encabezados del primer archivo (aunque no haya tabla)
+          if (enc && enc.length > 0 && encabezados.length === 0) {
+            encabezados = enc;
+          }
+          
+          if (tabla && tabla.length > 0) {
             todasTablas = todasTablas.concat(tabla);
-            if (enc.length > 0 && encabezados.length === 0) {
-              encabezados = enc; // Usar los encabezados del primer archivo
-            }
-            
             archivosProcesados++;
             processedExcelFilesRef.current.add(fileKey);
+          } else {
+            console.log(`   ⚠️ No se encontraron filas válidas en ${file.name} (filtrando por "Fitting" en Master Service)`);
           }
         } catch (error) {
           console.error(`Error procesando archivo Excel ${file.name}:`, error);
         }
       }
 
-      if (todasTablas.length > 0) {
+      // Guardar encabezados y tabla (aunque la tabla esté vacía, los encabezados son útiles)
+      if (encabezados.length > 0 || todasTablas.length > 0) {
         setData((d) => {
           const c = structuredClone(d);
-          c.probadores.tablaProbadores = todasTablas;
-          c.probadores.encabezados = encabezados;
+          if (todasTablas.length > 0) {
+            c.probadores.tablaProbadores = todasTablas;
+          }
+          if (encabezados.length > 0) {
+            c.probadores.encabezados = encabezados;
+          }
           
           // Activar automáticamente la sección si hay datos
-          c.secciones.probadores = true;
-          c.probadores.activo = true;
+          if (todasTablas.length > 0) {
+            c.secciones.probadores = true;
+            c.probadores.activo = true;
+          }
           return c;
         });
 
@@ -149,6 +159,8 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
           let mensaje = `✅ Se procesaron ${archivosProcesados} archivo(s) Excel de probadores desde la carpeta\n`;
           if (todasTablas.length > 0) {
             mensaje += `✅ Se importaron ${todasTablas.length} fila(s) de la tabla (solo filas con "Fitting" en Master Service)`;
+          } else {
+            mensaje += `⚠️ No se encontraron filas válidas (filtrando por "Fitting" en Master Service)`;
           }
           alert(mensaje);
         }

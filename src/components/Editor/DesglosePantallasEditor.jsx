@@ -221,6 +221,28 @@ export const DesglosePantallasEditor = ({ data, setData, imageInputRefs, excelFi
             </tbody>
           </table>
         </div>
+        <div className="mt-2">
+          <Button onClick={() => {
+            setData((d) => {
+              const c = structuredClone(d);
+              if (!c.pantallas) c.pantallas = [];
+              c.pantallas.push({
+                etiquetaPlano: '',
+                hostname: '',
+                mac: '',
+                resolucion: '',
+                puertoPatch: '',
+                puertoSwitch: '',
+                contrato: '',
+                termicoPantalla: '',
+                termicoPC: ''
+              });
+              return c;
+            });
+          }}>
+            + Añadir línea
+          </Button>
+        </div>
       </div>
 
     </div>

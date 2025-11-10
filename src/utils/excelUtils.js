@@ -623,7 +623,7 @@ export const processExcelProbadores = async (file) => {
     
     if (!tieneProbadores) {
       alert(`El archivo "${file.name}" no es válido.\n\nSolo se procesan archivos Excel que contengan "PROBADORES" en el nombre.`);
-      return { tabla: [] };
+      return { tabla: [], encabezados: [] };
     }
 
     const arrayBuffer = await file.arrayBuffer();
@@ -637,7 +637,7 @@ export const processExcelProbadores = async (file) => {
     
     if (!masterSheetName) {
       alert(`El archivo "${file.name}" no contiene una hoja llamada "MASTER".\n\nHojas disponibles: ${workbook.SheetNames.join(', ')}`);
-      return { tabla: [] };
+      return { tabla: [], encabezados: [] };
     }
     
     console.log(`📋 Hoja encontrada: "${masterSheetName}"`);
@@ -648,7 +648,7 @@ export const processExcelProbadores = async (file) => {
     
     if (!allRows || allRows.length === 0) {
       alert('El archivo Excel está vacío');
-      return { tabla: [] };
+      return { tabla: [], encabezados: [] };
     }
 
     // Los encabezados están en la fila 3 (índice 2)
@@ -693,7 +693,14 @@ export const processExcelProbadores = async (file) => {
         .map(({ cell }) => String(cell || '').trim());
 
       if (filaFiltrada.length === encabezados.length) {
-        tablaProbadores.push(filaFiltrada);
+        // Crear un objeto con los encabezados como claves
+        const filaObjeto = {};
+        encabezados.forEach((encabezado, idx) => {
+          filaObjeto[encabezado] = filaFiltrada[idx] || '';
+        });
+        // También guardar _rowData para compatibilidad
+        filaObjeto._rowData = filaFiltrada;
+        tablaProbadores.push(filaObjeto);
       }
     }
 

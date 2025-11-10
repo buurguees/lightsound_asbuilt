@@ -225,6 +225,29 @@ export const WelcomerEditor = ({ data, setData, imageInputRefs, welcomerExcelFil
             </tbody>
           </table>
         </div>
+        <div className="mt-2">
+          <Button onClick={() => {
+            setData((d) => {
+              const c = structuredClone(d);
+              if (!c.welcomer) c.welcomer = [];
+              c.welcomer.push({
+                etiquetaPlano: '',
+                hostname: '',
+                mac: '',
+                seccion: '',
+                numProbadores: '',
+                puertoPatch: '',
+                puertoSwitch: '',
+                contrato: '',
+                termicoPantalla: '',
+                termicoPC: ''
+              });
+              return c;
+            });
+          }}>
+            + Añadir línea
+          </Button>
+        </div>
       </div>
     </div>
   );

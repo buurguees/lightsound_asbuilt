@@ -198,6 +198,27 @@ export const TurnomaticEditor = ({ data, setData, imageInputRefs, turnomaticExce
             </tbody>
           </table>
         </div>
+        <div className="mt-2">
+          <Button onClick={() => {
+            setData((d) => {
+              const c = structuredClone(d);
+              if (!c.turnomatic) c.turnomatic = [];
+              c.turnomatic.push({
+                etiquetaPlano: '',
+                hostname: '',
+                mac: '',
+                puertoPatch: '',
+                puertoSwitch: '',
+                contrato: '',
+                termicoPantalla: '',
+                termicoPC: ''
+              });
+              return c;
+            });
+          }}>
+            + Añadir línea
+          </Button>
+        </div>
       </div>
     </div>
   );
