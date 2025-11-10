@@ -6,14 +6,16 @@ import { SeccionPlanostienda } from './components/PDF/SeccionPlanostienda';
 // Componentes UI
 import { Button } from './components/UI/Button';
 import { LoadingModal } from './components/UI/LoadingModal';
+import { Modal } from './components/UI/Modal';
 import { Card } from './components/UI/Card';
 // Componentes Page
 import { PageHeader } from './components/Page/PageHeader';
 import { PageFooter } from './components/Page/PageFooter';
 // Componentes Editor
+import { ConfiguracionEditor } from './components/Editor/ConfiguracionEditor';
 import { MetadatosEditor } from './components/Editor/MetadatosEditor';
 import { ObservacionesEditor } from './components/Editor/ObservacionesEditor';
-import { EquipamientoEditor } from './components/Editor/EquipamientoEditor';
+import { ElementosInstaladosEditor } from './components/Editor/ElementosInstaladosEditor';
 import { DesglosePantallasEditor } from './components/Editor/DesglosePantallasEditor';
 import { FotosPantallasEditor } from './components/Editor/FotosPantallasEditor';
 import { ProbadoresEditor } from './components/Editor/ProbadoresEditor';
@@ -70,13 +72,7 @@ const defaultReport = {
   planostienda: {
     pdfs: []
   },
-  equipamiento: [
-    { nombre: "Altavoces tienda", cantidad: "0", modelo: "", ubicacion: "", url: "", nota: "" },
-    { nombre: "Subwoofers", cantidad: "0", modelo: "", ubicacion: "", url: "", nota: "" },
-    { nombre: "Micrófonos", cantidad: "0", modelo: "", ubicacion: "", url: "", nota: "" },
-    { nombre: "Altavoces almacén", cantidad: "0", modelo: "", ubicacion: "", url: "", nota: "" },
-    { nombre: "Columnas acústicas", cantidad: "0", modelo: "", ubicacion: "", url: "", nota: "" },
-  ],
+  equipamiento: [],
   tipoInstalacionVideo: "",
   almacenExterno: "No",
   pantallas: [],
@@ -136,6 +132,9 @@ const defaultReport = {
       { url: "", fileName: undefined, fileSize: undefined, descripcion: "" }
     ]
   },
+  configuracion: {
+    elementos: [] // Plantilla de elementos instalados
+  },
 };
 
 // --- Estilos de impresión ---
@@ -147,30 +146,42 @@ const PrintStyles = () => (
         margin: 0; 
       }
       .no-print { display: none !important; }
+      html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: visible;
+      }
       .page { 
         page-break-after: always;
         page-break-inside: avoid;
         width: 297mm;
+        min-height: 210mm;
         height: 210mm;
+        max-height: 210mm;
         display: flex;
         flex-direction: column;
         padding: 12mm 15mm;
         box-sizing: border-box;
+        overflow: hidden;
       }
       .page:last-child { page-break-after: auto; }
       .page-header {
         flex-shrink: 0;
         margin-bottom: 8mm;
+        min-height: fit-content;
       }
       .page-content {
-        flex: 1;
+        flex: 1 1 auto;
         display: flex;
         flex-direction: column;
         overflow: hidden;
+        min-height: 0;
       }
       .page-footer {
         flex-shrink: 0;
-        margin-top: 4mm;
+        margin-top: auto;
         padding-top: 3mm;
         border-top: 1px solid #e5e5e5;
       }
@@ -186,7 +197,13 @@ const PrintStyles = () => (
       }
       img {
         max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
         page-break-inside: avoid;
+      }
+      table {
+        width: 100%;
+        table-layout: auto;
       }
     }
     
@@ -244,7 +261,6 @@ const Portada = ({ meta, equipamiento, tipoInstalacionVideo, almacenExterno }) =
           <div className="bg-neutral-900 px-2 py-1 inline-block rounded mb-1 flex items-center justify-center" style={{ height: '40px', maxWidth: '150px' }}>
             <img src="/logo.svg" alt="Logo" className="h-full w-auto object-contain" />
           </div>
-          <p className="uppercase tracking-widest text-xs text-neutral-500 mt-0.5">PV_P00</p>
         </div>
         
         {/* Cliente/Código arriba a la derecha */}
@@ -306,29 +322,32 @@ const Portada = ({ meta, equipamiento, tipoInstalacionVideo, almacenExterno }) =
         <div className="h-0.5 w-16 bg-neutral-800"></div>
       </div>
 
-      {/* Equipamiento instalado */}
-      <div className="mb-2">
-        <h2 className="text-base font-bold mb-2 text-neutral-800">EQUIPAMIENTO INSTALADO</h2>
-        <div className="grid grid-cols-2 gap-2">
-          {equipamiento.filter(item => item.cantidad && item.cantidad !== "0").map((item, i) => (
-            <div key={i} className="rounded-lg border border-neutral-300 bg-white px-3 py-2">
-              <div className="text-xs font-semibold text-neutral-600 mb-0.5">{item.nombre}</div>
-              <div className="text-xs font-medium">
-                {item.cantidad || "N/A"}
-                {item.modelo && ` - ${item.modelo}`}
-              </div>
-            </div>
-          ))}
-          <div className="rounded-lg border border-neutral-300 bg-white px-3 py-2">
-            <div className="text-xs font-semibold text-neutral-600 mb-0.5">Tipo de instalación</div>
-            <div className="text-xs font-medium">{tipoInstalacionVideo || "N/A"}</div>
-          </div>
-          <div className="rounded-lg border border-neutral-300 bg-white px-3 py-2">
-            <div className="text-xs font-semibold text-neutral-600 mb-0.5">Almacén externo</div>
-            <div className="text-xs font-medium">{almacenExterno || "No"}</div>
+      {/* Elementos Instalados - Listado completo */}
+      {equipamiento.filter(item => item.nombre && item.nombre.trim() !== "").length > 0 && (
+        <div className="mb-4">
+          <h2 className="text-base font-bold mb-2 text-neutral-800">ELEMENTOS INSTALADOS</h2>
+          <div className="overflow-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-neutral-100 text-[10px]">
+                  <th className="border px-2 py-1.5 text-left font-semibold">Tipo de equipo</th>
+                  <th className="border px-2 py-1.5 text-center font-semibold" style={{ width: '80px' }}>Cantidad</th>
+                  <th className="border px-2 py-1.5 text-left font-semibold">Nota</th>
+                </tr>
+              </thead>
+              <tbody>
+                {equipamiento.filter(item => item.nombre && item.nombre.trim() !== "").map((item, i) => (
+                  <tr key={i} className="odd:bg-white even:bg-neutral-50">
+                    <td className="border px-2 py-1.5 font-medium">{item.nombre}</td>
+                    <td className="border px-2 py-1.5 text-center">{item.cantidad || "-"}</td>
+                    <td className="border px-2 py-1.5 text-xs">{item.nota || "-"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Observaciones */}
       {meta.observaciones && (
@@ -577,86 +596,40 @@ const SeccionProbadores = ({ probadores }) => {
 };
 
 const SeccionAltavocesInstalacion = ({ equipamiento }) => {
-  // Filtrar equipamientos que tengan nombre y cantidad diferente de "0"
-  const todosEquipamientos = equipamiento.filter(a => 
-    a.nombre && a.cantidad && a.cantidad !== "0"
-  );
-  const grupos = [];
+  // Filtrar equipamientos que tengan nombre
+  const todosEquipamientos = equipamiento.filter(a => a.nombre && a.nombre.trim() !== "");
   
-  for (let i = 0; i < todosEquipamientos.length; i += 4) {
-    grupos.push(todosEquipamientos.slice(i, i + 4));
-  }
-  
-  if (grupos.length === 0) return null;
+  if (todosEquipamientos.length === 0) return null;
   
   return (
-    <>
-      {grupos.map((grupo, grupoIdx) => (
-        <section className={PAGE} key={grupoIdx}>
-          <div className="page-header">
-            <div className="border-b-2 border-neutral-800 pb-3">
-              <h2 className="text-xl font-bold text-neutral-800">EQUIPAMIENTO INSTALADO</h2>
-              <p className="text-sm text-neutral-600 mt-1">Página {grupoIdx + 1} de {grupos.length}</p>
-            </div>
-          </div>
-          
-          <div className="page-content">
-            <div className="grid grid-cols-2 gap-4 h-full">
-              {grupo.map((alt, i) => (
-                <div key={i} className="flex flex-col border-2 border-neutral-300 rounded-lg bg-white overflow-hidden">
-                  {/* Cabecera con tipo de equipo */}
-                  <div className="bg-neutral-800 text-white px-3 py-2">
-                    <p className="text-sm font-bold truncate">{alt.nombre}</p>
-                  </div>
-                  
-                  {/* Imagen del equipo */}
-                  <div className="flex items-center justify-center bg-neutral-50 p-3" style={{ height: '200px' }}>
-                    {alt.url ? (
-                      <img loading="lazy" src={alt.url} alt={alt.nombre} className="w-full h-full object-contain" />
-                    ) : (
-                      <div className="text-center">
-                        <div className="text-neutral-300 text-4xl mb-2">🔊</div>
-                        <span className="text-neutral-400 text-xs">(Sin imagen)</span>
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Información del equipo */}
-                  <div className="bg-white p-3 border-t border-neutral-300 space-y-2 min-h-[100px]">
-                    {alt.modelo && (
-                      <div>
-                        <p className="text-xs font-bold text-neutral-600 mb-1">MODELO</p>
-                        <p className="text-base font-medium text-neutral-900">{alt.modelo}</p>
-                      </div>
-                    )}
-                    {alt.cantidad && (
-                      <div>
-                        <p className="text-xs font-bold text-neutral-600 mb-1">CANTIDAD</p>
-                        <p className="text-base font-medium text-neutral-900">{alt.cantidad}</p>
-                      </div>
-                    )}
-                    {alt.ubicacion && (
-                      <div>
-                        <p className="text-xs font-bold text-neutral-600 mb-1">UBICACIÓN</p>
-                        <p className="text-sm text-neutral-800">{alt.ubicacion}</p>
-                      </div>
-                    )}
-                    {alt.nota && (
-                      <div className="pt-2 mt-2 border-t border-neutral-200">
-                        <p className="text-xs font-bold text-blue-700 mb-1">NOTA</p>
-                        <p className="text-xs text-blue-900">{alt.nota}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
+    <section className={PAGE}>
+      <PageHeader title="ELEMENTOS INSTALADOS" subtitle="Recuento de elementos instalados en la tienda" />
+      
+      <div className="page-content">
+        <div className="overflow-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="bg-neutral-100 text-[11px]">
+                <th className="border px-3 py-2 text-left font-semibold">Tipo de equipo</th>
+                <th className="border px-3 py-2 text-left font-semibold">Cantidad</th>
+                <th className="border px-3 py-2 text-left font-semibold">Nota</th>
+              </tr>
+            </thead>
+            <tbody>
+              {todosEquipamientos.map((equipo, i) => (
+                <tr key={i} className="odd:bg-white even:bg-neutral-50">
+                  <td className="border px-3 py-2 font-medium">{equipo.nombre}</td>
+                  <td className="border px-3 py-2">{equipo.cantidad || "-"}</td>
+                  <td className="border px-3 py-2">{equipo.nota || "-"}</td>
+                </tr>
               ))}
-            </div>
-          </div>
-          
-          <PageFooter />
-        </section>
-      ))}
-    </>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <PageFooter />
+    </section>
   );
 };
 
@@ -795,7 +768,7 @@ const Editor = ({
       <div className="grid grid-cols-1 gap-3 p-3">
         <MetadatosEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />
         <ObservacionesEditor data={data} setData={setData} />
-        <EquipamientoEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />
+        <ElementosInstaladosEditor data={data} setData={setData} />
         <DesglosePantallasEditor 
           data={data} 
           setData={setData} 
@@ -884,6 +857,7 @@ export default function App() {
   const [excelFilesFromFolder, setExcelFilesFromFolder] = useState([]);
   const [fotoFilesFromFolder, setFotoFilesFromFolder] = useState([]);
   const [fotosProcessedInfo, setFotosProcessedInfo] = useState(null);
+  const [showConfigModal, setShowConfigModal] = useState(false);
   const inputFolder = useRef(null);
   
 
@@ -1108,13 +1082,7 @@ export default function App() {
       planostienda: {
         pdfs: []
       },
-      equipamiento: [
-        { nombre: "Altavoces tienda", cantidad: "0", modelo: "", ubicacion: "", url: "", nota: "" },
-        { nombre: "Subwoofers", cantidad: "0", modelo: "", ubicacion: "", url: "", nota: "" },
-        { nombre: "Micrófonos", cantidad: "0", modelo: "", ubicacion: "", url: "", nota: "" },
-        { nombre: "Altavoces almacén", cantidad: "0", modelo: "", ubicacion: "", url: "", nota: "" },
-        { nombre: "Columnas acústicas", cantidad: "0", modelo: "", ubicacion: "", url: "", nota: "" },
-      ],
+      equipamiento: [],
       tipoInstalacionVideo: "",
       almacenExterno: "No",
       pantallas: [],
@@ -1174,13 +1142,16 @@ export default function App() {
           { url: "", fileName: undefined, fileSize: undefined, descripcion: "" }
         ]
       },
+      configuracion: {
+        elementos: []
+      },
     };
   };
 
   // Función para limpiar la plantilla y resetear al estado inicial
   const limpiarPlantilla = () => {
     const confirmar = window.confirm(
-      '¿Estás seguro de que quieres limpiar toda la plantilla?\n\nEsto eliminará TODOS los datos actuales:\n- Metadatos del informe\n- Observaciones\n- Pantallas y fotos\n- Equipamiento\n- Todos los bloques de texto\n\nLa aplicación será reseteada completamente al estado inicial vacío.\n\nEsta acción no se puede deshacer.'
+      '¿Estás seguro de que quieres limpiar toda la plantilla?\n\nEsto eliminará TODOS los datos actuales:\n- Metadatos del informe\n- Observaciones\n- Pantallas y fotos\n- Elementos Instalados\n- Todos los bloques de texto\n\nLa aplicación será reseteada completamente al estado inicial vacío.\n\nEsta acción no se puede deshacer.'
     );
     
     if (confirmar) {
@@ -1227,6 +1198,7 @@ export default function App() {
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-bold text-neutral-800">Generador de Informe As Built</h1>
             <div className="flex items-center gap-2">
+              <Button onClick={() => setShowConfigModal(true)}>⚙️ Configuración</Button>
               <Button onClick={() => inputFolder.current?.click()}>📁 Importar Carpeta</Button>
               <Button onClick={limpiarPlantilla} className="bg-red-500 hover:bg-red-600 text-white">🗑️ Limpiar Plantilla</Button>
               <Button onClick={() => window.print()}>Imprimir / Exportar PDF</Button>
@@ -1236,6 +1208,15 @@ export default function App() {
           </div>
         </div>
       </div>
+
+      {/* Modal de Configuración */}
+      <Modal 
+        isVisible={showConfigModal} 
+        onClose={() => setShowConfigModal(false)}
+        title="Configuración"
+      >
+        <ConfiguracionEditor data={data} setData={setData} />
+      </Modal>
 
       {/* Layout de dos columnas */}
       <div className="no-print flex-1 flex overflow-hidden" style={{ height: 'calc(100vh - 80px)' }}>

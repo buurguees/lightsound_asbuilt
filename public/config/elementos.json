@@ -1,0 +1,34 @@
+{
+  "elementos": [
+    {
+        "nombre": "Micrófono"
+    },
+    {
+      "nombre": "Pantalla LED"
+    },
+    {
+      "nombre": "Altavoces"
+    },
+    {
+      "nombre": "Subwoofer"
+    },
+    {
+      "nombre": "Torres Acústicas"
+    },
+    {
+      "nombre": "Yamaha"
+    },
+    {
+      "nombre": "Beyma"
+    },
+    {
+      "nombre": "Classic-59"
+    },
+    {
+        "nombre": "Almacén"
+    },
+    {
+        "nombre": "Office"
+    }
+  ]
+}
