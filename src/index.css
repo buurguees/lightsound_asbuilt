@@ -104,6 +104,29 @@
     page-break-inside: avoid;
     max-width: 100% !important;
   }
+  
+  /* Lista de Elementos Instalados con columnas múltiples y viñetas */
+  .lista-elementos-instalados {
+    list-style-type: disc;
+    list-style-position: outside;
+    padding-left: 1.5em;
+    margin: 0;
+    columns: 2;
+    column-gap: 2em;
+    column-fill: auto;
+  }
+  
+  .lista-elementos-instalados li {
+    break-inside: avoid;
+    margin-bottom: 0.4em;
+    padding-left: 0.3em;
+    line-height: 1.5;
+  }
+  
+  /* Si hay muchos elementos (más de 20), usar 3 columnas */
+  .lista-elementos-instalados:has(li:nth-child(21)) {
+    columns: 3;
+  }
 }
 
 /* Estilos generales para mejorar la presentación */

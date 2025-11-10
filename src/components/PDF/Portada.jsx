@@ -67,24 +67,13 @@ export const Portada = ({ meta, equipamiento, tipoInstalacionVideo, almacenExter
       {Object.keys(equipamiento || {}).filter(nombre => equipamiento[nombre] === true).length > 0 && (
         <div className="mb-4">
           <h2 className="text-base font-bold mb-2 text-neutral-800">ELEMENTOS INSTALADOS</h2>
-          <div className="overflow-auto">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="bg-neutral-100 text-[10px]">
-                  <th className="border px-2 py-1.5 text-left font-semibold">Tipo de equipo</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.keys(equipamiento)
-                  .filter(nombre => equipamiento[nombre] === true)
-                  .map((nombre, i) => (
-                    <tr key={i} className="odd:bg-white even:bg-neutral-50">
-                      <td className="border px-2 py-1.5 font-medium">{nombre}</td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
+          <ul className="lista-elementos-instalados">
+            {Object.keys(equipamiento)
+              .filter(nombre => equipamiento[nombre] === true)
+              .map((nombre, i) => (
+                <li key={i}>{nombre}</li>
+              ))}
+          </ul>
         </div>
       )}
     </div>
