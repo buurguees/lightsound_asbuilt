@@ -23,26 +23,26 @@ export const Portada = ({ meta, equipamiento, tipoInstalacionVideo, almacenExter
       {/* Columna izquierda: Metadatos */}
       <div className="portada-columna-izquierda">
         <div className="metadatos-container">
-          <div className="grid grid-cols-1 gap-3 text-xs">
+          <div className="grid grid-cols-1 gap-4">
             <div>
-              <p className="font-semibold text-neutral-500 text-[10px] mb-1">PROYECTO</p>
-              <p className="text-neutral-800 font-medium">{meta.proyecto}</p>
+              <h2 className="text-neutral-500 mb-1">PROYECTO</h2>
+              <h1 className="text-neutral-800">{meta.proyecto}</h1>
             </div>
             <div>
-              <p className="font-semibold text-neutral-500 text-[10px] mb-1">PROJECT MANAGER</p>
-              <p className="text-neutral-800 font-medium">{meta.pm}</p>
+              <h2 className="text-neutral-500 mb-1">PROJECT MANAGER</h2>
+              <h1 className="text-neutral-800">{meta.pm}</h1>
             </div>
             <div>
-              <p className="font-semibold text-neutral-500 text-[10px] mb-1">DIRECCIÓN</p>
-              <p className="text-neutral-800 font-medium">{meta.direccion}</p>
+              <h2 className="text-neutral-500 mb-1">DIRECCIÓN</h2>
+              <h1 className="text-neutral-800">{meta.direccion}</h1>
             </div>
             <div>
-              <p className="font-semibold text-neutral-500 text-[10px] mb-1">VERSIÓN PLANO</p>
-              <p className="text-neutral-800 font-medium">{meta.versionPlano}</p>
+              <h2 className="text-neutral-500 mb-1">VERSIÓN PLANO</h2>
+              <h1 className="text-neutral-800">{meta.versionPlano}</h1>
             </div>
             <div>
-              <p className="font-semibold text-neutral-500 text-[10px] mb-1">FECHA</p>
-              <p className="text-neutral-800 font-medium">{meta.fecha}</p>
+              <h2 className="text-neutral-500 mb-1">FECHA</h2>
+              <h1 className="text-neutral-800">{meta.fecha}</h1>
             </div>
           </div>
         </div>
