@@ -1,4 +1,3 @@
-import { Card } from '../UI/Card';
 import { useEffect } from 'react';
 import { loadConfigTab } from '../../utils/configUtils';
 
@@ -63,7 +62,8 @@ export const ElementosInstaladosEditor = ({ data, setData }) => {
   const elementosInstalados = Object.values(equipamiento).filter(Boolean).length;
 
   return (
-    <Card title="Elementos Instalados">
+    <div>
+      <h2 className="text-lg font-semibold text-neutral-800 mb-4">Elementos Instalados</h2>
       <div className="flex flex-col" style={{ maxHeight: '600px' }}>
         {/* Encabezado con contador */}
         <div className="flex items-center justify-between px-2 py-1 border-b border-neutral-200 bg-neutral-50 flex-shrink-0 mb-0">
@@ -107,7 +107,7 @@ export const ElementosInstaladosEditor = ({ data, setData }) => {
           )}
         </div>
       </div>
-    </Card>
+    </div>
   );
 };
 

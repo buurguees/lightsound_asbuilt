@@ -1,5 +1,4 @@
 import React, { useRef, useEffect } from 'react';
-import { Card } from '../UI/Card';
 import { Input } from '../UI/Input';
 import { Button } from '../UI/Button';
 import { processExcelPantallas, removeDuplicatesBySX } from '../../utils/excelUtils';
@@ -97,7 +96,8 @@ export const DesglosePantallasEditor = ({ data, setData, imageInputRefs, excelFi
   }, [excelFilesFromFolder, setData]);
 
   return (
-    <Card title="Desglose de pantallas">
+    <div>
+      <h2 className="text-lg font-semibold text-neutral-800 mb-4">Desglose de pantallas</h2>
       <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
         <div className="flex gap-2 items-center">
           <div className="flex-1">
@@ -295,7 +295,7 @@ export const DesglosePantallasEditor = ({ data, setData, imageInputRefs, excelFi
           </table>
         </div>
       </div>
-    </Card>
+    </div>
   );
 };
 

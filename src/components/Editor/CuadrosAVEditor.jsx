@@ -1,4 +1,3 @@
-import { Card } from '../UI/Card';
 import { Field } from '../UI/Field';
 import { Input } from '../UI/Input';
 import { Textarea } from '../UI/Textarea';
@@ -7,7 +6,8 @@ import { compressImage } from '../../utils/imageUtils';
 
 export const CuadrosAVEditor = ({ data, setData, imageInputRefs }) => {
   return (
-    <Card title="Cuadros (Eléctrico / AV / Doc)">
+    <div>
+      <h2 className="text-lg font-semibold text-neutral-800 mb-4">Cuadros (Eléctrico / AV / Doc)</h2>
       <div className="grid grid-cols-1 gap-3">
         {data.cuadrosAV.items.map((c, i) => (
           <div key={i} className="p-4 bg-neutral-50 rounded-lg border">
@@ -149,7 +149,7 @@ export const CuadrosAVEditor = ({ data, setData, imageInputRefs }) => {
           </Button>
         </div>
       </div>
-    </Card>
+    </div>
   );
 };
 

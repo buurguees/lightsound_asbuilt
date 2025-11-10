@@ -1,4 +1,3 @@
-import { Card } from '../UI/Card';
 import { Field } from '../UI/Field';
 import { Textarea } from '../UI/Textarea';
 import { Input } from '../UI/Input';
@@ -8,7 +7,8 @@ import { updateData } from '../../utils/dataUtils';
 
 export const UnifilarVideoEditor = ({ data, setData, imageInputRefs }) => {
   return (
-    <Card title="Unifilar vídeo">
+    <div>
+      <h2 className="text-lg font-semibold text-neutral-800 mb-4">Unifilar vídeo</h2>
       <Field label="Detalle">
         <Textarea rows={4} value={data.unifilarVideo.detalle} onChange={(e) => updateData(setData, "unifilarVideo.detalle", e.target.value)} />
       </Field>
@@ -83,7 +83,7 @@ export const UnifilarVideoEditor = ({ data, setData, imageInputRefs }) => {
           </div>
         ))}
       </div>
-    </Card>
+    </div>
   );
 };
 

@@ -1,5 +1,4 @@
 import React, { useEffect, useRef } from 'react';
-import { Card } from '../UI/Card';
 import { Field } from '../UI/Field';
 import { Input } from '../UI/Input';
 import { Textarea } from '../UI/Textarea';
@@ -300,8 +299,12 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
   };
 
   return (
-    <Card title="Fotos de pantallas" right={<Button onClick={addFoto}>Añadir foto</Button>}>
+    <div>
+      <h2 className="text-lg font-semibold text-neutral-800 mb-4">Fotos de pantallas</h2>
       <div className="grid grid-cols-1 gap-4">
+        <div className="mb-2">
+          <Button onClick={addFoto}>Añadir foto</Button>
+        </div>
         {data.fotos.map((f, i) => (
           <div key={i} className="rounded-lg border-2 border-neutral-300 p-4 bg-neutral-50">
             <div className="flex justify-between items-center mb-3">
@@ -486,7 +489,7 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
           </div>
         ))}
       </div>
-    </Card>
+    </div>
   );
 };
 

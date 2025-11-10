@@ -1,10 +1,10 @@
-import { Card } from '../UI/Card';
 import { Button } from '../UI/Button';
 import { compressImage } from '../../utils/imageUtils';
 
 export const ProbadoresEditor = ({ data, setData, imageInputRefs }) => {
   return (
-    <Card title="Probadores">
+    <div>
+      <h2 className="text-lg font-semibold text-neutral-800 mb-4">Probadores</h2>
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <input
@@ -168,7 +168,7 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs }) => {
           )}
         </div>
       </div>
-    </Card>
+    </div>
   );
 };
 

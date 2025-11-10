@@ -1,5 +1,4 @@
 import { useRef } from 'react';
-import { Card } from '../UI/Card';
 import { Field } from '../UI/Field';
 import { Input } from '../UI/Input';
 import { Button } from '../UI/Button';
@@ -18,7 +17,8 @@ const upd = (setData, path, value) => {
 
 export const MetadatosEditor = ({ data, setData, imageInputRefs }) => {
   return (
-    <Card title="Metadatos del informe">
+    <div>
+      <h2 className="text-lg font-semibold text-neutral-800 mb-4">Metadatos del informe</h2>
       <div className="grid grid-cols-2 gap-3">
         <Field label="Título">
           <Input value="Informe Fin de Obra" disabled className="bg-neutral-100 cursor-not-allowed" />
@@ -104,7 +104,7 @@ export const MetadatosEditor = ({ data, setData, imageInputRefs }) => {
           )}
         </Field>
       </div>
-    </Card>
+    </div>
   );
 };
 

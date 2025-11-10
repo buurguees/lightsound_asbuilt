@@ -1,13 +1,12 @@
 ﻿import React, { useRef, useState, useEffect } from "react";
 import * as XLSX from 'xlsx';
 // Componentes PDF
-import { PDFUploader } from './components/PDF/PDFUploader';
 import { SeccionPlanostienda } from './components/PDF/SeccionPlanostienda';
 // Componentes UI
 import { Button } from './components/UI/Button';
 import { LoadingModal } from './components/UI/LoadingModal';
 import { Modal } from './components/UI/Modal';
-import { Card } from './components/UI/Card';
+import { Sidebar } from './components/UI/Sidebar';
 // Componentes Page
 import { PageHeader } from './components/Page/PageHeader';
 import { PageFooter } from './components/Page/PageFooter';
@@ -22,6 +21,7 @@ import { RackVideoEditor } from './components/Editor/RackVideoEditor';
 import { RackAudioEditor } from './components/Editor/RackAudioEditor';
 import { CuadrosAVEditor } from './components/Editor/CuadrosAVEditor';
 import { UnifilarVideoEditor } from './components/Editor/UnifilarVideoEditor';
+import { PlanosTiendaEditor } from './components/Editor/PlanosTiendaEditor';
 // Utils
 import { PAGE } from './utils/constants';
 import { fileToBase64 } from './utils/pdfUtils';
@@ -738,10 +738,11 @@ const SeccionCuadros = ({ cuadros }) => (
   </>
 );
 
-// --- Editor ---
+// --- Editor con módulo activo ---
 const Editor = ({ 
   data, 
   setData, 
+  activeModule,
   onPageRendered, 
   pdfPagesRendering, 
   setPdfPagesRendering,
@@ -755,32 +756,44 @@ const Editor = ({
 }) => {
   const imageInputRefs = useRef({});
 
-  return (
-    <>
-      <LoadingModal isVisible={!!currentLoadingPDF} fileName={currentLoadingPDF} />
-      <div className="grid grid-cols-1 gap-3 p-3">
-        <MetadatosEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />
-        <ElementosInstaladosEditor data={data} setData={setData} />
-        <DesglosePantallasEditor 
-          data={data} 
-          setData={setData} 
-          imageInputRefs={imageInputRefs}
-          excelFilesFromFolder={excelFilesFromFolder}
-        />
-        <FotosPantallasEditor 
-          data={data} 
-          setData={setData} 
-          imageInputRefs={imageInputRefs}
-          fotoFilesFromFolder={fotoFilesFromFolder}
-          onFotosProcessed={onFotosProcessed}
-        />
-        <ProbadoresEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />
-        <RackVideoEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />
-        <RackAudioEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />
-        <CuadrosAVEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />
-        <UnifilarVideoEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />
-        <Card title="Planos de tienda">
-          <PDFUploader
+  const renderActiveModule = () => {
+    switch (activeModule) {
+      case 'metadatos':
+        return <MetadatosEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />;
+      case 'elementos':
+        return <ElementosInstaladosEditor data={data} setData={setData} />;
+      case 'desglose':
+        return (
+          <DesglosePantallasEditor 
+            data={data} 
+            setData={setData} 
+            imageInputRefs={imageInputRefs}
+            excelFilesFromFolder={excelFilesFromFolder}
+          />
+        );
+      case 'fotos':
+        return (
+          <FotosPantallasEditor 
+            data={data} 
+            setData={setData} 
+            imageInputRefs={imageInputRefs}
+            fotoFilesFromFolder={fotoFilesFromFolder}
+            onFotosProcessed={onFotosProcessed}
+          />
+        );
+      case 'probadores':
+        return <ProbadoresEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />;
+      case 'rackVideo':
+        return <RackVideoEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />;
+      case 'rackAudio':
+        return <RackAudioEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />;
+      case 'cuadrosAV':
+        return <CuadrosAVEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />;
+      case 'unifilar':
+        return <UnifilarVideoEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />;
+      case 'planos':
+        return (
+          <PlanosTiendaEditor
             data={data}
             setData={setData}
             imageInputRefs={imageInputRefs}
@@ -789,7 +802,17 @@ const Editor = ({
             setCurrentLoadingPDF={setCurrentLoadingPDF}
             setPdfPagesRendering={setPdfPagesRendering}
           />
-        </Card>
+        );
+      default:
+        return <MetadatosEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />;
+    }
+  };
+
+  return (
+    <>
+      <LoadingModal isVisible={!!currentLoadingPDF} fileName={currentLoadingPDF} />
+      <div className="p-4">
+        {renderActiveModule()}
       </div>
     </>
   );
@@ -850,6 +873,7 @@ export default function App() {
   const [fotoFilesFromFolder, setFotoFilesFromFolder] = useState([]);
   const [fotosProcessedInfo, setFotosProcessedInfo] = useState(null);
   const [showConfigModal, setShowConfigModal] = useState(false);
+  const [activeModule, setActiveModule] = useState('metadatos'); // Módulo activo en el sidebar
   const inputFolder = useRef(null);
   
   // Convertir fecha al formato DD-MM-AAAA si está en otro formato
@@ -1216,29 +1240,31 @@ export default function App() {
         <ConfiguracionEditor data={data} setData={setData} />
       </Modal>
 
-      {/* Layout de dos columnas */}
+      {/* Layout de tres columnas: Sidebar | Editor | PDF */}
       <div className="no-print flex-1 flex overflow-hidden" style={{ height: 'calc(100vh - 80px)' }}>
-        {/* Columna izquierda: Formulario */}
-        <div className="w-1/2 border-r border-neutral-300 bg-white overflow-y-auto" style={{ maxHeight: 'calc(100vh - 80px)' }}>
-          <div className="p-4">
-            <Editor 
-              data={data} 
-              setData={setData} 
-              onPageRendered={handlePageRendered} 
-              pdfPagesRendering={pdfPagesRendering} 
-              setPdfPagesRendering={setPdfPagesRendering}
-              loadingPDFs={loadingPDFs}
-              setLoadingPDFs={setLoadingPDFs}
-              currentLoadingPDF={currentLoadingPDF}
-              setCurrentLoadingPDF={setCurrentLoadingPDF}
-              excelFilesFromFolder={excelFilesFromFolder}
-              fotoFilesFromFolder={fotoFilesFromFolder}
-              onFotosProcessed={setFotosProcessedInfo}
-            />
-          </div>
+        {/* Sidebar izquierdo: Módulos */}
+        <Sidebar activeModule={activeModule} setActiveModule={setActiveModule} />
+
+        {/* Columna central: Editor del módulo activo */}
+        <div className="flex-1 border-r border-neutral-300 bg-white overflow-y-auto" style={{ maxHeight: 'calc(100vh - 80px)' }}>
+          <Editor 
+            data={data} 
+            setData={setData}
+            activeModule={activeModule}
+            onPageRendered={handlePageRendered} 
+            pdfPagesRendering={pdfPagesRendering} 
+            setPdfPagesRendering={setPdfPagesRendering}
+            loadingPDFs={loadingPDFs}
+            setLoadingPDFs={setLoadingPDFs}
+            currentLoadingPDF={currentLoadingPDF}
+            setCurrentLoadingPDF={setCurrentLoadingPDF}
+            excelFilesFromFolder={excelFilesFromFolder}
+            fotoFilesFromFolder={fotoFilesFromFolder}
+            onFotosProcessed={setFotosProcessedInfo}
+          />
         </div>
 
-        {/* Columna derecha: Vista Previa */}
+        {/* Columna derecha: Vista Previa PDF */}
         <div className="w-1/2 bg-neutral-50 flex flex-col overflow-hidden" style={{ maxHeight: 'calc(100vh - 80px)' }}>
           <div className="flex-shrink-0 bg-neutral-100 border-b border-neutral-300 px-4 py-3 shadow-sm">
             <h2 className="text-lg font-bold text-neutral-700">Vista Previa del Informe</h2>
