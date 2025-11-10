@@ -1,111 +1,109 @@
 import { Card } from '../UI/Card';
-import { Button } from '../UI/Button';
+import { useEffect } from 'react';
+import { loadConfigTab } from '../../utils/configUtils';
 
 export const ElementosInstaladosEditor = ({ data, setData }) => {
   const elementosConfig = data.configuracion?.elementos || [];
-  const equipamiento = data.equipamiento || [];
+  // equipamiento ahora es un objeto: { "nombreElemento": true/false }
+  const equipamiento = data.equipamiento || {};
 
-  const agregarElemento = () => {
+  // Cargar configuración de elementos al montar el componente
+  useEffect(() => {
+    const cargarConfiguracion = async () => {
+      try {
+        const savedConfig = await loadConfigTab('elementos');
+        if (savedConfig && savedConfig.elementos) {
+          setData((d) => {
+            const c = structuredClone(d);
+            if (!c.configuracion) c.configuracion = {};
+            c.configuracion.elementos = savedConfig.elementos;
+            return c;
+          });
+        }
+      } catch (error) {
+        console.error('Error cargando configuración de elementos:', error);
+      }
+    };
+    cargarConfiguracion();
+  }, [setData]);
+
+  // Inicializar equipamiento como objeto vacío si no existe o si es un array (migración)
+  useEffect(() => {
+    if (!data.equipamiento || Array.isArray(data.equipamiento)) {
+      setData((d) => {
+        const c = structuredClone(d);
+        // Si es un array, convertir a objeto
+        if (Array.isArray(d.equipamiento)) {
+          const nuevoEquipamiento = {};
+          d.equipamiento.forEach(item => {
+            if (item.nombre && item.nombre.trim() !== "") {
+              nuevoEquipamiento[item.nombre] = true;
+            }
+          });
+          c.equipamiento = nuevoEquipamiento;
+        } else {
+          c.equipamiento = {};
+        }
+        return c;
+      });
+    }
+  }, [data.equipamiento, setData]);
+
+  const toggleElemento = (nombreElemento) => {
     setData((d) => {
       const c = structuredClone(d);
-      if (!c.equipamiento) c.equipamiento = [];
-      c.equipamiento.push({ nombre: "", nota: "" });
+      if (!c.equipamiento) c.equipamiento = {};
+      // Toggle: si está marcado, desmarcarlo; si no, marcarlo
+      c.equipamiento[nombreElemento] = !c.equipamiento[nombreElemento];
       return c;
     });
   };
 
-  const actualizarElemento = (index, campo, valor) => {
-    setData((d) => {
-      const c = structuredClone(d);
-      c.equipamiento[index][campo] = valor;
-      return c;
-    });
-  };
-
-  const eliminarElemento = (index) => {
-    setData((d) => {
-      const c = structuredClone(d);
-      c.equipamiento.splice(index, 1);
-      return c;
-    });
-  };
+  // Contar elementos instalados (marcados)
+  const elementosInstalados = Object.values(equipamiento).filter(Boolean).length;
 
   return (
     <Card title="Elementos Instalados">
       <div className="flex flex-col" style={{ maxHeight: '600px' }}>
-        {/* Encabezado fijo con botón */}
-        <div className="flex items-center justify-between px-2 py-1.5 border-b border-neutral-200 bg-neutral-50 flex-shrink-0 mb-0">
-          <button
-            onClick={agregarElemento}
-            className="px-2 py-1 text-xs bg-blue-500 hover:bg-blue-600 text-white rounded border-0"
-          >
-            + Añadir elemento
-          </button>
+        {/* Encabezado con contador */}
+        <div className="flex items-center justify-between px-2 py-1 border-b border-neutral-200 bg-neutral-50 flex-shrink-0 mb-0">
+          <span className="text-xs text-neutral-600 font-medium">
+            Marca los elementos que están instalados
+          </span>
           <span className="text-xs text-neutral-500">
-            {equipamiento.length} elemento{equipamiento.length !== 1 ? 's' : ''}
+            {elementosInstalados} de {elementosConfig.length} seleccionado{elementosInstalados !== 1 ? 's' : ''}
           </span>
         </div>
 
-        {/* Tabla compacta estilo Excel - Scrollable */}
+        {/* Lista de checkboxes - Scrollable */}
         <div className="flex-1 overflow-auto">
-          {equipamiento.length === 0 ? (
+          {elementosConfig.length === 0 ? (
             <div className="text-center py-4 text-neutral-400 text-xs">
-              No hay elementos instalados. Haz clic en "Añadir elemento" para comenzar.
+              No hay elementos configurados. Configura los elementos en el menú de configuración.
             </div>
           ) : (
-            <table className="w-full text-xs border-collapse">
-              <thead className="sticky top-0 bg-neutral-100 z-10">
-                <tr>
-                  <th className="border border-neutral-300 px-2 py-1 text-left font-semibold bg-neutral-100" style={{ width: '40px' }}>#</th>
-                  <th className="border border-neutral-300 px-2 py-1 text-left font-semibold bg-neutral-100">Tipo de equipo</th>
-                  <th className="border border-neutral-300 px-2 py-1 text-left font-semibold bg-neutral-100">Nota</th>
-                  <th className="border border-neutral-300 px-1 py-1 text-center font-semibold bg-neutral-100" style={{ width: '60px' }}>Acción</th>
-                </tr>
-              </thead>
-              <tbody>
-                {equipamiento.map((equipo, i) => (
-                  <tr key={i} className="hover:bg-neutral-50">
-                    <td className="border border-neutral-300 px-2 py-0.5 text-neutral-500 text-center">
-                      {i + 1}
-                    </td>
-                    <td className="border border-neutral-300 px-2 py-0.5">
-                      <select
-                        value={equipo.nombre}
-                        onChange={(e) => actualizarElemento(i, 'nombre', e.target.value)}
-                        className="w-full border-0 bg-transparent px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-blue-300 text-xs"
-                        style={{ minHeight: '24px' }}
-                      >
-                        <option value="">Seleccionar tipo...</option>
-                        {elementosConfig.map((elem, idx) => (
-                          <option key={idx} value={elem.nombre}>
-                            {elem.nombre}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="border border-neutral-300 px-2 py-0.5">
-                      <input
-                        type="text"
-                        value={equipo.nota}
-                        onChange={(e) => actualizarElemento(i, 'nota', e.target.value)}
-                        placeholder="Nota opcional..."
-                        className="w-full border-0 bg-transparent px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-blue-300 text-xs"
-                        style={{ minHeight: '24px' }}
-                      />
-                    </td>
-                    <td className="border border-neutral-300 px-1 py-0.5 text-center">
-                      <button
-                        onClick={() => eliminarElemento(i)}
-                        className="px-1.5 py-0.5 text-xs bg-red-500 hover:bg-red-600 text-white rounded"
-                        title="Eliminar"
-                      >
-                        ×
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="p-1">
+              {elementosConfig.map((elemento, i) => {
+                const nombre = elemento.nombre;
+                const estaInstalado = equipamiento[nombre] || false;
+                return (
+                  <label
+                    key={i}
+                    className="flex items-center px-2 py-1 hover:bg-neutral-50 rounded cursor-pointer border border-transparent hover:border-neutral-200 transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={estaInstalado}
+                      onChange={() => toggleElemento(nombre)}
+                      className="w-3.5 h-3.5 text-blue-600 border-neutral-300 rounded focus:ring-blue-500 focus:ring-1 cursor-pointer"
+                    />
+                    <span className={`ml-2 text-xs ${estaInstalado ? 'text-neutral-800 font-medium' : 'text-neutral-600'}`}>
+                      {nombre}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
           )}
         </div>
       </div>

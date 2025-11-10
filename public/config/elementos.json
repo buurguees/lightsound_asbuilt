@@ -7,7 +7,7 @@
       "nombre": "Pantalla LED"
     },
     {
-      "nombre": "Altavoces"
+      "nombre": "NA-402"
     },
     {
       "nombre": "Subwoofer"
@@ -28,7 +28,19 @@
         "nombre": "Almacén"
     },
     {
+        "nombre": "Almacén Externo"
+    },
+    {
         "nombre": "Office"
+    },
+    {
+        "nombre": "Turnomatic"
+    },
+    {
+        "nombre": "Welcomer"
+    },
+    {
+        "nombre": "Sensores de Probadores"
     }
   ]
 }

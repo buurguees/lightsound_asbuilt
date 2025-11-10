@@ -14,7 +14,6 @@ import { PageFooter } from './components/Page/PageFooter';
 // Componentes Editor
 import { ConfiguracionEditor } from './components/Editor/ConfiguracionEditor';
 import { MetadatosEditor } from './components/Editor/MetadatosEditor';
-import { ObservacionesEditor } from './components/Editor/ObservacionesEditor';
 import { ElementosInstaladosEditor } from './components/Editor/ElementosInstaladosEditor';
 import { DesglosePantallasEditor } from './components/Editor/DesglosePantallasEditor';
 import { FotosPantallasEditor } from './components/Editor/FotosPantallasEditor';
@@ -85,7 +84,6 @@ const defaultReport = {
   secciones: {
     portada: true,
     equipamiento: true,
-    observaciones: true,
     desglosePantallas: true,
     fotosPantallas: true,
     probadores: false,
@@ -97,11 +95,10 @@ const defaultReport = {
     planostienda: true,
     medicionPartidas: false,
   },
-  observaciones: "",
   planostienda: {
     pdfs: []
   },
-  equipamiento: [],
+  equipamiento: {}, // Objeto: { "nombreElemento": true/false }
   tipoInstalacionVideo: "",
   almacenExterno: "No",
   pantallas: [],
@@ -114,14 +111,12 @@ const defaultReport = {
   },
   rackVideo: {
     descripcion: "",
-    observaciones: "",
     fotos: [
       { url: "", fileName: undefined, fileSize: undefined, descripcion: "" }
     ]
   },
   rackAudio: { 
     descripcion: "", 
-    observaciones: "",
     fotos: [
       { url: "", fileName: undefined, fileSize: undefined, descripcion: "" }
     ]
@@ -131,7 +126,6 @@ const defaultReport = {
       { 
         titulo: "CUADRO ELÉCTRICO", 
         detalle: "",
-        observaciones: "",
         fotos: [
           { url: "", fileName: undefined, fileSize: undefined, descripcion: "" }
         ]
@@ -139,7 +133,6 @@ const defaultReport = {
       { 
         titulo: "AV BOX", 
         detalle: "",
-        observaciones: "",
         fotos: [
           { url: "", fileName: undefined, fileSize: undefined, descripcion: "" }
         ]
@@ -147,7 +140,6 @@ const defaultReport = {
       { 
         titulo: "DOC BOX", 
         detalle: "",
-        observaciones: "",
         fotos: [
           { url: "", fileName: undefined, fileSize: undefined, descripcion: "" }
         ]
@@ -156,7 +148,6 @@ const defaultReport = {
   },
   unifilarVideo: { 
     detalle: "",
-    observaciones: "",
     fotos: [
       { url: "", fileName: undefined, fileSize: undefined, descripcion: "" }
     ]
@@ -352,7 +343,7 @@ const Portada = ({ meta, equipamiento, tipoInstalacionVideo, almacenExterno }) =
       </div>
 
       {/* Elementos Instalados - Listado completo */}
-      {equipamiento.filter(item => item.nombre && item.nombre.trim() !== "").length > 0 && (
+      {Object.keys(equipamiento).filter(nombre => equipamiento[nombre] === true).length > 0 && (
         <div className="mb-4">
           <h2 className="text-base font-bold mb-2 text-neutral-800">ELEMENTOS INSTALADOS</h2>
           <div className="overflow-auto">
@@ -360,31 +351,22 @@ const Portada = ({ meta, equipamiento, tipoInstalacionVideo, almacenExterno }) =
               <thead>
                 <tr className="bg-neutral-100 text-[10px]">
                   <th className="border px-2 py-1.5 text-left font-semibold">Tipo de equipo</th>
-                  <th className="border px-2 py-1.5 text-left font-semibold">Nota</th>
                 </tr>
               </thead>
               <tbody>
-                {equipamiento.filter(item => item.nombre && item.nombre.trim() !== "").map((item, i) => (
-                  <tr key={i} className="odd:bg-white even:bg-neutral-50">
-                    <td className="border px-2 py-1.5 font-medium">{item.nombre}</td>
-                    <td className="border px-2 py-1.5 text-xs">{item.nota || "-"}</td>
-                  </tr>
-                ))}
+                {Object.keys(equipamiento)
+                  .filter(nombre => equipamiento[nombre] === true)
+                  .map((nombre, i) => (
+                    <tr key={i} className="odd:bg-white even:bg-neutral-50">
+                      <td className="border px-2 py-1.5 font-medium">{nombre}</td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
-        </div>
+          </div>
       )}
 
-      {/* Observaciones */}
-      {meta.observaciones && (
-        <div className="flex-1 min-h-0">
-          <h2 className="text-xs font-bold mb-1 text-neutral-800">OBSERVACIONES:</h2>
-          <div className="whitespace-pre-wrap rounded-lg border border-neutral-300 bg-neutral-50 p-3 text-xs h-full min-h-[40px] overflow-hidden">
-            {meta.observaciones}
-          </div>
-        </div>
-      )}
     </div>
 
     {/* Footer */}
@@ -623,38 +605,38 @@ const SeccionProbadores = ({ probadores }) => {
 };
 
 const SeccionAltavocesInstalacion = ({ equipamiento }) => {
-  // Filtrar equipamientos que tengan nombre
-  const todosEquipamientos = equipamiento.filter(a => a.nombre && a.nombre.trim() !== "");
+  // equipamiento ahora es un objeto: { "nombreElemento": true/false }
+  // Filtrar solo los elementos marcados como instalados (true)
+  const elementosInstalados = Object.keys(equipamiento || {})
+    .filter(nombre => equipamiento[nombre] === true);
   
-  if (todosEquipamientos.length === 0) return null;
+  if (elementosInstalados.length === 0) return null;
   
   return (
     <section className={PAGE}>
       <PageHeader title="ELEMENTOS INSTALADOS" subtitle="Recuento de elementos instalados en la tienda" />
-      
-      <div className="page-content">
+          
+          <div className="page-content">
         <div className="overflow-auto">
           <table className="w-full text-xs">
             <thead>
               <tr className="bg-neutral-100 text-[11px]">
                 <th className="border px-3 py-2 text-left font-semibold">Tipo de equipo</th>
-                <th className="border px-3 py-2 text-left font-semibold">Nota</th>
               </tr>
             </thead>
             <tbody>
-              {todosEquipamientos.map((equipo, i) => (
+              {elementosInstalados.map((nombre, i) => (
                 <tr key={i} className="odd:bg-white even:bg-neutral-50">
-                  <td className="border px-3 py-2 font-medium">{equipo.nombre}</td>
-                  <td className="border px-3 py-2">{equipo.nota || "-"}</td>
+                  <td className="border px-3 py-2 font-medium">{nombre}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-        </div>
-      </div>
-      
-      <PageFooter />
-    </section>
+            </div>
+          </div>
+          
+          <PageFooter />
+        </section>
   );
 };
 
@@ -708,13 +690,6 @@ const SeccionRack = ({ titulo, data }) => (
         </div>
       )}
 
-      {/* Observaciones */}
-      {data.observaciones && (
-        <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg flex-shrink-0">
-          <p className="text-xs font-semibold text-blue-800 mb-1">OBSERVACIONES:</p>
-          <p className="text-sm text-blue-900 whitespace-pre-wrap">{data.observaciones}</p>
-        </div>
-      )}
     </div>
     
     <PageFooter />
@@ -755,13 +730,6 @@ const SeccionCuadros = ({ cuadros }) => (
             </div>
           )}
 
-          {/* Observaciones */}
-          {c.observaciones && (
-            <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg flex-shrink-0">
-              <p className="text-xs font-semibold text-green-800 mb-1">OBSERVACIONES:</p>
-              <p className="text-sm text-green-900 whitespace-pre-wrap">{c.observaciones}</p>
-            </div>
-          )}
         </div>
         
         <PageFooter />
@@ -771,11 +739,11 @@ const SeccionCuadros = ({ cuadros }) => (
 );
 
 // --- Editor ---
-const Editor = ({
-  data,
-  setData,
-  onPageRendered,
-  pdfPagesRendering,
+const Editor = ({ 
+  data, 
+  setData, 
+  onPageRendered, 
+  pdfPagesRendering, 
   setPdfPagesRendering,
   loadingPDFs,
   setLoadingPDFs,
@@ -792,7 +760,6 @@ const Editor = ({
       <LoadingModal isVisible={!!currentLoadingPDF} fileName={currentLoadingPDF} />
       <div className="grid grid-cols-1 gap-3 p-3">
         <MetadatosEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />
-        <ObservacionesEditor data={data} setData={setData} />
         <ElementosInstaladosEditor data={data} setData={setData} />
         <DesglosePantallasEditor 
           data={data} 
@@ -835,7 +802,7 @@ const Printable = React.memo(({ data, onPageRendered }) => (
   <div>
     {data.secciones.portada && (
       <Portada 
-        meta={{ ...data.meta, observaciones: data.observaciones }} 
+        meta={data.meta} 
         equipamiento={data.equipamiento}
         tipoInstalacionVideo={data.tipoInstalacionVideo}
         almacenExterno={data.almacenExterno}
@@ -884,7 +851,7 @@ export default function App() {
   const [fotosProcessedInfo, setFotosProcessedInfo] = useState(null);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const inputFolder = useRef(null);
-
+  
   // Convertir fecha al formato DD-MM-AAAA si está en otro formato
   useEffect(() => {
     if (data.meta.fecha && !/^\d{2}-\d{2}-\d{4}$/.test(data.meta.fecha)) {
@@ -1058,7 +1025,7 @@ export default function App() {
           c.meta.codigo = codigoExtraido;
         }
       }
-      
+
       console.log('Estado actualizado' + (fotoEntradaProcesada ? ' con foto de entrada' : ''));
       return c;
     });
@@ -1105,7 +1072,6 @@ export default function App() {
       secciones: {
         portada: true,
         equipamiento: true,
-        observaciones: true,
         desglosePantallas: true,
         fotosPantallas: true,
         probadores: false,
@@ -1117,11 +1083,10 @@ export default function App() {
         planostienda: true,
         medicionPartidas: false,
       },
-      observaciones: "",
       planostienda: {
         pdfs: []
       },
-      equipamiento: [],
+      equipamiento: {}, // Objeto: { "nombreElemento": true/false }
       tipoInstalacionVideo: "",
       almacenExterno: "No",
       pantallas: [],
@@ -1134,14 +1099,12 @@ export default function App() {
       },
       rackVideo: {
         descripcion: "",
-        observaciones: "",
         fotos: [
           { url: "", fileName: undefined, fileSize: undefined, descripcion: "" }
         ]
       },
       rackAudio: { 
         descripcion: "", 
-        observaciones: "",
         fotos: [
           { url: "", fileName: undefined, fileSize: undefined, descripcion: "" }
         ]
@@ -1151,7 +1114,6 @@ export default function App() {
           { 
             titulo: "CUADRO ELÉCTRICO", 
             detalle: "",
-            observaciones: "",
             fotos: [
               { url: "", fileName: undefined, fileSize: undefined, descripcion: "" }
             ]
@@ -1159,7 +1121,6 @@ export default function App() {
           { 
             titulo: "AV BOX", 
             detalle: "",
-            observaciones: "",
             fotos: [
               { url: "", fileName: undefined, fileSize: undefined, descripcion: "" }
             ]
@@ -1167,7 +1128,6 @@ export default function App() {
           { 
             titulo: "DOC BOX", 
             detalle: "",
-            observaciones: "",
             fotos: [
               { url: "", fileName: undefined, fileSize: undefined, descripcion: "" }
             ]
@@ -1176,7 +1136,6 @@ export default function App() {
       },
       unifilarVideo: { 
         detalle: "",
-        observaciones: "",
         fotos: [
           { url: "", fileName: undefined, fileSize: undefined, descripcion: "" }
         ]
@@ -1190,7 +1149,7 @@ export default function App() {
   // Función para limpiar la plantilla y resetear al estado inicial
   const limpiarPlantilla = () => {
     const confirmar = window.confirm(
-      '¿Estás seguro de que quieres limpiar toda la plantilla?\n\nEsto eliminará TODOS los datos actuales:\n- Metadatos del informe\n- Observaciones\n- Pantallas y fotos\n- Elementos Instalados\n- Todos los bloques de texto\n\nLa aplicación será reseteada completamente al estado inicial vacío.\n\nEsta acción no se puede deshacer.'
+      '¿Estás seguro de que quieres limpiar toda la plantilla?\n\nEsto eliminará TODOS los datos actuales:\n- Metadatos del informe\n- Pantallas y fotos\n- Elementos Instalados\n- Todos los bloques de texto\n\nLa aplicación será reseteada completamente al estado inicial vacío.\n\nEsta acción no se puede deshacer.'
     );
     
     if (confirmar) {
