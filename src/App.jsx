@@ -884,8 +884,12 @@ export default function App() {
     const fotoFiles = files.filter(file => {
       const path = file.webkitRelativePath || file.path || '';
       console.log('Archivo:', file.name, 'Ruta:', path);
-      return path.includes('As Built/Fotos/') || path.includes('As Built\\Fotos\\') || 
-             path.includes('As Built/Fotos') || path.includes('As Built\\Fotos');
+      // Filtrar estrictamente solo archivos que estén dentro de As Built/Fotos/
+      // Asegurarse de que la ruta contenga "As Built/Fotos/" o "As Built\Fotos\" pero no otras variantes
+      const pathNormalized = path.replace(/\\/g, '/');
+      return pathNormalized.includes('As Built/Fotos/') && 
+             !pathNormalized.includes('As Built/Fotos/../') &&
+             !pathNormalized.startsWith('../');
     });
 
     console.log('Archivos filtrados en As Built/Fotos:', fotoFiles.length);

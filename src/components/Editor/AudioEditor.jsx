@@ -419,8 +419,17 @@ export const AudioEditor = ({ data, setData, imageInputRefs, audioFilesFromFolde
                   </div>
                   {fotos.map((foto, index) => (
                     <div key={index} className="relative border rounded p-2 bg-neutral-50">
-                      <div className="text-xs font-semibold text-neutral-600 mb-1">
-                        {tipo.label} {fotos.length > 1 ? `_${index + 1}` : ''}
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="text-xs font-semibold text-neutral-600">
+                          {tipo.label} {fotos.length > 1 ? `_${index + 1}` : ''}
+                        </div>
+                        <Button 
+                          onClick={() => handleRemoveImage(tipo.key, index)}
+                          className="text-xs px-2 py-1 bg-red-600 hover:bg-red-700 text-white"
+                          title="Eliminar esta imagen"
+                        >
+                          ✕
+                        </Button>
                       </div>
                       <img 
                         loading="lazy" 
@@ -431,12 +440,6 @@ export const AudioEditor = ({ data, setData, imageInputRefs, audioFilesFromFolde
                       <small className="text-neutral-600 mt-1 block text-xs truncate" title={foto.fileName}>
                         {foto.fileName}
                       </small>
-                      <Button 
-                        onClick={() => handleRemoveImage(tipo.key, index)}
-                        className="mt-2 text-xs w-full"
-                      >
-                        Eliminar
-                      </Button>
                     </div>
                   ))}
                 </div>
