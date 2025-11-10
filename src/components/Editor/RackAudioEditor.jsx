@@ -34,6 +34,11 @@ export const RackAudioEditor = ({ data, setData, imageInputRefs, rackAudioFilesF
           tipoFoto = 'frontal';
           tipoNombre = 'FRONTAL RACK AUDIO';
         } 
+        // Detectar FRONTAL_ON_THE_SPOT
+        else if (fileName.includes('FRONTAL_ON_THE_SPOT') || fileName.includes('FRONTAL ON THE SPOT')) {
+          tipoFoto = 'frontalOnTheSpot';
+          tipoNombre = 'FRONTAL ON THE SPOT';
+        }
         // Detectar TRASERA_RACK_AUDIO
         else if (fileName.includes('TRASERA_RACK_AUDIO') || fileName.includes('TRASERA RACK AUDIO')) {
           tipoFoto = 'trasera';
@@ -105,6 +110,9 @@ export const RackAudioEditor = ({ data, setData, imageInputRefs, rackAudioFilesF
     
     if (nombreUpper.includes('FRONTAL_RACK_AUDIO') || nombreUpper.includes('FRONTAL RACK AUDIO')) {
       return { key: 'frontal', label: 'Frontal Rack Audio' };
+    }
+    else if (nombreUpper.includes('FRONTAL_ON_THE_SPOT') || nombreUpper.includes('FRONTAL ON THE SPOT')) {
+      return { key: 'frontalOnTheSpot', label: 'Frontal On The Spot' };
     }
     else if (nombreUpper.includes('TRASERA_RACK_AUDIO') || nombreUpper.includes('TRASERA RACK AUDIO')) {
       return { key: 'trasera', label: 'Trasera Rack Audio' };
@@ -204,6 +212,7 @@ export const RackAudioEditor = ({ data, setData, imageInputRefs, rackAudioFilesF
       
       // Si no hay imágenes, desactivar la sección
       const tieneImagenes = (c.rackAudio.frontal && c.rackAudio.frontal.length > 0) ||
+                            (c.rackAudio.frontalOnTheSpot && c.rackAudio.frontalOnTheSpot.length > 0) ||
                             (c.rackAudio.trasera && c.rackAudio.trasera.length > 0);
       
       if (!tieneImagenes) {
@@ -216,6 +225,7 @@ export const RackAudioEditor = ({ data, setData, imageInputRefs, rackAudioFilesF
 
   const tiposRackAudio = [
     { key: 'frontal', label: 'Frontal Rack Audio' },
+    { key: 'frontalOnTheSpot', label: 'Frontal On The Spot' },
     { key: 'trasera', label: 'Trasera Rack Audio' }
   ];
 

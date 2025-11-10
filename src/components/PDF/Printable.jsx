@@ -9,6 +9,8 @@ import { SeccionAltavocesInstalacion } from './SeccionAltavocesInstalacion';
 import { SeccionRack } from './SeccionRack';
 import { SeccionRacksCombinados } from './SeccionRacksCombinados';
 import { SeccionCuadros } from './SeccionCuadros';
+import { SeccionCuadrosAV } from './SeccionCuadrosAV';
+import { SeccionDocumentacion } from './SeccionDocumentacion';
 import { SeccionPlanostienda } from './SeccionPlanostienda';
 import { SeccionTexto } from './SeccionTexto';
 
@@ -41,7 +43,10 @@ export const Printable = React.memo(({ data, onPageRendered }) => (
       <SeccionRacksCombinados rackVideo={data.rackVideo} rackAudio={data.rackAudio} />
     )}
     {data.secciones.cuadrosAV && (
-      <SeccionCuadros cuadros={data.cuadrosAV} />
+      <SeccionCuadrosAV cuadrosAV={data.cuadrosAV} />
+    )}
+    {data.secciones.documentacion && (
+      <SeccionDocumentacion documentacion={data.documentacion} />
     )}
     {data.secciones.unifilarVideo && (
       <SeccionRack titulo="UNIFILAR VIDEO" data={data.unifilarVideo} />

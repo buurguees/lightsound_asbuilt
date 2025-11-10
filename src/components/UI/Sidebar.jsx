@@ -9,6 +9,7 @@ export const Sidebar = ({ activeModule, setActiveModule }) => {
     { id: 'rackVideo', label: 'Rack Video' },
     { id: 'rackAudio', label: 'Rack Audio' },
     { id: 'cuadrosAV', label: 'Cuadros AV' },
+    { id: 'documentacion', label: 'Documentación' },
     { id: 'unifilar', label: 'Unifilar Video' },
     { id: 'planos', label: 'Planos de Tienda' },
   ];

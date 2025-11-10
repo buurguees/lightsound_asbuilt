@@ -2,53 +2,42 @@ import { useEffect, useRef } from 'react';
 import { Button } from '../UI/Button';
 import { compressImage } from '../../utils/imageUtils';
 
-export const CuadrosAVEditor = ({ data, setData, imageInputRefs, cuadrosAVFilesFromFolder }) => {
+export const DocumentacionEditor = ({ data, setData, imageInputRefs, documentacionFilesFromFolder }) => {
   const processedFilesRef = useRef(new Set());
 
-  // Procesar archivos de cuadros AV recibidos desde App.jsx (importación de carpeta)
+  // Procesar archivos de documentación recibidos desde App.jsx (importación de carpeta)
   useEffect(() => {
-    if (!cuadrosAVFilesFromFolder || cuadrosAVFilesFromFolder.length === 0) {
+    if (!documentacionFilesFromFolder || documentacionFilesFromFolder.length === 0) {
       return;
     }
 
     // Resetear archivos procesados cuando cambian los archivos
     processedFilesRef.current.clear();
 
-    const processCuadrosAVFiles = async () => {
-      console.log(`\n🚀 Iniciando procesamiento de ${cuadrosAVFilesFromFolder.length} archivo(s) de cuadros AV...`);
+    const processDocumentacionFiles = async () => {
+      console.log(`\n🚀 Iniciando procesamiento de ${documentacionFilesFromFolder.length} archivo(s) de documentación...`);
       
       const c = structuredClone(data);
       let fotosProcesadas = 0;
 
-      for (const file of cuadrosAVFilesFromFolder) {
+      for (const file of documentacionFilesFromFolder) {
         const fileName = file.name.toUpperCase();
         console.log(`\n📷 Procesando archivo: ${file.name}`);
         console.log(`   Nombre normalizado: ${fileName}`);
         
         // Determinar tipo de foto según el contenido del nombre del archivo
-        // Orden importante: detectar nomenclaturas más específicas primero
         let tipoFoto = null;
         let tipoNombre = '';
         
-        // Detectar CUADRO_LSG
-        if (fileName.includes('CUADRO_LSG') || fileName.includes('CUADRO LSG')) {
-          tipoFoto = 'cuadroLSG';
-          tipoNombre = 'CUADRO LSG';
-        }
-        // Detectar CUADRO_ELECTRICO_GENERAL
-        else if (fileName.includes('CUADRO_ELECTRICO_GENERAL') || fileName.includes('CUADRO ELECTRICO GENERAL') || fileName.includes('CUADRO_ELÉCTRICO_GENERAL')) {
-          tipoFoto = 'cuadroElectricoGeneral';
-          tipoNombre = 'CUADRO ELÉCTRICO GENERAL';
-        }
-        // Detectar TÉRMICOS_PANTALLA
-        else if (fileName.includes('TÉRMICOS_PANTALLA') || fileName.includes('TERMICOS_PANTALLA') || fileName.includes('TÉRMICOS PANTALLA') || fileName.includes('TERMICOS PANTALLA')) {
-          tipoFoto = 'termicosPantalla';
-          tipoNombre = 'TÉRMICOS PANTALLA';
-        }
-        // Detectar TÉRMICOS_RACK
-        else if (fileName.includes('TÉRMICOS_RACK') || fileName.includes('TERMICOS_RACK') || fileName.includes('TÉRMICOS RACK') || fileName.includes('TERMICOS RACK')) {
-          tipoFoto = 'termicosRack';
-          tipoNombre = 'TÉRMICOS RACK';
+        // Detectar DOC_BOX
+        if (fileName.includes('DOC_BOX') || fileName.includes('DOC BOX')) {
+          tipoFoto = 'docBox';
+          tipoNombre = 'DOC BOX';
+        } 
+        // Detectar AV_BOX
+        else if (fileName.includes('AV_BOX') || fileName.includes('AV BOX')) {
+          tipoFoto = 'avBox';
+          tipoNombre = 'AV BOX';
         }
         
         if (tipoFoto) {
@@ -58,16 +47,16 @@ export const CuadrosAVEditor = ({ data, setData, imageInputRefs, cuadrosAVFilesF
             const base64 = await compressImage(file, { maxDim: 1600, quality: 0.85 });
             
             // Si no existe el array de fotos para este tipo, crearlo
-            if (!c.cuadrosAV[tipoFoto]) {
-              c.cuadrosAV[tipoFoto] = [];
+            if (!c.documentacion[tipoFoto]) {
+              c.documentacion[tipoFoto] = [];
             }
             
             // Si es un array, añadir la foto
-            if (Array.isArray(c.cuadrosAV[tipoFoto])) {
+            if (Array.isArray(c.documentacion[tipoFoto])) {
               // Verificar si ya existe esta imagen (por nombre de archivo)
-              const yaExiste = c.cuadrosAV[tipoFoto].some(f => f.fileName === file.name);
+              const yaExiste = c.documentacion[tipoFoto].some(f => f.fileName === file.name);
               if (!yaExiste) {
-                c.cuadrosAV[tipoFoto].push({
+                c.documentacion[tipoFoto].push({
                   url: base64,
                   fileName: file.name,
                   fileSize: file.size
@@ -79,8 +68,8 @@ export const CuadrosAVEditor = ({ data, setData, imageInputRefs, cuadrosAVFilesF
               }
             } else {
               // Si no es array, convertir a array y añadir la foto
-              const fotoExistente = c.cuadrosAV[tipoFoto]?.url ? [c.cuadrosAV[tipoFoto]] : [];
-              c.cuadrosAV[tipoFoto] = [...fotoExistente, {
+              const fotoExistente = c.documentacion[tipoFoto]?.url ? [c.documentacion[tipoFoto]] : [];
+              c.documentacion[tipoFoto] = [...fotoExistente, {
                 url: base64,
                 fileName: file.name,
                 fileSize: file.size
@@ -93,7 +82,7 @@ export const CuadrosAVEditor = ({ data, setData, imageInputRefs, cuadrosAVFilesF
           }
         } else {
           console.log(`  ❌ No se pudo determinar el tipo de foto para: ${file.name}`);
-          console.log(`     Buscando: "CUADRO_LSG", "CUADRO_ELECTRICO_GENERAL", "TÉRMICOS_PANTALLA" o "TÉRMICOS_RACK" en el nombre`);
+          console.log(`     Buscando: "DOC_BOX" o "AV_BOX" en el nombre`);
         }
       }
       
@@ -102,30 +91,23 @@ export const CuadrosAVEditor = ({ data, setData, imageInputRefs, cuadrosAVFilesF
       // Actualizar el estado con todas las fotos procesadas
       if (fotosProcesadas > 0) {
         // Activar automáticamente la sección si hay imágenes
-        c.secciones.cuadrosAV = true;
+        c.secciones.documentacion = true;
         setData(c);
       }
     };
 
-    processCuadrosAVFiles();
-  }, [cuadrosAVFilesFromFolder, data, setData]);
+    processDocumentacionFiles();
+  }, [documentacionFilesFromFolder, data, setData]);
 
-  // Función para detectar el tipo de cuadro AV basándose en el nombre del archivo
-  const detectarTipoCuadroAV = (fileName) => {
+  // Función para detectar el tipo de documentación basándose en el nombre del archivo
+  const detectarTipoDocumentacion = (fileName) => {
     const nombreUpper = fileName.toUpperCase();
     
-    // Orden importante: detectar nomenclaturas más específicas primero
-    if (nombreUpper.includes('CUADRO_LSG') || nombreUpper.includes('CUADRO LSG')) {
-      return { key: 'cuadroLSG', label: 'Cuadro LSG' };
+    if (nombreUpper.includes('DOC_BOX') || nombreUpper.includes('DOC BOX')) {
+      return { key: 'docBox', label: 'DOC BOX' };
     }
-    else if (nombreUpper.includes('CUADRO_ELECTRICO_GENERAL') || nombreUpper.includes('CUADRO ELECTRICO GENERAL') || nombreUpper.includes('CUADRO_ELÉCTRICO_GENERAL')) {
-      return { key: 'cuadroElectricoGeneral', label: 'Cuadro Eléctrico General' };
-    }
-    else if (nombreUpper.includes('TÉRMICOS_PANTALLA') || nombreUpper.includes('TERMICOS_PANTALLA') || nombreUpper.includes('TÉRMICOS PANTALLA') || nombreUpper.includes('TERMICOS PANTALLA')) {
-      return { key: 'termicosPantalla', label: 'Térmicos Pantalla' };
-    }
-    else if (nombreUpper.includes('TÉRMICOS_RACK') || nombreUpper.includes('TERMICOS_RACK') || nombreUpper.includes('TÉRMICOS RACK') || nombreUpper.includes('TERMICOS RACK')) {
-      return { key: 'termicosRack', label: 'Térmicos Rack' };
+    else if (nombreUpper.includes('AV_BOX') || nombreUpper.includes('AV BOX')) {
+      return { key: 'avBox', label: 'AV BOX' };
     }
     
     return null;
@@ -139,29 +121,29 @@ export const CuadrosAVEditor = ({ data, setData, imageInputRefs, cuadrosAVFilesF
       const base64 = await compressImage(file, { maxDim: 1600, quality: 0.85 });
       setData((d) => {
         const c = structuredClone(d);
-        if (!c.cuadrosAV[tipoFoto]) {
-          c.cuadrosAV[tipoFoto] = [];
+        if (!c.documentacion[tipoFoto]) {
+          c.documentacion[tipoFoto] = [];
         }
         
-        if (Array.isArray(c.cuadrosAV[tipoFoto])) {
-          const yaExiste = c.cuadrosAV[tipoFoto].some(f => f.fileName === file.name);
+        if (Array.isArray(c.documentacion[tipoFoto])) {
+          const yaExiste = c.documentacion[tipoFoto].some(f => f.fileName === file.name);
           if (!yaExiste) {
-            c.cuadrosAV[tipoFoto].push({
+            c.documentacion[tipoFoto].push({
               url: base64,
               fileName: file.name,
               fileSize: file.size
             });
           }
         } else {
-          const fotoExistente = c.cuadrosAV[tipoFoto]?.url ? [c.cuadrosAV[tipoFoto]] : [];
-          c.cuadrosAV[tipoFoto] = [...fotoExistente, {
+          const fotoExistente = c.documentacion[tipoFoto]?.url ? [c.documentacion[tipoFoto]] : [];
+          c.documentacion[tipoFoto] = [...fotoExistente, {
             url: base64,
             fileName: file.name,
             fileSize: file.size
           }];
         }
         
-        c.secciones.cuadrosAV = true;
+        c.secciones.documentacion = true;
         return c;
       });
     } catch (error) {
@@ -181,7 +163,7 @@ export const CuadrosAVEditor = ({ data, setData, imageInputRefs, cuadrosAVFilesF
     
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      const tipoDetectado = detectarTipoCuadroAV(file.name);
+      const tipoDetectado = detectarTipoDocumentacion(file.name);
       
       if (tipoDetectado) {
         try {
@@ -214,48 +196,44 @@ export const CuadrosAVEditor = ({ data, setData, imageInputRefs, cuadrosAVFilesF
   const handleRemoveImage = (tipoFoto, index) => {
     setData((d) => {
       const c = structuredClone(d);
-      if (Array.isArray(c.cuadrosAV[tipoFoto])) {
-        c.cuadrosAV[tipoFoto].splice(index, 1);
+      if (Array.isArray(c.documentacion[tipoFoto])) {
+        c.documentacion[tipoFoto].splice(index, 1);
       } else {
-        c.cuadrosAV[tipoFoto] = { url: "", fileName: undefined, fileSize: undefined };
+        c.documentacion[tipoFoto] = { url: "", fileName: undefined, fileSize: undefined };
       }
       
       // Si no hay imágenes, desactivar la sección
-      const tieneImagenes = (c.cuadrosAV.cuadroLSG && c.cuadrosAV.cuadroLSG.length > 0) ||
-                            (c.cuadrosAV.cuadroElectricoGeneral && c.cuadrosAV.cuadroElectricoGeneral.length > 0) ||
-                            (c.cuadrosAV.termicosPantalla && c.cuadrosAV.termicosPantalla.length > 0) ||
-                            (c.cuadrosAV.termicosRack && c.cuadrosAV.termicosRack.length > 0);
+      const tieneImagenes = (c.documentacion.docBox && c.documentacion.docBox.length > 0) ||
+                            (c.documentacion.avBox && c.documentacion.avBox.length > 0);
       
       if (!tieneImagenes) {
-        c.secciones.cuadrosAV = false;
+        c.secciones.documentacion = false;
       }
       
       return c;
     });
   };
 
-  const tiposCuadrosAV = [
-    { key: 'cuadroLSG', label: 'Cuadro LSG' },
-    { key: 'cuadroElectricoGeneral', label: 'Cuadro Eléctrico General' },
-    { key: 'termicosPantalla', label: 'Térmicos Pantalla' },
-    { key: 'termicosRack', label: 'Térmicos Rack' }
+  const tiposDocumentacion = [
+    { key: 'docBox', label: 'DOC BOX' },
+    { key: 'avBox', label: 'AV BOX' }
   ];
 
   return (
     <div>
-      <h2 className="font-semibold text-neutral-800 mb-4">Cuadros AV</h2>
+      <h2 className="font-semibold text-neutral-800 mb-4">Documentación</h2>
 
       {/* Botón general para subir múltiples imágenes */}
       <div className="mt-4 mb-4 p-4 bg-neutral-50 rounded-lg border border-neutral-300">
         <div className="flex items-center gap-3">
           <Button 
-            onClick={() => imageInputRefs.current['cuadrosAV_general']?.click()}
+            onClick={() => imageInputRefs.current['documentacion_general']?.click()}
             className="bg-blue-600 hover:bg-blue-700 text-white"
           >
             Subir Imágenes (Detección Automática)
           </Button>
           <input
-            ref={el => imageInputRefs.current['cuadrosAV_general'] = el}
+            ref={el => imageInputRefs.current['documentacion_general'] = el}
             type="file"
             accept="image/*"
             multiple
@@ -275,20 +253,20 @@ export const CuadrosAVEditor = ({ data, setData, imageInputRefs, cuadrosAVFilesF
 
       {/* Bloques de imágenes por tipo */}
       <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-        {tiposCuadrosAV.map((tipo) => {
-          const fotos = Array.isArray(data.cuadrosAV[tipo.key]) 
-            ? data.cuadrosAV[tipo.key] 
-            : (data.cuadrosAV[tipo.key]?.url ? [data.cuadrosAV[tipo.key]] : []);
+        {tiposDocumentacion.map((tipo) => {
+          const fotos = Array.isArray(data.documentacion[tipo.key]) 
+            ? data.documentacion[tipo.key] 
+            : (data.documentacion[tipo.key]?.url ? [data.documentacion[tipo.key]] : []);
           
           return (
             <div key={tipo.key} className="bg-white rounded-lg border p-3">
               <h3 className="font-semibold text-neutral-700 mb-2">{tipo.label.toUpperCase()}</h3>
               <div className="flex gap-2 mb-2">
-                <Button onClick={() => imageInputRefs.current[`cuadrosAV_${tipo.key}`]?.click()}>
+                <Button onClick={() => imageInputRefs.current[`documentacion_${tipo.key}`]?.click()}>
                   Subir {fotos.length > 0 && `(${fotos.length})`}
                 </Button>
                 <input
-                  ref={el => imageInputRefs.current[`cuadrosAV_${tipo.key}`] = el}
+                  ref={el => imageInputRefs.current[`documentacion_${tipo.key}`] = el}
                   type="file"
                   accept="image/*"
                   multiple
@@ -343,3 +321,4 @@ export const CuadrosAVEditor = ({ data, setData, imageInputRefs, cuadrosAVFilesF
     </div>
   );
 };
+

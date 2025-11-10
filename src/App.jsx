@@ -24,6 +24,7 @@ import { AudioEditor } from './components/Editor/AudioEditor';
 import { RackVideoEditor } from './components/Editor/RackVideoEditor';
 import { RackAudioEditor } from './components/Editor/RackAudioEditor';
 import { CuadrosAVEditor } from './components/Editor/CuadrosAVEditor';
+import { DocumentacionEditor } from './components/Editor/DocumentacionEditor';
 import { UnifilarVideoEditor } from './components/Editor/UnifilarVideoEditor';
 import { PlanosTiendaEditor } from './components/Editor/PlanosTiendaEditor';
 // Utils
@@ -96,6 +97,7 @@ const defaultReport = {
     rackVideo: true,
     rackAudio: true,
     cuadrosAV: true,
+    documentacion: false,
     unifilarVideo: true,
     planostienda: true,
     medicionPartidas: false,
@@ -149,6 +151,7 @@ const defaultReport = {
     descripcion: "",
     observaciones: "",
     frontal: [],
+    frontalOnTheSpot: [],
     trasera: [],
     fotos: [
       { url: "", fileName: undefined, fileSize: undefined, descripcion: "" }
@@ -700,6 +703,8 @@ const Editor = ({
   audioFilesFromFolder,
   rackVideoFilesFromFolder,
   rackAudioFilesFromFolder,
+  cuadrosAVFilesFromFolder,
+  documentacionFilesFromFolder,
   onFotosProcessed
 }) => {
   const imageInputRefs = useRef({});
@@ -738,7 +743,9 @@ const Editor = ({
       case 'rackAudio':
         return <RackAudioEditor data={data} setData={setData} imageInputRefs={imageInputRefs} rackAudioFilesFromFolder={rackAudioFilesFromFolder} />;
       case 'cuadrosAV':
-        return <CuadrosAVEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />;
+        return <CuadrosAVEditor data={data} setData={setData} imageInputRefs={imageInputRefs} cuadrosAVFilesFromFolder={cuadrosAVFilesFromFolder} />;
+      case 'documentacion':
+        return <DocumentacionEditor data={data} setData={setData} imageInputRefs={imageInputRefs} documentacionFilesFromFolder={documentacionFilesFromFolder} />;
       case 'unifilar':
         return <UnifilarVideoEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />;
       case 'planos':
@@ -829,6 +836,8 @@ export default function App() {
   const [audioFilesFromFolder, setAudioFilesFromFolder] = useState([]);
   const [rackVideoFilesFromFolder, setRackVideoFilesFromFolder] = useState([]);
   const [rackAudioFilesFromFolder, setRackAudioFilesFromFolder] = useState([]);
+  const [cuadrosAVFilesFromFolder, setCuadrosAVFilesFromFolder] = useState([]);
+  const [documentacionFilesFromFolder, setDocumentacionFilesFromFolder] = useState([]);
   const [fotosProcessedInfo, setFotosProcessedInfo] = useState(null);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [activeModule, setActiveModule] = useState('metadatos'); // Módulo activo en el sidebar
@@ -971,6 +980,8 @@ export default function App() {
       const fileName = file.name.toUpperCase();
       return fileName.includes('FRONTAL_RACK_AUDIO') || 
              fileName.includes('FRONTAL RACK AUDIO') ||
+             fileName.includes('FRONTAL_ON_THE_SPOT') ||
+             fileName.includes('FRONTAL ON THE SPOT') ||
              fileName.includes('TRASERA_RACK_AUDIO') || 
              fileName.includes('TRASERA RACK AUDIO');
     });
@@ -980,6 +991,47 @@ export default function App() {
     // Enviar archivos de rack audio a RackAudioEditor.jsx para procesamiento
     if (rackAudioFiles.length > 0) {
       setRackAudioFilesFromFolder(rackAudioFiles);
+    }
+    
+    // Filtrar archivos de cuadros AV (misma carpeta As Built/Fotos/)
+    const cuadrosAVFiles = fotoFiles.filter(file => {
+      const fileName = file.name.toUpperCase();
+      return fileName.includes('CUADRO_LSG') || 
+             fileName.includes('CUADRO LSG') ||
+             fileName.includes('CUADRO_ELECTRICO_GENERAL') ||
+             fileName.includes('CUADRO ELECTRICO GENERAL') ||
+             fileName.includes('CUADRO_ELÉCTRICO_GENERAL') ||
+             fileName.includes('TÉRMICOS_PANTALLA') ||
+             fileName.includes('TERMICOS_PANTALLA') ||
+             fileName.includes('TÉRMICOS PANTALLA') ||
+             fileName.includes('TERMICOS PANTALLA') ||
+             fileName.includes('TÉRMICOS_RACK') ||
+             fileName.includes('TERMICOS_RACK') ||
+             fileName.includes('TÉRMICOS RACK') ||
+             fileName.includes('TERMICOS RACK');
+    });
+    
+    console.log('Archivos de cuadros AV encontrados:', cuadrosAVFiles.length);
+    
+    // Enviar archivos de cuadros AV a CuadrosAVEditor.jsx para procesamiento
+    if (cuadrosAVFiles.length > 0) {
+      setCuadrosAVFilesFromFolder(cuadrosAVFiles);
+    }
+    
+    // Filtrar archivos de documentación (misma carpeta As Built/Fotos/)
+    const documentacionFiles = fotoFiles.filter(file => {
+      const fileName = file.name.toUpperCase();
+      return fileName.includes('DOC_BOX') || 
+             fileName.includes('DOC BOX') ||
+             fileName.includes('AV_BOX') || 
+             fileName.includes('AV BOX');
+    });
+    
+    console.log('Archivos de documentación encontrados:', documentacionFiles.length);
+    
+    // Enviar archivos de documentación a DocumentacionEditor.jsx para procesamiento
+    if (documentacionFiles.length > 0) {
+      setDocumentacionFilesFromFolder(documentacionFiles);
     }
     
     // Buscar y cargar foto de entrada de la tienda (se procesa en App.jsx)
@@ -1158,6 +1210,7 @@ export default function App() {
         rackVideo: true,
         rackAudio: true,
         cuadrosAV: true,
+    documentacion: false,
         unifilarVideo: true,
         planostienda: true,
         medicionPartidas: false,
@@ -1210,29 +1263,14 @@ export default function App() {
         ]
       },
       cuadrosAV: {
-        items: [
-          { 
-            titulo: "CUADRO ELÉCTRICO", 
-            detalle: "",
-            fotos: [
-              { url: "", fileName: undefined, fileSize: undefined, descripcion: "" }
-            ]
-          },
-          { 
-            titulo: "AV BOX", 
-            detalle: "",
-            fotos: [
-              { url: "", fileName: undefined, fileSize: undefined, descripcion: "" }
-            ]
-          },
-          { 
-            titulo: "DOC BOX", 
-            detalle: "",
-            fotos: [
-              { url: "", fileName: undefined, fileSize: undefined, descripcion: "" }
-            ]
-          },
-        ],
+        cuadroLSG: [],
+        cuadroElectricoGeneral: [],
+        termicosPantalla: [],
+        termicosRack: []
+      },
+      documentacion: {
+        docBox: [],
+        avBox: []
       },
       unifilarVideo: { 
         detalle: "",
@@ -1341,6 +1379,8 @@ export default function App() {
           audioFilesFromFolder={audioFilesFromFolder}
           rackVideoFilesFromFolder={rackVideoFilesFromFolder}
           rackAudioFilesFromFolder={rackAudioFilesFromFolder}
+          cuadrosAVFilesFromFolder={cuadrosAVFilesFromFolder}
+          documentacionFilesFromFolder={documentacionFilesFromFolder}
           onFotosProcessed={setFotosProcessedInfo}
             />
         </div>

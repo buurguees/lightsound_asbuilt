@@ -21,6 +21,9 @@ export const SeccionRacksCombinados = ({ rackVideo, rackAudio }) => {
   if (rackAudio.frontal && Array.isArray(rackAudio.frontal) && rackAudio.frontal.length > 0) {
     imagenesRackAudio.push(...rackAudio.frontal.map(img => ({ ...img, tipo: 'FRONTAL RACK AUDIO' })));
   }
+  if (rackAudio.frontalOnTheSpot && Array.isArray(rackAudio.frontalOnTheSpot) && rackAudio.frontalOnTheSpot.length > 0) {
+    imagenesRackAudio.push(...rackAudio.frontalOnTheSpot.map(img => ({ ...img, tipo: 'FRONTAL ON THE SPOT' })));
+  }
   if (rackAudio.trasera && Array.isArray(rackAudio.trasera) && rackAudio.trasera.length > 0) {
     imagenesRackAudio.push(...rackAudio.trasera.map(img => ({ ...img, tipo: 'TRASERA RACK AUDIO' })));
   }
