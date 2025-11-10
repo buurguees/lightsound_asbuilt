@@ -152,7 +152,62 @@ export const AudioEditor = ({ data, setData, imageInputRefs, audioFilesFromFolde
     processAudioFiles();
   }, [audioFilesFromFolder, data, setData]);
 
-  // Función para subir imagen manualmente
+  // Función para detectar el tipo de audio basándose en el nombre del archivo
+  const detectarTipoAudio = (fileName) => {
+    const nombreUpper = fileName.toUpperCase();
+    
+    // Detectar tipos específicos de ALTAVOZ (orden específico primero)
+    if (nombreUpper.includes('ALTAVOZ ESPECIAL')) {
+      return { key: 'altavozEspecial', label: 'Altavoz Especial' };
+    }
+    else if (nombreUpper.includes('ALTAVOZ KITCHEN OFFICE')) {
+      return { key: 'altavozKitchenOffice', label: 'Altavoz Kitchen Office' };
+    }
+    else if (nombreUpper.includes('ALTAVOZ ZONA COMÚN') || nombreUpper.includes('ALTAVOZ ZONA COMUN')) {
+      return { key: 'altavozZonaComun', label: 'Altavoz Zona Común' };
+    }
+    else if (nombreUpper.includes('ALTAVOZ FULL RANGE')) {
+      return { key: 'altavozFullRange', label: 'Altavoz Full Range' };
+    }
+    else if (nombreUpper.includes('ALTAVOZ ALMACÉN') || nombreUpper.includes('ALTAVOZ ALMACEN')) {
+      return { key: 'altavozAlmacen', label: 'Altavoz Almacén' };
+    }
+    else if (nombreUpper.includes('ALTAVOZ PROBADORES')) {
+      return { key: 'altavozProbadores', label: 'Altavoz Probadores' };
+    }
+    else if (nombreUpper.includes('ALTAVOZ OFFICE')) {
+      return { key: 'altavozOffice', label: 'Altavoz Office' };
+    }
+    else if (nombreUpper.includes('ALTAVOZ')) {
+      return { key: 'altavoz', label: 'Altavoz' };
+    }
+    // Detectar TORRE ACÚSTICA
+    else if (nombreUpper.includes('TORRE ACÚSTICA') || nombreUpper.includes('TORRE ACUSTICA')) {
+      return { key: 'torreAcustica', label: 'Torre Acústica' };
+    }
+    else if (nombreUpper.includes('TORRE')) {
+      return { key: 'torre', label: 'Torre' };
+    }
+    // Detectar CLUSTER
+    else if (nombreUpper.includes('CLUSTER')) {
+      return { key: 'cluster', label: 'Cluster' };
+    }
+    // Detectar SUBWOOFER
+    else if (nombreUpper.includes('SUBWOOFER')) {
+      return { key: 'subwoofer', label: 'Subwoofer' };
+    }
+    // Detectar SUB-GRAVE o SUB-GRABE
+    else if (nombreUpper.includes('SUB-GRAVE') || nombreUpper.includes('SUBGRAVE') || nombreUpper.includes('SUB_GRAVE')) {
+      return { key: 'subGrave', label: 'Sub-grave' };
+    }
+    else if (nombreUpper.includes('SUB-GRABE') || nombreUpper.includes('SUBGRABE') || nombreUpper.includes('SUB_GRABE')) {
+      return { key: 'subGrabe', label: 'Sub-grabe' };
+    }
+    
+    return null;
+  };
+
+  // Función para subir imagen manualmente (con tipo específico)
   const handleImageUpload = async (tipoFoto, tipoNombre, file) => {
     if (!file) return;
     
@@ -166,11 +221,15 @@ export const AudioEditor = ({ data, setData, imageInputRefs, audioFilesFromFolde
         
         // Si es un array, añadir la foto
         if (Array.isArray(c.audio[tipoFoto])) {
-          c.audio[tipoFoto].push({
-            url: base64,
-            fileName: file.name,
-            fileSize: file.size
-          });
+          // Verificar si ya existe esta imagen (por nombre de archivo)
+          const yaExiste = c.audio[tipoFoto].some(f => f.fileName === file.name);
+          if (!yaExiste) {
+            c.audio[tipoFoto].push({
+              url: base64,
+              fileName: file.name,
+              fileSize: file.size
+            });
+          }
         } else {
           // Si no es array, convertir a objeto simple
           c.audio[tipoFoto] = {
@@ -186,6 +245,47 @@ export const AudioEditor = ({ data, setData, imageInputRefs, audioFilesFromFolde
       });
     } catch (error) {
       console.error(`Error procesando imagen ${file.name}:`, error);
+    }
+  };
+
+  // Función para subir múltiples imágenes y asignarlas automáticamente
+  const handleMultipleImageUpload = async (files) => {
+    if (!files || files.length === 0) return;
+    
+    const resultados = {
+      exitosas: 0,
+      sinTipo: [],
+      errores: []
+    };
+    
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const tipoDetectado = detectarTipoAudio(file.name);
+      
+      if (tipoDetectado) {
+        try {
+          await handleImageUpload(tipoDetectado.key, tipoDetectado.label, file);
+          resultados.exitosas++;
+        } catch (error) {
+          resultados.errores.push({ file: file.name, error: error.message });
+        }
+      } else {
+        resultados.sinTipo.push(file.name);
+      }
+    }
+    
+    // Mostrar resumen
+    if (resultados.sinTipo.length > 0 || resultados.errores.length > 0) {
+      let mensaje = `✅ ${resultados.exitosas} imagen(es) subida(s) correctamente.\n\n`;
+      if (resultados.sinTipo.length > 0) {
+        mensaje += `⚠️ ${resultados.sinTipo.length} imagen(es) no se pudo(n) clasificar (no se encontró nomenclatura reconocida):\n${resultados.sinTipo.join('\n')}\n\n`;
+      }
+      if (resultados.errores.length > 0) {
+        mensaje += `❌ ${resultados.errores.length} error(es) al procesar:\n${resultados.errores.map(e => `${e.file}: ${e.error}`).join('\n')}`;
+      }
+      alert(mensaje);
+    } else if (resultados.exitosas > 0) {
+      alert(`✅ ${resultados.exitosas} imagen(es) subida(s) correctamente y asignada(s) automáticamente.`);
     }
   };
 
@@ -250,6 +350,35 @@ export const AudioEditor = ({ data, setData, imageInputRefs, audioFilesFromFolde
   return (
     <div>
       <h2 className="font-semibold text-neutral-800 mb-4">Audio</h2>
+
+      {/* Botón general para subir múltiples imágenes */}
+      <div className="mb-4 p-4 bg-neutral-50 rounded-lg border border-neutral-300">
+        <div className="flex items-center gap-3">
+          <Button 
+            onClick={() => imageInputRefs.current['audio_general']?.click()}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Subir Imágenes (Detección Automática)
+          </Button>
+          <input
+            ref={el => imageInputRefs.current['audio_general'] = el}
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={async (e) => {
+              if (e.target.files && e.target.files.length > 0) {
+                await handleMultipleImageUpload(Array.from(e.target.files));
+                // Limpiar el input para permitir seleccionar las mismas imágenes de nuevo
+                e.target.value = '';
+              }
+            }}
+          />
+          <p className="text-xs text-neutral-600">
+            Selecciona múltiples imágenes y se asignarán automáticamente según su nombre
+          </p>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {tiposAudio.map((tipo) => {
