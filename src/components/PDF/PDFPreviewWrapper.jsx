@@ -29,10 +29,13 @@ export const PDFPreviewWrapper = ({ children }) => {
 
       setScale(finalScale);
 
-      // Asegurar que el scroll esté en la parte superior para que no se recorte la cabecera
-      try {
-        container.scrollTop = 0;
-      } catch {}
+      // Asegurar que el scroll esté en la parte superior después de un pequeño delay
+      // para que el contenido se haya renderizado
+      setTimeout(() => {
+        if (containerRef.current) {
+          containerRef.current.scrollTop = 0;
+        }
+      }, 100);
     };
 
     calculateScale();
@@ -59,10 +62,10 @@ export const PDFPreviewWrapper = ({ children }) => {
         width: '100%',
         height: '100%',
         display: 'flex',
-        alignItems: 'center',          // centrado horizontal
-        justifyContent: 'flex-start',  // empezar arriba para no cortar la cabecera
+        alignItems: 'flex-start',      // empezar desde arriba
+        justifyContent: 'center',       // centrado horizontal
         overflowY: 'auto',
-        overflowX: 'auto',
+        overflowX: 'hidden',           // sin scroll horizontal
         padding: '20px',
         boxSizing: 'border-box'
       }}
@@ -73,7 +76,9 @@ export const PDFPreviewWrapper = ({ children }) => {
         style={{
           transform: `scale(${scale})`,
           transformOrigin: 'top center',
-          transition: 'transform 0.2s ease'
+          transition: 'transform 0.2s ease',
+          width: '1123px',             // ancho fijo del PDF
+          margin: '0 auto'             // centrado horizontal
         }}
       >
         {children}
