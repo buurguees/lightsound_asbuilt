@@ -1140,6 +1140,22 @@ export default function App() {
       console.log('No se encontró foto de entrada (ENTRADA_TIENDA)');
     }
     
+    // Filtrar archivos Excel que contengan "BANNERS" en el nombre
+    // Estos archivos se procesan en BannersEditor.jsx
+    const bannerExcelFiles = files.filter(file => {
+      const fileName = file.name.toUpperCase();
+      const hasBanners = fileName.includes('BANNERS');
+      const isExcel = fileName.endsWith('.XLSX') || fileName.endsWith('.XLS') || fileName.endsWith('.CSV');
+      return hasBanners && isExcel;
+    });
+    
+    console.log('Archivos Excel de BANNERS encontrados para procesar:', bannerExcelFiles.length);
+    
+    // Enviar archivos Excel de banners a BannersEditor.jsx para procesamiento
+    if (bannerExcelFiles.length > 0) {
+      setBannerExcelFilesFromFolder(bannerExcelFiles);
+    }
+
     // Filtrar y enviar archivos Excel de Documentación/Validaciones/ a DesglosePantallasEditor.jsx
     const validacionMKDFiles = files.filter(file => {
       const path = file.webkitRelativePath || file.path || '';
