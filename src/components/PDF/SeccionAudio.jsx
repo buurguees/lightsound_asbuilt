@@ -44,24 +44,42 @@ export const SeccionAudio = ({ audio }) => {
 
   if (todasLasImagenes.length === 0) return null;
 
-  // Agrupar imágenes de 2 en 2 (máximo 2 bloques por página)
-  // Cada bloque tiene 3 imágenes por fila, así que cada bloque puede tener hasta 6 imágenes (2 filas x 3)
-  // Pero el usuario quiere 2 bloques por página, así que agrupamos de 2 en 2 bloques
-  // Cada bloque puede tener múltiples imágenes (3 por fila)
+  // Calcular cuántas imágenes caben por página de forma segura
+  // Considerando: header (~60px), footer (~40px), espacio entre bloques (16px), padding (24px)
+  // Altura disponible aproximada: ~650px
+  // Cada imagen con título: ~180px (título ~20px + imagen 150px + padding)
+  // Por fila: 3 imágenes
+  // Filas por bloque: máximo 2 filas (6 imágenes) para asegurar que quepa bien
+  // Bloques por página: máximo 2 bloques (12 imágenes máximo por página)
+  // Pero para ser más conservadores y evitar cortes, usaremos máximo 9 imágenes por página (3 filas x 3 columnas)
   
-  // Crear bloques: cada bloque puede tener hasta 6 imágenes (2 filas x 3 columnas)
-  // Pero para simplificar, vamos a hacer que cada bloque tenga un máximo de 6 imágenes
-  // y agrupamos los bloques de 2 en 2 por página
+  const MAX_IMAGENES_POR_PAGINA = 9; // 3 filas x 3 columnas = 9 imágenes máximo por página
+  const IMAGENES_POR_FILA = 3;
   
-  const bloques = [];
-  for (let i = 0; i < todasLasImagenes.length; i += 6) {
-    bloques.push(todasLasImagenes.slice(i, i + 6));
-  }
-
-  // Agrupar bloques de 2 en 2 (2 bloques por página)
+  // Crear páginas asegurándonos de que nunca se corten imágenes
   const paginas = [];
-  for (let i = 0; i < bloques.length; i += 2) {
-    paginas.push(bloques.slice(i, i + 2));
+  let imagenActual = 0;
+  
+  while (imagenActual < todasLasImagenes.length) {
+    const imagenesEnPagina = [];
+    let imagenesEnPaginaActual = 0;
+    
+    // Agregar imágenes hasta alcanzar el máximo por página
+    while (imagenActual < todasLasImagenes.length && imagenesEnPaginaActual < MAX_IMAGENES_POR_PAGINA) {
+      imagenesEnPagina.push(todasLasImagenes[imagenActual]);
+      imagenActual++;
+      imagenesEnPaginaActual++;
+    }
+    
+    if (imagenesEnPagina.length > 0) {
+      // Dividir las imágenes de la página en bloques de máximo 6 imágenes (2 filas x 3)
+      // Esto asegura que cada bloque quepa bien y no se corte
+      const bloquesEnPagina = [];
+      for (let i = 0; i < imagenesEnPagina.length; i += 6) {
+        bloquesEnPagina.push(imagenesEnPagina.slice(i, i + 6));
+      }
+      paginas.push(bloquesEnPagina);
+    }
   }
 
   if (paginas.length === 0) return null;
