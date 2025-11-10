@@ -120,6 +120,11 @@ const defaultReport = {
       },
       audio: {
         activo: false,
+        altavoz: [],
+        torre: [],
+        cluster: [],
+        subwoofer: [],
+        subGrabe: []
       },
   rackVideo: {
     descripcion: "",
@@ -676,6 +681,7 @@ const Editor = ({
   fotoFilesFromFolder,
   probadorFilesFromFolder,
   probadorExcelFilesFromFolder,
+  audioFilesFromFolder,
   onFotosProcessed
 }) => {
   const imageInputRefs = useRef({});
@@ -708,7 +714,7 @@ const Editor = ({
       case 'probadores':
         return <ProbadoresEditor data={data} setData={setData} imageInputRefs={imageInputRefs} probadorFilesFromFolder={probadorFilesFromFolder} probadorExcelFilesFromFolder={probadorExcelFilesFromFolder} />;
       case 'audio':
-        return <AudioEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />;
+        return <AudioEditor data={data} setData={setData} imageInputRefs={imageInputRefs} audioFilesFromFolder={audioFilesFromFolder} />;
       case 'rackVideo':
         return <RackVideoEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />;
       case 'rackAudio':
@@ -802,6 +808,7 @@ export default function App() {
   const [fotoFilesFromFolder, setFotoFilesFromFolder] = useState([]);
   const [probadorFilesFromFolder, setProbadorFilesFromFolder] = useState([]);
   const [probadorExcelFilesFromFolder, setProbadorExcelFilesFromFolder] = useState([]);
+  const [audioFilesFromFolder, setAudioFilesFromFolder] = useState([]);
   const [fotosProcessedInfo, setFotosProcessedInfo] = useState(null);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [activeModule, setActiveModule] = useState('metadatos'); // Módulo activo en el sidebar
@@ -892,6 +899,25 @@ export default function App() {
     // Enviar archivos de probadores a ProbadoresEditor.jsx para procesamiento
     if (probadorFiles.length > 0) {
       setProbadorFilesFromFolder(probadorFiles);
+    }
+    
+    // Filtrar archivos de audio (misma carpeta As Built/Fotos/)
+    const audioFiles = fotoFiles.filter(file => {
+      const fileName = file.name.toUpperCase();
+      return fileName.includes('ALTAVOZ') || 
+             fileName.includes('TORRE') || 
+             fileName.includes('CLUSTER') || 
+             fileName.includes('SUBWOOFER') || 
+             fileName.includes('SUB-GRABE') || 
+             fileName.includes('SUBGRABE') || 
+             fileName.includes('SUB_GRABE');
+    });
+    
+    console.log('Archivos de audio encontrados:', audioFiles.length);
+    
+    // Enviar archivos de audio a AudioEditor.jsx para procesamiento
+    if (audioFiles.length > 0) {
+      setAudioFilesFromFolder(audioFiles);
     }
     
     // Buscar y cargar foto de entrada de la tienda (se procesa en App.jsx)
@@ -1094,6 +1120,11 @@ export default function App() {
       },
       audio: {
         activo: false,
+        altavoz: [],
+        torre: [],
+        cluster: [],
+        subwoofer: [],
+        subGrabe: []
       },
       rackVideo: {
         descripcion: "",
@@ -1234,8 +1265,9 @@ export default function App() {
               setCurrentLoadingPDF={setCurrentLoadingPDF}
             excelFilesFromFolder={excelFilesFromFolder}
             fotoFilesFromFolder={fotoFilesFromFolder}
-            probadorFilesFromFolder={probadorFilesFromFolder}
-            probadorExcelFilesFromFolder={probadorExcelFilesFromFolder}
+          probadorFilesFromFolder={probadorFilesFromFolder}
+          probadorExcelFilesFromFolder={probadorExcelFilesFromFolder}
+          audioFilesFromFolder={audioFilesFromFolder}
             onFotosProcessed={setFotosProcessedInfo}
             />
         </div>
