@@ -4,6 +4,11 @@ import { PageHeader } from '../Page/PageHeader';
 import { PageFooter } from '../Page/PageFooter';
 
 export const SeccionDocumentacion = ({ documentacion }) => {
+  // Verificar que documentacion existe
+  if (!documentacion) {
+    return null;
+  }
+  
   // Recopilar todas las imágenes de documentación
   const imagenes = [];
   if (documentacion.docBox && Array.isArray(documentacion.docBox) && documentacion.docBox.length > 0) {

@@ -46,6 +46,10 @@ export const DocumentacionEditor = ({ data, setData, imageInputRefs, documentaci
             console.log(`     Archivo: ${file.name}`);
             const base64 = await compressImage(file, { maxDim: 1600, quality: 0.85 });
             
+            // Asegurar que documentacion existe
+            if (!c.documentacion) {
+              c.documentacion = { docBox: [], avBox: [] };
+            }
             // Si no existe el array de fotos para este tipo, crearlo
             if (!c.documentacion[tipoFoto]) {
               c.documentacion[tipoFoto] = [];
@@ -121,6 +125,10 @@ export const DocumentacionEditor = ({ data, setData, imageInputRefs, documentaci
       const base64 = await compressImage(file, { maxDim: 1600, quality: 0.85 });
       setData((d) => {
         const c = structuredClone(d);
+        // Asegurar que documentacion existe
+        if (!c.documentacion) {
+          c.documentacion = { docBox: [], avBox: [] };
+        }
         if (!c.documentacion[tipoFoto]) {
           c.documentacion[tipoFoto] = [];
         }
@@ -196,6 +204,10 @@ export const DocumentacionEditor = ({ data, setData, imageInputRefs, documentaci
   const handleRemoveImage = (tipoFoto, index) => {
     setData((d) => {
       const c = structuredClone(d);
+      // Asegurar que documentacion existe
+      if (!c.documentacion) {
+        c.documentacion = { docBox: [], avBox: [] };
+      }
       if (Array.isArray(c.documentacion[tipoFoto])) {
         c.documentacion[tipoFoto].splice(index, 1);
       } else {
@@ -254,9 +266,9 @@ export const DocumentacionEditor = ({ data, setData, imageInputRefs, documentaci
       {/* Bloques de imágenes por tipo */}
       <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
         {tiposDocumentacion.map((tipo) => {
-          const fotos = Array.isArray(data.documentacion[tipo.key]) 
+          const fotos = data.documentacion && Array.isArray(data.documentacion[tipo.key]) 
             ? data.documentacion[tipo.key] 
-            : (data.documentacion[tipo.key]?.url ? [data.documentacion[tipo.key]] : []);
+            : (data.documentacion?.[tipo.key]?.url ? [data.documentacion[tipo.key]] : []);
           
           return (
             <div key={tipo.key} className="bg-white rounded-lg border p-3">
