@@ -34,7 +34,7 @@ export const PDFPreviewWrapper = ({ children }) => {
       // Asegurar que la escala sea al menos 0.1 para evitar que sea demasiado pequeña
       const finalScale = Math.max(0.1, newScale);
 
-      setScale(newScale);
+      setScale(finalScale);
     };
 
     calculateScale();
