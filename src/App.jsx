@@ -2,6 +2,7 @@
 import * as XLSX from 'xlsx';
 // Componentes PDF
 import { SeccionPlanostienda } from './components/PDF/SeccionPlanostienda';
+import { SeccionAudio } from './components/PDF/SeccionAudio';
 import { Printable as PDFPrintable } from './components/PDF/Printable';
 import { PDFPreviewWrapper } from './components/PDF/PDFPreviewWrapper';
 // Componentes UI
@@ -19,6 +20,7 @@ import { ElementosInstaladosEditor } from './components/Editor/ElementosInstalad
 import { DesglosePantallasEditor } from './components/Editor/DesglosePantallasEditor';
 import { FotosPantallasEditor } from './components/Editor/FotosPantallasEditor';
 import { ProbadoresEditor } from './components/Editor/ProbadoresEditor';
+import { AudioEditor } from './components/Editor/AudioEditor';
 import { RackVideoEditor } from './components/Editor/RackVideoEditor';
 import { RackAudioEditor } from './components/Editor/RackAudioEditor';
 import { CuadrosAVEditor } from './components/Editor/CuadrosAVEditor';
@@ -89,6 +91,7 @@ const defaultReport = {
     desglosePantallas: true,
     fotosPantallas: true,
     probadores: false,
+    audio: false,
     altavocesInstalacion: true,
     rackVideo: true,
     rackAudio: true,
@@ -114,6 +117,9 @@ const defaultReport = {
         encabezados: [],
         masters: [],
         probadores: []
+      },
+      audio: {
+        activo: false,
       },
   rackVideo: {
     descripcion: "",
@@ -701,6 +707,8 @@ const Editor = ({
         );
       case 'probadores':
         return <ProbadoresEditor data={data} setData={setData} imageInputRefs={imageInputRefs} probadorFilesFromFolder={probadorFilesFromFolder} probadorExcelFilesFromFolder={probadorExcelFilesFromFolder} />;
+      case 'audio':
+        return <AudioEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />;
       case 'rackVideo':
         return <RackVideoEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />;
       case 'rackAudio':
@@ -757,6 +765,9 @@ const Printable = React.memo(({ data, onPageRendered }) => (
     )}
     {data.secciones.probadores && (
       <SeccionProbadores probadores={data.probadores} />
+    )}
+    {data.secciones.audio && (
+      <SeccionAudio audio={data.audio} />
     )}
     {data.secciones.altavocesInstalacion && (
       <SeccionAltavocesInstalacion equipamiento={data.equipamiento} />
@@ -1054,6 +1065,7 @@ export default function App() {
         desglosePantallas: true,
         fotosPantallas: true,
         probadores: false,
+        audio: false,
         altavocesInstalacion: true,
         rackVideo: true,
         rackAudio: true,
@@ -1079,6 +1091,9 @@ export default function App() {
         encabezados: [],
         masters: [],
         probadores: []
+      },
+      audio: {
+        activo: false,
       },
       rackVideo: {
         descripcion: "",

@@ -4,6 +4,7 @@ import { Portada } from './Portada';
 import { SeccionDesglosePantallas } from './SeccionDesglosePantallas';
 import { SeccionFotosPantallas } from './SeccionFotosPantallas';
 import { SeccionProbadores } from './SeccionProbadores';
+import { SeccionAudio } from './SeccionAudio';
 import { SeccionAltavocesInstalacion } from './SeccionAltavocesInstalacion';
 import { SeccionRack } from './SeccionRack';
 import { SeccionCuadros } from './SeccionCuadros';
@@ -28,6 +29,9 @@ export const Printable = React.memo(({ data, onPageRendered }) => (
     )}
     {data.secciones.probadores && (
       <SeccionProbadores probadores={data.probadores} />
+    )}
+    {data.secciones.audio && (
+      <SeccionAudio audio={data.audio} />
     )}
     {data.secciones.altavocesInstalacion && (
       <SeccionAltavocesInstalacion equipamiento={data.equipamiento} />

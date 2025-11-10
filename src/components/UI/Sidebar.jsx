@@ -5,6 +5,7 @@ export const Sidebar = ({ activeModule, setActiveModule }) => {
     { id: 'desglose', label: 'Desglose de Pantallas' },
     { id: 'fotos', label: 'Fotos de Pantallas' },
     { id: 'probadores', label: 'Probadores' },
+    { id: 'audio', label: 'Audio' },
     { id: 'rackVideo', label: 'Rack Video' },
     { id: 'rackAudio', label: 'Rack Audio' },
     { id: 'cuadrosAV', label: 'Cuadros AV' },
