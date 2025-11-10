@@ -375,7 +375,7 @@ const Portada = ({ meta, equipamiento, tipoInstalacionVideo, almacenExterno }) =
 );
 
 const TablaPantallasImportadas = ({ filas }) => (
-  <table className="w-full text-xs mb-4">
+  <table className="w-full text-xs mb-4 tabla-importadas">
     <thead>
       <tr className="bg-neutral-100 text-[11px]">
         {[
@@ -399,7 +399,7 @@ const TablaPantallasImportadas = ({ filas }) => (
 );
 
 const TablaPantallasManuales = ({ filas }) => (
-  <table className="w-full text-xs">
+  <table className="w-full text-xs tabla-manuales">
     <thead>
       <tr className="bg-neutral-100 text-[11px]">
         {[
@@ -763,7 +763,7 @@ const Editor = ({
       case 'elementos':
         return <ElementosInstaladosEditor data={data} setData={setData} />;
       case 'desglose':
-        return (
+  return (
           <DesglosePantallasEditor 
             data={data} 
             setData={setData} 
@@ -772,7 +772,7 @@ const Editor = ({
           />
         );
       case 'fotos':
-        return (
+    return (
           <FotosPantallasEditor 
             data={data} 
             setData={setData} 
@@ -792,7 +792,7 @@ const Editor = ({
       case 'unifilar':
         return <UnifilarVideoEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />;
       case 'planos':
-        return (
+  return (
           <PlanosTiendaEditor
             data={data}
             setData={setData}
@@ -1218,7 +1218,7 @@ export default function App() {
       <div className="no-print bg-white border-b shadow-sm sticky top-0 z-20 flex-shrink-0">
         <div className="mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold text-neutral-800">Generador de Informe As Built</h1>
+            <h1 className="font-bold text-neutral-800">Generador de Informe As Built</h1>
             <div className="flex items-center gap-2">
               <Button onClick={() => setShowConfigModal(true)}>⚙️ Configuración</Button>
               <Button onClick={() => inputFolder.current?.click()}>📁 Importar Carpeta</Button>
@@ -1247,28 +1247,28 @@ export default function App() {
 
         {/* Columna central: Editor del módulo activo */}
         <div className="flex-1 border-r border-neutral-300 bg-white overflow-y-auto" style={{ maxHeight: 'calc(100vh - 80px)' }}>
-          <Editor 
-            data={data} 
-            setData={setData}
+            <Editor 
+              data={data} 
+              setData={setData} 
             activeModule={activeModule}
-            onPageRendered={handlePageRendered} 
-            pdfPagesRendering={pdfPagesRendering} 
-            setPdfPagesRendering={setPdfPagesRendering}
-            loadingPDFs={loadingPDFs}
-            setLoadingPDFs={setLoadingPDFs}
-            currentLoadingPDF={currentLoadingPDF}
-            setCurrentLoadingPDF={setCurrentLoadingPDF}
+              onPageRendered={handlePageRendered} 
+              pdfPagesRendering={pdfPagesRendering} 
+              setPdfPagesRendering={setPdfPagesRendering}
+              loadingPDFs={loadingPDFs}
+              setLoadingPDFs={setLoadingPDFs}
+              currentLoadingPDF={currentLoadingPDF}
+              setCurrentLoadingPDF={setCurrentLoadingPDF}
             excelFilesFromFolder={excelFilesFromFolder}
             fotoFilesFromFolder={fotoFilesFromFolder}
             onFotosProcessed={setFotosProcessedInfo}
-          />
+            />
         </div>
 
         {/* Columna derecha: Vista Previa PDF */}
         <div className="w-1/2 bg-neutral-50 flex flex-col overflow-hidden" style={{ maxHeight: 'calc(100vh - 80px)' }}>
           <div className="flex-shrink-0 bg-neutral-100 border-b border-neutral-300 px-4 py-3 shadow-sm">
-            <h2 className="text-lg font-bold text-neutral-700">Vista Previa del Informe</h2>
-            <p className="text-sm text-neutral-600">Esto es cómo se verá al imprimir</p>
+            <h2 className="font-bold text-neutral-700">Vista Previa del Informe</h2>
+            <p className="text-neutral-600">Esto es cómo se verá al imprimir</p>
           </div>
           <div className="flex-1 overflow-y-auto p-4">
             <Printable data={data} onPageRendered={handlePageRendered} />

@@ -68,6 +68,33 @@
     page-break-inside: auto;
   }
   
+  /* Alineación de columnas entre tablas de Desglose de Pantallas */
+  .tabla-importadas,
+  .tabla-manuales {
+    table-layout: fixed;
+    width: 100%;
+  }
+  
+  /* Primera columna "Etiqueta de plano" - mismo ancho en ambas tablas */
+  .tabla-importadas th:first-child,
+  .tabla-importadas td:first-child,
+  .tabla-manuales th:first-child,
+  .tabla-manuales td:first-child {
+    width: 30%;
+  }
+  
+  /* Columnas restantes de tabla importadas (3 columnas) */
+  .tabla-importadas th:not(:first-child),
+  .tabla-importadas td:not(:first-child) {
+    width: calc(70% / 3);
+  }
+  
+  /* Columnas restantes de tabla manuales (5 columnas) */
+  .tabla-manuales th:not(:first-child),
+  .tabla-manuales td:not(:first-child) {
+    width: calc(70% / 5);
+  }
+  
   tr {
     page-break-inside: avoid;
     page-break-after: auto;
@@ -85,7 +112,7 @@
   @media screen {
     html {
       /* 10px base para toda la plataforma (no afecta al PDF que usa sus estilos) */
-      font-size: 10px;
+      font-size: 12px;
     }
     body {
       font-family: 'Roboto', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
