@@ -105,12 +105,14 @@ const defaultReport = {
   almacenExterno: "No",
   pantallas: [],
   fotos: [],
-  probadores: {
-    activo: false,
-    probadorOcupado: { url: "", fileName: undefined, fileSize: undefined },
-    probadorLiberado: { url: "", fileName: undefined, fileSize: undefined },
-    pasilloProbadores: { url: "", fileName: undefined, fileSize: undefined },
-  },
+      probadores: {
+        activo: false,
+        probadorOcupado: { url: "", fileName: undefined, fileSize: undefined },
+        probadorLiberado: { url: "", fileName: undefined, fileSize: undefined },
+        pasilloProbadores: { url: "", fileName: undefined, fileSize: undefined },
+        tablaProbadores: [],
+        encabezados: [],
+      },
   rackVideo: {
     descripcion: "",
     fotos: [
@@ -665,6 +667,7 @@ const Editor = ({
   excelFilesFromFolder,
   fotoFilesFromFolder,
   probadorFilesFromFolder,
+  probadorExcelFilesFromFolder,
   onFotosProcessed
 }) => {
   const imageInputRefs = useRef({});
@@ -695,7 +698,7 @@ const Editor = ({
           />
         );
       case 'probadores':
-        return <ProbadoresEditor data={data} setData={setData} imageInputRefs={imageInputRefs} probadorFilesFromFolder={probadorFilesFromFolder} />;
+        return <ProbadoresEditor data={data} setData={setData} imageInputRefs={imageInputRefs} probadorFilesFromFolder={probadorFilesFromFolder} probadorExcelFilesFromFolder={probadorExcelFilesFromFolder} />;
       case 'rackVideo':
         return <RackVideoEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />;
       case 'rackAudio':
@@ -785,6 +788,7 @@ export default function App() {
   const [excelFilesFromFolder, setExcelFilesFromFolder] = useState([]);
   const [fotoFilesFromFolder, setFotoFilesFromFolder] = useState([]);
   const [probadorFilesFromFolder, setProbadorFilesFromFolder] = useState([]);
+  const [probadorExcelFilesFromFolder, setProbadorExcelFilesFromFolder] = useState([]);
   const [fotosProcessedInfo, setFotosProcessedInfo] = useState(null);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [activeModule, setActiveModule] = useState('metadatos'); // Módulo activo en el sidebar
@@ -954,6 +958,26 @@ export default function App() {
       setExcelFilesFromFolder(validacionMKDFiles);
     }
 
+    // Filtrar y enviar archivos Excel de probadores de Documentación/Validaciones/ a ProbadoresEditor.jsx
+    const probadorExcelFiles = files.filter(file => {
+      const path = file.webkitRelativePath || file.path || '';
+      const fileName = file.name.toUpperCase();
+      const isExcel = fileName.endsWith('.XLSX') || fileName.endsWith('.XLS');
+      const isInValidaciones = path.includes('Documentación/Validaciones/') || 
+                                path.includes('Documentación\\Validaciones\\') ||
+                                path.includes('Documentacion/Validaciones/') ||
+                                path.includes('Documentacion\\Validaciones\\');
+      const hasProbadores = fileName.includes('PROBADORES');
+      return isExcel && isInValidaciones && hasProbadores;
+    });
+
+    console.log('Archivos Excel de probadores encontrados para procesar:', probadorExcelFiles.length);
+    
+    // Enviar archivos Excel de probadores a ProbadoresEditor.jsx para procesamiento
+    if (probadorExcelFiles.length > 0) {
+      setProbadorExcelFilesFromFolder(probadorExcelFiles);
+    }
+
     // Actualizar el estado con la foto de entrada
     // NOTA: Las fotos de pantallas se procesan en FotosPantallasEditor.jsx
     setData((d) => {
@@ -1049,6 +1073,8 @@ export default function App() {
         probadorOcupado: { url: "", fileName: undefined, fileSize: undefined },
         probadorLiberado: { url: "", fileName: undefined, fileSize: undefined },
         pasilloProbadores: { url: "", fileName: undefined, fileSize: undefined },
+        tablaProbadores: [],
+        encabezados: [],
       },
       rackVideo: {
         descripcion: "",
@@ -1190,6 +1216,7 @@ export default function App() {
             excelFilesFromFolder={excelFilesFromFolder}
             fotoFilesFromFolder={fotoFilesFromFolder}
             probadorFilesFromFolder={probadorFilesFromFolder}
+            probadorExcelFilesFromFolder={probadorExcelFilesFromFolder}
             onFotosProcessed={setFotosProcessedInfo}
             />
         </div>

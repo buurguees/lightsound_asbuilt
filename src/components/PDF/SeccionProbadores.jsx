@@ -7,7 +7,9 @@ export const SeccionProbadores = ({ probadores }) => {
   const tieneImagenes = probadores.probadorOcupado?.url || 
                         probadores.probadorLiberado?.url || 
                         probadores.pasilloProbadores?.url;
-  if (!tieneImagenes) return null;
+  const tieneTabla = probadores.tablaProbadores && probadores.tablaProbadores.length > 0;
+  
+  if (!tieneImagenes && !tieneTabla) return null;
 
   return (
     <section className={PAGE}>
@@ -61,6 +63,46 @@ export const SeccionProbadores = ({ probadores }) => {
           </div>
         </div>
       </div>
+
+      {/* Tabla de probadores importada del Excel */}
+      {tieneTabla && (
+        <div className="mt-4">
+          <h3 className="text-sm font-semibold text-neutral-700 mb-2">Tabla de Probadores</h3>
+          <div className="overflow-auto border rounded-lg">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-neutral-100 text-[11px]">
+                  {probadores.encabezados && probadores.encabezados.length > 0 ? (
+                    probadores.encabezados.map((h, i) => (
+                      <th key={i} className="border px-2 py-1 text-left font-semibold">{h || `Columna ${i + 1}`}</th>
+                    ))
+                  ) : (
+                    probadores.tablaProbadores[0]?._rowData?.map((_, i) => (
+                      <th key={i} className="border px-2 py-1 text-left font-semibold">Columna {i + 1}</th>
+                    ))
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {probadores.tablaProbadores.map((fila, i) => (
+                  <tr key={i} className="odd:bg-white even:bg-neutral-50">
+                    {fila._rowData ? (
+                      fila._rowData.map((cell, j) => (
+                        <td key={j} className="border px-2 py-1">{cell}</td>
+                      ))
+                    ) : (
+                      probadores.encabezados?.map((header, j) => (
+                        <td key={j} className="border px-2 py-1">{fila[header] || ''}</td>
+                      ))
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       <PageFooter />
     </section>
   );

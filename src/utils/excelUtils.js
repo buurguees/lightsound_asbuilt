@@ -277,3 +277,114 @@ export const processExcelPantallas = async (file) => {
   }
 };
 
+/**
+ * Procesa un archivo Excel de probadores y extrae la tabla completa
+ * Reglas:
+ * - Archivo DEBE contener "PROBADORES" en el nombre (obligatorio)
+ * - Leer desde la fila 1 (índice 0) - tabla completa sin filtros
+ * - Importar todas las filas tal como se muestran en el Excel
+ */
+export const processExcelProbadores = async (file) => {
+  if (!file) return { tabla: [] };
+
+  try {
+    // Validar nombre del archivo - DEBE contener "PROBADORES"
+    const fileName = file.name;
+    const fileNameUpper = fileName.toUpperCase();
+    
+    const tieneProbadores = fileNameUpper.includes('PROBADORES');
+    
+    if (!tieneProbadores) {
+      alert(`El archivo "${file.name}" no es válido.\n\nSolo se procesan archivos Excel que contengan "PROBADORES" en el nombre.`);
+      return { tabla: [] };
+    }
+
+    const arrayBuffer = await file.arrayBuffer();
+    const XLSXLib = await import('xlsx');
+    const workbook = XLSXLib.read(arrayBuffer, { type: 'array', defval: '' });
+    
+    // Obtener la primera hoja
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    
+    // Obtener todas las filas como arrays
+    const allRows = XLSXLib.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+    
+    if (!allRows || allRows.length === 0) {
+      alert('El archivo Excel está vacío');
+      return { tabla: [] };
+    }
+
+    // Procesar todas las filas desde la primera (índice 0)
+    const tablaProbadores = [];
+    
+    console.log(`\n📊 Procesando Excel de Probadores: ${file.name}`);
+    console.log(`   Total de filas en el archivo: ${allRows.length}`);
+    console.log(`   Importando tabla completa desde la fila 1`);
+    
+    // La primera fila son los encabezados
+    const encabezados = allRows[0] || [];
+    
+    // Procesar todas las filas de datos (desde la fila 2, índice 1)
+    for (let i = 1; i < allRows.length; i++) {
+      const row = allRows[i];
+      
+      // Si la fila está completamente vacía, saltarla
+      if (!row || row.every(cell => !cell || String(cell).trim() === '')) {
+        continue;
+      }
+      
+      // Crear un objeto con los datos de la fila
+      // Usar los encabezados como claves si están disponibles
+      const filaData = {};
+      
+      if (encabezados.length > 0) {
+        // Si hay encabezados, crear objeto con claves
+        encabezados.forEach((header, idx) => {
+          const key = String(header || `Columna${idx + 1}`).trim();
+          filaData[key] = String(row[idx] || '').trim();
+        });
+      } else {
+        // Si no hay encabezados, usar índices de columna
+        row.forEach((cell, idx) => {
+          filaData[`Columna${idx + 1}`] = String(cell || '').trim();
+        });
+      }
+      
+      // También guardar la fila como array para mantener el orden
+      filaData._rowData = row.map(cell => String(cell || '').trim());
+      
+      tablaProbadores.push(filaData);
+    }
+    
+    console.log(`\n📊 Resumen del procesamiento:`);
+    console.log(`   Filas procesadas: ${tablaProbadores.length}`);
+    console.log(`   Columnas detectadas: ${encabezados.length || (tablaProbadores[0]?._rowData?.length || 0)}`);
+
+    if (tablaProbadores.length === 0) {
+      const mensaje = `No se encontraron datos en el archivo Excel.\n\nFilas procesadas: ${allRows.length - 1}`;
+      console.error(mensaje);
+      alert(mensaje);
+      return { tabla: [] };
+    }
+
+    // Listar las primeras filas importadas
+    console.log(`\n✅ Tabla de probadores importada (${tablaProbadores.length} filas):`);
+    tablaProbadores.slice(0, 5).forEach((fila, idx) => {
+      console.log(`   Fila ${idx + 1}:`, fila._rowData || Object.values(fila));
+    });
+    if (tablaProbadores.length > 5) {
+      console.log(`   ... y ${tablaProbadores.length - 5} filas más`);
+    }
+
+    return { 
+      tabla: tablaProbadores,
+      encabezados: encabezados.map(h => String(h || '').trim())
+    };
+  } catch (error) {
+    console.error('Error al procesar el Excel de probadores:', error);
+    alert('Error: ' + error.message);
+    return { tabla: [] };
+  }
+};
+
