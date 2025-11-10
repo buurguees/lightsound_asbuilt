@@ -103,7 +103,7 @@ export const Portada = ({ meta, equipamiento, tipoInstalacionVideo, almacenExter
                   if (typeof elemento === 'object' && elemento !== null && elemento.cantidad) {
                     cantidad = elemento.cantidad || 1;
                   }
-                  const texto = cantidad > 1 ? `${nombre} - ${cantidad} Unidades` : nombre;
+                  const texto = cantidad > 0 ? `${nombre} - ${cantidad} Unidad${cantidad !== 1 ? 'es' : ''}` : nombre;
                   return <li key={i}>{texto}</li>;
                 })}
             </ul>
