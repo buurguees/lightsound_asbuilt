@@ -59,11 +59,11 @@ export const SeccionDesglosePantallas = ({ pantallas }) => (
     <div className="page-content">
       <div className="overflow-auto">
         <div className="mb-4">
-          <h3 className="text-sm font-semibold text-neutral-700 mb-2">Datos importados del Excel</h3>
+          <h3 className="text-sm font-semibold text-neutral-700 mb-2">Información de los Players</h3>
           <TablaPantallasImportadas filas={pantallas} />
         </div>
         <div>
-          <h3 className="text-sm font-semibold text-neutral-700 mb-2">Datos manuales</h3>
+          <h3 className="text-sm font-semibold text-neutral-700 mb-2">Conexionado e información relevante</h3>
           <TablaPantallasManuales filas={pantallas} />
         </div>
       </div>
