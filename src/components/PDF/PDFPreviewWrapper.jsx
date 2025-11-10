@@ -28,6 +28,11 @@ export const PDFPreviewWrapper = ({ children }) => {
       const finalScale = Math.max(0.3, Math.min(1, newScale));
 
       setScale(finalScale);
+
+      // Asegurar que el scroll esté en la parte superior para que no se recorte la cabecera
+      try {
+        container.scrollTop = 0;
+      } catch {}
     };
 
     calculateScale();
@@ -54,9 +59,10 @@ export const PDFPreviewWrapper = ({ children }) => {
         width: '100%',
         height: '100%',
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        overflow: 'auto',
+        alignItems: 'center',          // centrado horizontal
+        justifyContent: 'flex-start',  // empezar arriba para no cortar la cabecera
+        overflowY: 'auto',
+        overflowX: 'auto',
         padding: '20px',
         boxSizing: 'border-box'
       }}
