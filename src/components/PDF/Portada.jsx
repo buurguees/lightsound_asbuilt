@@ -70,15 +70,24 @@ export const Portada = ({ meta, equipamiento, tipoInstalacionVideo, almacenExter
         )}
 
         {/* Elementos Instalados */}
-        {Object.keys(equipamiento || {}).filter(nombre => equipamiento[nombre] === true).length > 0 && (
+        {Object.keys(equipamiento || {}).filter(nombre => {
+          const elemento = equipamiento[nombre];
+          return elemento && (elemento.instalado === true || (typeof elemento === 'object' && elemento.instalado));
+        }).length > 0 && (
           <div className="mb-4">
             <h2 className="text-lg font-bold mb-3 text-neutral-800">ELEMENTOS INSTALADOS</h2>
             <ul className="lista-elementos-instalados">
               {Object.keys(equipamiento)
-                .filter(nombre => equipamiento[nombre] === true)
-                .map((nombre, i) => (
-                  <li key={i}>{nombre}</li>
-                ))}
+                .filter(nombre => {
+                  const elemento = equipamiento[nombre];
+                  return elemento && (elemento.instalado === true || (typeof elemento === 'object' && elemento.instalado));
+                })
+                .map((nombre, i) => {
+                  const elemento = equipamiento[nombre];
+                  const cantidad = (typeof elemento === 'object' && elemento.cantidad) ? elemento.cantidad : 1;
+                  const texto = cantidad > 1 ? `${nombre} (${cantidad})` : nombre;
+                  return <li key={i}>{texto}</li>;
+                })}
             </ul>
           </div>
         )}

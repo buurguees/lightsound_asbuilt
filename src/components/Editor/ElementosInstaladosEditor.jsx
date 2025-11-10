@@ -36,12 +36,30 @@ export const ElementosInstaladosEditor = ({ data, setData }) => {
           const nuevoEquipamiento = {};
           d.equipamiento.forEach(item => {
             if (item.nombre && item.nombre.trim() !== "") {
-              nuevoEquipamiento[item.nombre] = true;
+              nuevoEquipamiento[item.nombre] = { instalado: true, cantidad: 1 };
             }
           });
           c.equipamiento = nuevoEquipamiento;
         } else {
           c.equipamiento = {};
+        }
+        return c;
+      });
+    } else {
+      // Migrar estructura antigua (true/false) a nueva (objeto con instalado y cantidad)
+      setData((d) => {
+        const c = structuredClone(d);
+        if (c.equipamiento) {
+          const nuevoEquipamiento = {};
+          Object.keys(c.equipamiento).forEach(nombre => {
+            const valor = c.equipamiento[nombre];
+            if (typeof valor === 'boolean') {
+              nuevoEquipamiento[nombre] = { instalado: valor, cantidad: valor ? 1 : 0 };
+            } else if (typeof valor === 'object' && valor !== null) {
+              nuevoEquipamiento[nombre] = valor;
+            }
+          });
+          c.equipamiento = nuevoEquipamiento;
         }
         return c;
       });
@@ -52,14 +70,33 @@ export const ElementosInstaladosEditor = ({ data, setData }) => {
     setData((d) => {
       const c = structuredClone(d);
       if (!c.equipamiento) c.equipamiento = {};
-      // Toggle: si está marcado, desmarcarlo; si no, marcarlo
-      c.equipamiento[nombreElemento] = !c.equipamiento[nombreElemento];
+      const elemento = c.equipamiento[nombreElemento];
+      // Toggle: si está marcado, desmarcarlo; si no, marcarlo con cantidad 1
+      if (elemento && elemento.instalado) {
+        c.equipamiento[nombreElemento] = { instalado: false, cantidad: 0 };
+      } else {
+        c.equipamiento[nombreElemento] = { instalado: true, cantidad: 1 };
+      }
+      return c;
+    });
+  };
+
+  const actualizarCantidad = (nombreElemento, cantidad) => {
+    setData((d) => {
+      const c = structuredClone(d);
+      if (!c.equipamiento) c.equipamiento = {};
+      if (!c.equipamiento[nombreElemento]) {
+        c.equipamiento[nombreElemento] = { instalado: true, cantidad: 0 };
+      }
+      const cantidadNum = Math.max(0, parseInt(cantidad) || 0);
+      c.equipamiento[nombreElemento].cantidad = cantidadNum;
+      c.equipamiento[nombreElemento].instalado = cantidadNum > 0;
       return c;
     });
   };
 
   // Contar elementos instalados (marcados)
-  const elementosInstalados = Object.values(equipamiento).filter(Boolean).length;
+  const elementosInstalados = Object.values(equipamiento).filter(e => e && e.instalado).length;
 
   return (
     <div>
@@ -85,22 +122,39 @@ export const ElementosInstaladosEditor = ({ data, setData }) => {
             <div className="p-1">
               {elementosConfig.map((elemento, i) => {
                 const nombre = elemento.nombre;
-                const estaInstalado = equipamiento[nombre] || false;
+                const elementoData = equipamiento[nombre] || { instalado: false, cantidad: 0 };
+                const estaInstalado = elementoData.instalado || false;
+                const cantidad = elementoData.cantidad || 0;
                 return (
-                  <label
+                  <div
                     key={i}
-                    className="flex items-center px-2 py-1 hover:bg-neutral-50 rounded cursor-pointer border border-transparent hover:border-neutral-200 transition-colors"
+                    className="flex items-center px-2 py-1 hover:bg-neutral-50 rounded border border-transparent hover:border-neutral-200 transition-colors"
                   >
-                    <input
-                      type="checkbox"
-                      checked={estaInstalado}
-                      onChange={() => toggleElemento(nombre)}
-                      className="w-3.5 h-3.5 text-blue-600 border-neutral-300 rounded focus:ring-blue-500 focus:ring-1 cursor-pointer"
-                    />
-                    <span className={`ml-2 ${estaInstalado ? 'text-neutral-800 font-medium' : 'text-neutral-600'}`}>
-                      {nombre}
-                    </span>
-                  </label>
+                    <label className="flex items-center flex-1 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={estaInstalado}
+                        onChange={() => toggleElemento(nombre)}
+                        className="w-3.5 h-3.5 text-blue-600 border-neutral-300 rounded focus:ring-blue-500 focus:ring-1 cursor-pointer"
+                      />
+                      <span className={`ml-2 flex-1 ${estaInstalado ? 'text-neutral-800 font-medium' : 'text-neutral-600'}`}>
+                        {nombre}
+                      </span>
+                    </label>
+                    {estaInstalado && (
+                      <div className="ml-2 flex items-center gap-1">
+                        <input
+                          type="number"
+                          min="1"
+                          value={cantidad}
+                          onChange={(e) => actualizarCantidad(nombre, e.target.value)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-12 px-1 py-0.5 text-xs border border-neutral-300 rounded text-center focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          style={{ fontSize: '11px' }}
+                        />
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
