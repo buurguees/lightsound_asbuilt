@@ -144,7 +144,7 @@ export const DesglosePantallasEditor = ({ data, setData, imageInputRefs, excelFi
             <thead>
               <tr className="bg-neutral-100 text-[11px]">
                 {[
-                  "Nombre de pantalla", "Hostname", "Resolución", ""
+                  "Nombre de pantalla", "Hostname", "MAC", "Resolución", ""
                 ].map((h) => (
                   <th key={h} className="border px-2 py-1 text-left font-semibold">{h}</th>
                 ))}
@@ -181,6 +181,19 @@ export const DesglosePantallasEditor = ({ data, setData, imageInputRefs, excelFi
                   </td>
                   <td className="border px-1 py-1">
                     <Input
+                      value={r.mac}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setData((d) => {
+                          const c = structuredClone(d);
+                          c.pantallas[i].mac = v;
+                          return c;
+                        });
+                      }}
+                    />
+                  </td>
+                  <td className="border px-1 py-1">
+                    <Input
                       value={r.resolucion}
                       onChange={(e) => {
                         const v = e.target.value;
@@ -210,101 +223,6 @@ export const DesglosePantallasEditor = ({ data, setData, imageInputRefs, excelFi
         </div>
       </div>
 
-      {/* Tabla 2: Conexionado e información relevante */}
-      <div>
-        <h3 className="font-semibold text-neutral-700 mb-2">Conexionado e información relevante</h3>
-        <div className="overflow-auto">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="bg-neutral-100 text-[11px]">
-                {[
-                  "Etiqueta de plano", "Puerto patch", "Puerto switch", "Contrato", "Térmico pantalla", "Térmico PC"
-                ].map((h) => (
-                  <th key={h} className="border px-2 py-1 text-left font-semibold">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {data.pantallas.map((r, i) => (
-                <tr key={i} className="odd:bg-white even:bg-neutral-50">
-                  <td className="border px-1 py-1">
-                    <Input
-                      value={r.etiquetaPlano}
-                      disabled
-                      className="bg-neutral-100 cursor-not-allowed"
-                    />
-                  </td>
-                  <td className="border px-1 py-1">
-                    <Input
-                      value={r.puertoPatch}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        setData((d) => {
-                          const c = structuredClone(d);
-                          c.pantallas[i].puertoPatch = v;
-                          return c;
-                        });
-                      }}
-                    />
-                  </td>
-                  <td className="border px-1 py-1">
-                    <Input
-                      value={r.puertoSwitch}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        setData((d) => {
-                          const c = structuredClone(d);
-                          c.pantallas[i].puertoSwitch = v;
-                          return c;
-                        });
-                      }}
-                    />
-                  </td>
-                  <td className="border px-1 py-1">
-                    <Input
-                      value={r.contrato}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        setData((d) => {
-                          const c = structuredClone(d);
-                          c.pantallas[i].contrato = v;
-                          return c;
-                        });
-                      }}
-                    />
-                  </td>
-                  <td className="border px-1 py-1">
-                    <Input
-                      value={r.termicoPantalla}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        setData((d) => {
-                          const c = structuredClone(d);
-                          c.pantallas[i].termicoPantalla = v;
-                          return c;
-                        });
-                      }}
-                    />
-                  </td>
-                  <td className="border px-1 py-1">
-                    <Input
-                      value={r.termicoPC}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        setData((d) => {
-                          const c = structuredClone(d);
-                          c.pantallas[i].termicoPC = v;
-                          return c;
-                        });
-                      }}
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
     </div>
   );
 };

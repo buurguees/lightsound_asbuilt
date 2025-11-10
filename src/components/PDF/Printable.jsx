@@ -4,6 +4,8 @@ import { Portada } from './Portada';
 import { SeccionDesglosePantallas } from './SeccionDesglosePantallas';
 import { SeccionFotosPantallas } from './SeccionFotosPantallas';
 import { SeccionBanners } from './SeccionBanners';
+import { SeccionTurnomatic } from './SeccionTurnomatic';
+import { SeccionWelcomer } from './SeccionWelcomer';
 import { SeccionProbadores } from './SeccionProbadores';
 import { SeccionAudio } from './SeccionAudio';
 import { SeccionAltavocesInstalacion } from './SeccionAltavocesInstalacion';
@@ -32,15 +34,15 @@ export const Printable = React.memo(({ data, onPageRendered }) => (
     )}
     {/* Banners */}
     {data.secciones.banners && (
-      <SeccionBanners banners={data.banners} />
+      <SeccionBanners fotosBanners={data.fotosBanners} />
     )}
     {/* Turnomatic */}
     {data.secciones.turnomatic && (
-      <SeccionTexto titulo="TURNOMATIC" contenido={data.turnomatic?.contenido || ""} />
+      <SeccionTurnomatic fotosTurnomatic={data.fotosTurnomatic} />
     )}
     {/* Welcomer */}
     {data.secciones.welcomer && (
-      <SeccionTexto titulo="WELCOMER" contenido={data.welcomer?.contenido || ""} />
+      <SeccionWelcomer fotosWelcomer={data.fotosWelcomer} />
     )}
     {/* Pantallas */}
     {data.secciones.fotosPantallas && (
@@ -65,7 +67,7 @@ export const Printable = React.memo(({ data, onPageRendered }) => (
     )}
     {/* Documentación */}
     {data.secciones.documentacion && (
-      <SeccionDocumentacion documentacion={data.documentacion} />
+      <SeccionDocumentacion documentacion={data.documentacion} pantallas={data.pantallas} banners={data.banners} turnomatic={data.turnomatic} welcomer={data.welcomer} />
     )}
     {/* Planos de Tienda */}
     {data.secciones.planostienda && (

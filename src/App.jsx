@@ -21,6 +21,9 @@ import { ElementosInstaladosEditor } from './components/Editor/ElementosInstalad
 import { DesglosePantallasEditor } from './components/Editor/DesglosePantallasEditor';
 import { FotosPantallasEditor } from './components/Editor/FotosPantallasEditor';
 import { BannersEditor } from './components/Editor/BannersEditor';
+import { FotosBannersEditor } from './components/Editor/FotosBannersEditor';
+import { TurnomaticEditor } from './components/Editor/TurnomaticEditor';
+import { WelcomerEditor } from './components/Editor/WelcomerEditor';
 import { ProbadoresEditor } from './components/Editor/ProbadoresEditor';
 import { AudioEditor } from './components/Editor/AudioEditor';
 import { RackVideoEditor } from './components/Editor/RackVideoEditor';
@@ -114,6 +117,11 @@ const defaultReport = {
   pantallas: [],
   fotos: [],
   banners: [],
+  fotosBanners: [],
+  turnomatic: [],
+  fotosTurnomatic: [],
+  welcomer: [],
+  fotosWelcomer: [],
   probadores: {
     activo: false,
     probadorOcupado: { url: "", fileName: undefined, fileSize: undefined },
@@ -703,7 +711,13 @@ const Editor = ({
   rackAudioFilesFromFolder,
   cuadrosAVFilesFromFolder,
   documentacionFilesFromFolder,
-  onFotosProcessed
+  onFotosProcessed,
+  bannerExcelFilesFromFolder,
+  fotoBannerFilesFromFolder,
+  turnomaticExcelFilesFromFolder,
+  fotoTurnomaticFilesFromFolder,
+  welcomerExcelFilesFromFolder,
+  fotoWelcomerFilesFromFolder
 }) => {
   const imageInputRefs = useRef({});
 
@@ -738,23 +752,29 @@ const Editor = ({
             data={data} 
             setData={setData} 
             imageInputRefs={imageInputRefs}
-            bannerFilesFromFolder={bannerFilesFromFolder}
             bannerExcelFilesFromFolder={bannerExcelFilesFromFolder}
+            fotoBannerFilesFromFolder={fotoBannerFilesFromFolder}
           />
         );
       case 'turnomatic':
         return (
-          <div className="p-4">
-            <h2 className="font-semibold text-neutral-800 mb-4">Turnomatic</h2>
-            <p className="text-neutral-600">Módulo en desarrollo</p>
-          </div>
+          <TurnomaticEditor 
+            data={data} 
+            setData={setData} 
+            imageInputRefs={imageInputRefs}
+            turnomaticExcelFilesFromFolder={turnomaticExcelFilesFromFolder}
+            fotoTurnomaticFilesFromFolder={fotoTurnomaticFilesFromFolder}
+          />
         );
       case 'welcomer':
         return (
-          <div className="p-4">
-            <h2 className="font-semibold text-neutral-800 mb-4">Welcomer</h2>
-            <p className="text-neutral-600">Módulo en desarrollo</p>
-          </div>
+          <WelcomerEditor 
+            data={data} 
+            setData={setData} 
+            imageInputRefs={imageInputRefs}
+            welcomerExcelFilesFromFolder={welcomerExcelFilesFromFolder}
+            fotoWelcomerFilesFromFolder={fotoWelcomerFilesFromFolder}
+          />
         );
       case 'probadores':
         return <ProbadoresEditor data={data} setData={setData} imageInputRefs={imageInputRefs} probadorFilesFromFolder={probadorFilesFromFolder} probadorExcelFilesFromFolder={probadorExcelFilesFromFolder} />;
@@ -815,7 +835,7 @@ const Printable = React.memo(({ data, onPageRendered }) => (
       <SeccionFotosPantallas fotos={data.fotos} />
     )}
     {data.secciones.banners && (
-      <SeccionBanners banners={data.banners} />
+      <SeccionBanners fotosBanners={data.fotosBanners} />
     )}
     {data.secciones.probadores && (
       <SeccionProbadores probadores={data.probadores} />
@@ -856,6 +876,11 @@ export default function App() {
   const [fotoFilesFromFolder, setFotoFilesFromFolder] = useState([]);
   const [bannerFilesFromFolder, setBannerFilesFromFolder] = useState([]);
   const [bannerExcelFilesFromFolder, setBannerExcelFilesFromFolder] = useState([]);
+  const [fotoBannerFilesFromFolder, setFotoBannerFilesFromFolder] = useState([]);
+  const [turnomaticExcelFilesFromFolder, setTurnomaticExcelFilesFromFolder] = useState([]);
+  const [fotoTurnomaticFilesFromFolder, setFotoTurnomaticFilesFromFolder] = useState([]);
+  const [welcomerExcelFilesFromFolder, setWelcomerExcelFilesFromFolder] = useState([]);
+  const [fotoWelcomerFilesFromFolder, setFotoWelcomerFilesFromFolder] = useState([]);
   const [probadorFilesFromFolder, setProbadorFilesFromFolder] = useState([]);
   const [probadorExcelFilesFromFolder, setProbadorExcelFilesFromFolder] = useState([]);
   const [audioFilesFromFolder, setAudioFilesFromFolder] = useState([]);
@@ -1043,13 +1068,16 @@ export default function App() {
       setCuadrosAVFilesFromFolder(cuadrosAVFiles);
     }
     
-    // Filtrar archivos de banners (misma carpeta As Built/Fotos/)
-    // Por ahora, todos los archivos de imagen que no sean de otros módulos se consideran banners
-    // TODO: Añadir filtros específicos si es necesario
-    const bannerFiles = fotoFiles.filter(file => {
+    // Filtrar archivos de fotos de banners (misma carpeta As Built/Fotos/)
+    const fotoBannerFiles = fotoFiles.filter(file => {
       const fileName = file.name.toUpperCase();
-      // Excluir archivos que ya se asignaron a otros módulos
-      return !fileName.includes('PROBADORES_GENERAL') &&
+      const tieneSX = /[_\s]S\d+/.test(fileName);
+      const esTipoBanner = fileName.includes('_FRONTAL') || 
+                           fileName.includes('_PLAYER') || 
+                           fileName.includes('_SENDING') ||
+                           fileName.includes('_IP');
+      return tieneSX && esTipoBanner &&
+             !fileName.includes('PROBADORES_GENERAL') &&
              !fileName.includes('DEVICE_SENSOR') &&
              !fileName.includes('CABINA_OCUPADA') &&
              !fileName.includes('ALTAVOZ') &&
@@ -1072,17 +1100,91 @@ export default function App() {
              !fileName.includes('TÉRMICOS_PANTALLA') &&
              !fileName.includes('TÉRMICOS_RACK') &&
              !fileName.includes('DOC_BOX') &&
-             !fileName.includes('AV_BOX') &&
-             !fileName.includes('_FRONTAL') &&
-             !fileName.includes('_PLAYER') &&
-             !fileName.includes('_SENDING') &&
-             !fileName.includes('_IP');
+             !fileName.includes('AV_BOX');
     });
-    console.log('Archivos de banners encontrados:', bannerFiles.length);
     
-    // Enviar archivos de banners a BannersEditor.jsx para procesamiento
-    if (bannerFiles.length > 0) {
-      setBannerFilesFromFolder(bannerFiles);
+    // Filtrar archivos de fotos de turnomatic (misma lógica que banners)
+    const fotoTurnomaticFiles = fotoFiles.filter(file => {
+      const fileName = file.name.toUpperCase();
+      const tieneSX = /[_\s]S\d+/.test(fileName);
+      const esTipoFoto = fileName.includes('_FRONTAL') || 
+                         fileName.includes('_PLAYER') || 
+                         fileName.includes('_SENDING') ||
+                         fileName.includes('_IP');
+      return tieneSX && esTipoFoto &&
+             !fileName.includes('PROBADORES_GENERAL') &&
+             !fileName.includes('DEVICE_SENSOR') &&
+             !fileName.includes('CABINA_OCUPADA') &&
+             !fileName.includes('ALTAVOZ') &&
+             !fileName.includes('TORRE') &&
+             !fileName.includes('CLUSTER') &&
+             !fileName.includes('SUBWOOFER') &&
+             !fileName.includes('SUB-GRABE') &&
+             !fileName.includes('SUBGRABE') &&
+             !fileName.includes('SUB_GRABE') &&
+             !fileName.includes('FRONTAL_RACK_VIDEO') &&
+             !fileName.includes('TRASERA_RACK_VIDEO') &&
+             !fileName.includes('FRONTAL_RACK_COMUNICACIONES') &&
+             !fileName.includes('FRONTAL_RACK_COMUNICACION') &&
+             !fileName.includes('FRONTAL RACK COMUNICACIONES') &&
+             !fileName.includes('FRONTAL_RACK_AUDIO') &&
+             !fileName.includes('TRASERA_RACK_AUDIO') &&
+             !fileName.includes('FRONTAL_ON_THE_SPOT') &&
+             !fileName.includes('CUADRO_LSG') &&
+             !fileName.includes('CUADRO_ELECTRICO_GENERAL') &&
+             !fileName.includes('TÉRMICOS_PANTALLA') &&
+             !fileName.includes('TÉRMICOS_RACK') &&
+             !fileName.includes('DOC_BOX') &&
+             !fileName.includes('AV_BOX');
+    });
+    
+    // Filtrar archivos de fotos de welcomer (misma lógica que banners)
+    const fotoWelcomerFiles = fotoFiles.filter(file => {
+      const fileName = file.name.toUpperCase();
+      const tieneSX = /[_\s]S\d+/.test(fileName);
+      const esTipoFoto = fileName.includes('_FRONTAL') || 
+                         fileName.includes('_PLAYER') || 
+                         fileName.includes('_SENDING') ||
+                         fileName.includes('_IP');
+      return tieneSX && esTipoFoto &&
+             !fileName.includes('PROBADORES_GENERAL') &&
+             !fileName.includes('DEVICE_SENSOR') &&
+             !fileName.includes('CABINA_OCUPADA') &&
+             !fileName.includes('ALTAVOZ') &&
+             !fileName.includes('TORRE') &&
+             !fileName.includes('CLUSTER') &&
+             !fileName.includes('SUBWOOFER') &&
+             !fileName.includes('SUB-GRABE') &&
+             !fileName.includes('SUBGRABE') &&
+             !fileName.includes('SUB_GRABE') &&
+             !fileName.includes('FRONTAL_RACK_VIDEO') &&
+             !fileName.includes('TRASERA_RACK_VIDEO') &&
+             !fileName.includes('FRONTAL_RACK_COMUNICACIONES') &&
+             !fileName.includes('FRONTAL_RACK_COMUNICACION') &&
+             !fileName.includes('FRONTAL RACK COMUNICACIONES') &&
+             !fileName.includes('FRONTAL_RACK_AUDIO') &&
+             !fileName.includes('TRASERA_RACK_AUDIO') &&
+             !fileName.includes('FRONTAL_ON_THE_SPOT') &&
+             !fileName.includes('CUADRO_LSG') &&
+             !fileName.includes('CUADRO_ELECTRICO_GENERAL') &&
+             !fileName.includes('TÉRMICOS_PANTALLA') &&
+             !fileName.includes('TÉRMICOS_RACK') &&
+             !fileName.includes('DOC_BOX') &&
+             !fileName.includes('AV_BOX');
+    });
+    
+    console.log('Archivos de fotos de banners encontrados:', fotoBannerFiles.length);
+    console.log('Archivos de fotos de turnomatic encontrados:', fotoTurnomaticFiles.length);
+    console.log('Archivos de fotos de welcomer encontrados:', fotoWelcomerFiles.length);
+    
+    if (fotoBannerFiles.length > 0) {
+      setFotoBannerFilesFromFolder(fotoBannerFiles);
+    }
+    if (fotoTurnomaticFiles.length > 0) {
+      setFotoTurnomaticFilesFromFolder(fotoTurnomaticFiles);
+    }
+    if (fotoWelcomerFiles.length > 0) {
+      setFotoWelcomerFilesFromFolder(fotoWelcomerFiles);
     }
 
     // Filtrar archivos de documentación (misma carpeta As Built/Fotos/)
@@ -1156,20 +1258,63 @@ export default function App() {
       console.log('No se encontró foto de entrada (ENTRADA_TIENDA)');
     }
     
-    // Filtrar archivos Excel que contengan "BANNERS" en el nombre
+    // Filtrar archivos Excel que contengan "Validación_INTERNA_BANNERS" o "Validacion_INTERNA_BANNERS"
     // Estos archivos se procesan en BannersEditor.jsx
     const bannerExcelFiles = files.filter(file => {
+      const path = file.webkitRelativePath || file.path || '';
       const fileName = file.name.toUpperCase();
-      const hasBanners = fileName.includes('BANNERS');
-      const isExcel = fileName.endsWith('.XLSX') || fileName.endsWith('.XLS') || fileName.endsWith('.CSV');
-      return hasBanners && isExcel;
+      const isExcel = fileName.endsWith('.XLSX') || fileName.endsWith('.XLS');
+      const isInValidaciones = path.includes('Documentación/Validaciones/') || 
+                                path.includes('Documentación\\Validaciones\\') ||
+                                path.includes('Documentacion/Validaciones/') ||
+                                path.includes('Documentacion\\Validaciones\\');
+      const hasValidacionBanners = fileName.includes('VALIDACION_INTERNA_BANNERS') || 
+                                   file.name.includes('Validación_INTERNA_BANNERS') || 
+                                   file.name.includes('Validacion_INTERNA_BANNERS');
+      return isExcel && isInValidaciones && hasValidacionBanners;
     });
     
     console.log('Archivos Excel de BANNERS encontrados para procesar:', bannerExcelFiles.length);
     
+    // Filtrar archivos Excel que contengan "TURNOMATIC"
+    const turnomaticExcelFiles = files.filter(file => {
+      const path = file.webkitRelativePath || file.path || '';
+      const fileName = file.name.toUpperCase();
+      const isExcel = fileName.endsWith('.XLSX') || fileName.endsWith('.XLS');
+      const isInValidaciones = path.includes('Documentación/Validaciones/') || 
+                                path.includes('Documentación\\Validaciones\\') ||
+                                path.includes('Documentacion/Validaciones/') ||
+                                path.includes('Documentacion\\Validaciones\\');
+      const hasTurnomatic = fileName.includes('TURNOMATIC');
+      return isExcel && isInValidaciones && hasTurnomatic;
+    });
+    
+    // Filtrar archivos Excel que contengan "WELCOMER"
+    const welcomerExcelFiles = files.filter(file => {
+      const path = file.webkitRelativePath || file.path || '';
+      const fileName = file.name.toUpperCase();
+      const isExcel = fileName.endsWith('.XLSX') || fileName.endsWith('.XLS');
+      const isInValidaciones = path.includes('Documentación/Validaciones/') || 
+                                path.includes('Documentación\\Validaciones\\') ||
+                                path.includes('Documentacion/Validaciones/') ||
+                                path.includes('Documentacion\\Validaciones\\');
+      const hasWelcomer = fileName.includes('WELCOMER');
+      return isExcel && isInValidaciones && hasWelcomer;
+    });
+    
     // Enviar archivos Excel de banners a BannersEditor.jsx para procesamiento
     if (bannerExcelFiles.length > 0) {
       setBannerExcelFilesFromFolder(bannerExcelFiles);
+    }
+    
+    // Enviar archivos Excel de turnomatic
+    if (turnomaticExcelFiles.length > 0) {
+      setTurnomaticExcelFilesFromFolder(turnomaticExcelFiles);
+    }
+    
+    // Enviar archivos Excel de welcomer
+    if (welcomerExcelFiles.length > 0) {
+      setWelcomerExcelFilesFromFolder(welcomerExcelFiles);
     }
 
     // Filtrar y enviar archivos Excel de Documentación/Validaciones/ a DesglosePantallasEditor.jsx
@@ -1314,6 +1459,11 @@ export default function App() {
       pantallas: [],
       fotos: [],
       banners: [],
+      fotosBanners: [],
+      turnomatic: [],
+      fotosTurnomatic: [],
+      welcomer: [],
+      fotosWelcomer: [],
       probadores: {
         activo: false,
         probadorOcupado: { url: "", fileName: undefined, fileSize: undefined },
@@ -1359,10 +1509,11 @@ export default function App() {
         termicosPantalla: [],
         termicosRack: []
       },
-      documentacion: {
-        docBox: [],
-        avBox: []
-      },
+  documentacion: {
+    docBox: [],
+    avBox: [],
+    conexionado: []
+  },
       unifilarVideo: { 
         detalle: "",
         fotos: [
@@ -1473,6 +1624,12 @@ export default function App() {
           cuadrosAVFilesFromFolder={cuadrosAVFilesFromFolder}
           documentacionFilesFromFolder={documentacionFilesFromFolder}
           onFotosProcessed={setFotosProcessedInfo}
+          bannerExcelFilesFromFolder={bannerExcelFilesFromFolder}
+          fotoBannerFilesFromFolder={fotoBannerFilesFromFolder}
+          turnomaticExcelFilesFromFolder={turnomaticExcelFilesFromFolder}
+          fotoTurnomaticFilesFromFolder={fotoTurnomaticFilesFromFolder}
+          welcomerExcelFilesFromFolder={welcomerExcelFilesFromFolder}
+          fotoWelcomerFilesFromFolder={fotoWelcomerFilesFromFolder}
             />
         </div>
 

@@ -2,16 +2,14 @@ import React from 'react';
 import { PAGE } from '../../utils/constants';
 import { PageFooter } from '../Page/PageFooter';
 
-export const SeccionBanners = ({ fotosBanners }) => {
-  // Verificar que hay fotos para mostrar
-  if (!fotosBanners || fotosBanners.length === 0) {
+export const SeccionTurnomatic = ({ fotosTurnomatic }) => {
+  if (!fotosTurnomatic || fotosTurnomatic.length === 0) {
     return null;
   }
   
-  // Agrupar fotos de 2 en 2 (máximo 2 bloques por página)
   const grupos = [];
-  for (let i = 0; i < fotosBanners.length; i += 2) {
-    grupos.push(fotosBanners.slice(i, i + 2));
+  for (let i = 0; i < fotosTurnomatic.length; i += 2) {
+    grupos.push(fotosTurnomatic.slice(i, i + 2));
   }
   if (grupos.length === 0) return null;
 
@@ -21,7 +19,7 @@ export const SeccionBanners = ({ fotosBanners }) => {
         <section className={PAGE} key={grupoIdx}>
           <div className="page-header">
             <div className="border-b-2 border-neutral-800 pb-3">
-              <h2 className="text-xl font-bold text-neutral-800">BANNERS</h2>
+              <h2 className="text-xl font-bold text-neutral-800">TURNOMATIC</h2>
               <p className="text-sm text-neutral-600 mt-1">Página {grupoIdx + 1} de {grupos.length}</p>
             </div>
           </div>
@@ -82,3 +80,4 @@ export const SeccionBanners = ({ fotosBanners }) => {
     </>
   );
 };
+

@@ -262,23 +262,27 @@ export const processExcelPantallas = async (file) => {
 /**
  * Procesa un archivo Excel de banners y extrae datos
  * Reglas:
- * - Archivo DEBE contener "BANNERS" en el nombre (obligatorio)
+ * - Archivo DEBE contener "Validación_INTERNA_BANNERS" o "Validacion_INTERNA_BANNERS" en el nombre (obligatorio)
  * - Leer desde la fila 4 (índice 3)
- * - Por ahora, importa todas las filas (se puede añadir filtros específicos después)
+ * - FILTRO 1 (PRIMERO): Columna C (índice 2) "NOMBRE DE LA PANTALLA" debe contener patrón SX (S1, S2, etc.)
+ * - FILTRO 2 (SEGUNDO): Columna B (índice 1) "Columna2" debe contener "Alta"
+ * - Columnas: Etiqueta de plano (M, índice 12), Modelo (I, índice 8), Resolución (F, índice 5), Tamaño Lineal (G, índice 6)
  */
 export const processExcelBanners = async (file) => {
-  if (!file) return { banners: [] };
+  if (!file) return { banners: [], duplicadosEliminados: 0 };
 
   try {
-    // Validar nombre del archivo - DEBE contener "BANNERS"
+    // Validar nombre del archivo - DEBE contener "Validación_INTERNA_BANNERS" o "Validacion_INTERNA_BANNERS"
     const fileName = file.name;
     const fileNameUpper = fileName.toUpperCase();
     
-    const tieneBanners = fileNameUpper.includes('BANNERS');
+    const tieneValidacionBanners = fileNameUpper.includes('VALIDACION_INTERNA_BANNERS') || 
+                                    fileName.includes('Validación_INTERNA_BANNERS') || 
+                                    fileName.includes('Validacion_INTERNA_BANNERS');
     
-    if (!tieneBanners) {
-      alert(`El archivo "${file.name}" no es válido.\n\nSolo se procesan archivos Excel que contengan "BANNERS" en el nombre.`);
-      return { banners: [] };
+    if (!tieneValidacionBanners) {
+      alert(`El archivo "${file.name}" no es válido.\n\nSolo se procesan archivos Excel que contengan "Validación_INTERNA_BANNERS" o "Validacion_INTERNA_BANNERS" en el nombre.`);
+      return { banners: [], duplicadosEliminados: 0 };
     }
 
     const arrayBuffer = await file.arrayBuffer();
@@ -294,7 +298,7 @@ export const processExcelBanners = async (file) => {
     
     if (!allRows || allRows.length === 0) {
       alert('El archivo Excel está vacío');
-      return { banners: [] };
+      return { banners: [], duplicadosEliminados: 0 };
     }
 
     // Leer desde la fila 4 (índice 3)
@@ -302,11 +306,13 @@ export const processExcelBanners = async (file) => {
     
     if (allRows.length <= startRowIndex) {
       alert('El archivo no tiene suficientes filas (mínimo 4 filas)');
-      return { banners: [] };
+      return { banners: [], duplicadosEliminados: 0 };
     }
 
     // Procesar las filas desde la fila 4
     const bannersFromExcel = [];
+    let filasProcesadas = 0;
+    let filasConAlta = 0;
     
     console.log(`\n📊 Procesando Excel de Banners: ${file.name}`);
     console.log(`   Total de filas en el archivo: ${allRows.length}`);
@@ -316,28 +322,285 @@ export const processExcelBanners = async (file) => {
       const row = allRows[i];
       if (!row || row.length === 0) continue;
       
-      // Por ahora, tomar la primera columna como etiqueta
-      // Se puede ajustar según la estructura real del Excel
-      const etiqueta = String(row[0] || '').trim();
+      filasProcesadas++;
       
-      if (!etiqueta) continue; // Saltar filas vacías
+      // FILTRO: Columna B (índice 1) debe contener "Alta"
+      const columnaB = String(row[1] || '').trim();
+      if (!columnaB || !columnaB.toUpperCase().includes('ALTA')) {
+        continue; // Saltar esta fila si no contiene "Alta"
+      }
+      
+      filasConAlta++;
+      
+      // Validación INTERNA BANNERS: Etiqueta de plano (M), Modelo (I), Resolución (F), Resolución Lineal (G)
+      const etiquetaPlano = String(row[12] || '').trim(); // Columna M (índice 12)
+      const modelo = String(row[8] || '').trim(); // Columna I (índice 8)
+      const resolucion = String(row[5] || '').trim(); // Columna F (índice 5)
+      const resolucionLineal = String(row[6] || '').trim(); // Columna G (índice 6) - Resolución Lineal
       
       bannersFromExcel.push({
-        etiqueta: etiqueta,
-        imagen: { url: "", fileName: undefined, fileSize: undefined }
+        etiquetaPlano: etiquetaPlano,
+        modelo: modelo,
+        resolucion: resolucion,
+        tamanoLineal: resolucionLineal, // Resolución Lineal
+        puertoPatch: '',
+        puertoSwitch: '',
+        contrato: '',
+        termicoPantalla: '',
+        termicoPC: ''
       });
     }
     
-    console.log(`\n✅ Banners importados: ${bannersFromExcel.length}`);
-    bannersFromExcel.forEach((b, idx) => {
-      console.log(`   ${idx + 1}. ${b.etiqueta}`);
+    console.log(`\n📊 Resumen del procesamiento:`);
+    console.log(`   Filas procesadas: ${filasProcesadas}`);
+    console.log(`   Filas con "Alta" en columna B: ${filasConAlta}`);
+    console.log(`   Banners válidos encontrados: ${bannersFromExcel.length}`);
+
+    if (bannersFromExcel.length === 0) {
+      const mensaje = `No se encontraron banners válidos que cumplan los criterios:\n- Columna B contiene "Alta"\n\nFilas procesadas: ${filasProcesadas}\nFilas con Alta: ${filasConAlta}`;
+      console.error(mensaje);
+      alert(mensaje);
+      return { banners: [], duplicadosEliminados: 0 };
+    }
+
+    // ============================================
+    // FILTRO ANTI-DUPLICADOS: Eliminar duplicados por patrón SX
+    // ============================================
+    console.log(`\n🔍 Aplicando filtro anti-duplicados...`);
+    console.log(`   Banners antes del filtro: ${bannersFromExcel.length}`);
+    
+    const { pantallasUnicas, duplicadosEliminados } = removeDuplicatesBySX(bannersFromExcel);
+    
+    console.log(`   Banners después del filtro: ${pantallasUnicas.length}`);
+    console.log(`   Duplicados eliminados: ${duplicadosEliminados.length}`);
+    
+    if (duplicadosEliminados.length > 0) {
+      console.warn(`⚠️ Se eliminaron ${duplicadosEliminados.length} banner(es) duplicado(s) por patrón SX`);
+    }
+    
+    // Listar todos los banners importados
+    console.log(`\n✅ Banners importados (${pantallasUnicas.length}):`);
+    pantallasUnicas.forEach((b, idx) => {
+      console.log(`   ${idx + 1}. ${b.etiquetaPlano} (Modelo: ${b.modelo}, Resolución: ${b.resolucion})`);
     });
 
-    return { banners: bannersFromExcel };
+    return { 
+      banners: pantallasUnicas, 
+      duplicadosEliminados: duplicadosEliminados.length
+    };
   } catch (error) {
     console.error('Error al procesar el Excel de Banners:', error);
     alert('Error: ' + error.message);
-    return { banners: [] };
+    return { banners: [], duplicadosEliminados: 0 };
+  }
+};
+
+/**
+ * Procesa un archivo Excel de Turnomatic y extrae datos
+ * Reglas:
+ * - Archivo DEBE contener "TURNOMATIC" en el nombre (obligatorio)
+ * - Leer desde la fila 4 (índice 3)
+ * - FILTRO 1 (PRIMERO): Columna C (índice 2) "NOMBRE DE LA PANTALLA" debe contener patrón SX (S1, S2, etc.)
+ * - FILTRO 2 (SEGUNDO): Columna B (índice 1) "Columna2" debe contener "Alta"
+ * - Columnas: Etiqueta de plano (M, índice 12), Modelo (I, índice 8), Resolución (F, índice 5), Tamaño Lineal (G, índice 6)
+ */
+export const processExcelTurnomatic = async (file) => {
+  if (!file) return { turnomatic: [], duplicadosEliminados: 0 };
+
+  try {
+    const fileName = file.name;
+    const fileNameUpper = fileName.toUpperCase();
+    
+    const tieneTurnomatic = fileNameUpper.includes('TURNOMATIC');
+    
+    if (!tieneTurnomatic) {
+      alert(`El archivo "${file.name}" no es válido.\n\nSolo se procesan archivos Excel que contengan "TURNOMATIC" en el nombre.`);
+      return { turnomatic: [], duplicadosEliminados: 0 };
+    }
+
+    const arrayBuffer = await file.arrayBuffer();
+    const XLSXLib = await import('xlsx');
+    const workbook = XLSXLib.read(arrayBuffer, { type: 'array', defval: '' });
+    
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    
+    const allRows = XLSXLib.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+    
+    if (!allRows || allRows.length === 0) {
+      alert('El archivo Excel está vacío');
+      return { turnomatic: [], duplicadosEliminados: 0 };
+    }
+
+    const startRowIndex = 3;
+    
+    if (allRows.length <= startRowIndex) {
+      alert('El archivo no tiene suficientes filas (mínimo 4 filas)');
+      return { turnomatic: [], duplicadosEliminados: 0 };
+    }
+
+    const turnomaticFromExcel = [];
+    let filasProcesadas = 0;
+    let filasConAlta = 0;
+    
+    console.log(`\n📊 Procesando Excel de Turnomatic: ${file.name}`);
+    
+    for (let i = startRowIndex; i < allRows.length; i++) {
+      const row = allRows[i];
+      if (!row || row.length === 0) continue;
+      
+      filasProcesadas++;
+      
+      // FILTRO: Columna C (índice 2) debe contener "Alta"
+      const columnaC = String(row[2] || '').trim();
+      if (!columnaC || !columnaC.toUpperCase().includes('ALTA')) {
+        continue;
+      }
+      
+      filasConAlta++;
+      
+      // Validación TURNOMATIC: Etiqueta de plano (U), Hostname (T), MAC (S)
+      const etiquetaPlano = String(row[20] || '').trim(); // Columna U (índice 20)
+      const hostname = String(row[19] || '').trim(); // Columna T (índice 19)
+      const mac = String(row[18] || '').trim(); // Columna S (índice 18)
+      
+      // Solo agregar si tiene etiqueta de plano
+      if (!etiquetaPlano) {
+        continue;
+      }
+      
+      turnomaticFromExcel.push({
+        etiquetaPlano: etiquetaPlano,
+        hostname: hostname,
+        mac: mac,
+        puertoPatch: '',
+        puertoSwitch: '',
+        contrato: '',
+        termicoPantalla: '',
+        termicoPC: ''
+      });
+    }
+    
+    if (turnomaticFromExcel.length === 0) {
+      const mensaje = `No se encontraron turnomatic válidos que cumplan los criterios:\n- Columna C contiene "Alta"\n- Columna U contiene etiqueta de plano`;
+      console.error(mensaje);
+      alert(mensaje);
+      return { turnomatic: [], duplicadosEliminados: 0 };
+    }
+
+    // No aplicar filtro anti-duplicados para Turnomatic, ya que no se filtra por SX
+    const duplicadosEliminados = [];
+    
+    return { 
+      turnomatic: turnomaticFromExcel, 
+      duplicadosEliminados: duplicadosEliminados.length
+    };
+  } catch (error) {
+    console.error('Error al procesar el Excel de Turnomatic:', error);
+    alert('Error: ' + error.message);
+    return { turnomatic: [], duplicadosEliminados: 0 };
+  }
+};
+
+/**
+ * Procesa un archivo Excel de Welcomer y extrae datos
+ * Reglas:
+ * - Archivo DEBE contener "WELCOMER" en el nombre (obligatorio)
+ * - Leer desde la fila 4 (índice 3)
+ * - FILTRO 1 (PRIMERO): Columna C (índice 2) "NOMBRE DE LA PANTALLA" debe contener patrón SX (S1, S2, etc.)
+ * - FILTRO 2 (SEGUNDO): Columna B (índice 1) "Columna2" debe contener "Alta"
+ * - Columnas: Etiqueta de plano (M, índice 12), Modelo (I, índice 8), Resolución (F, índice 5), Tamaño Lineal (G, índice 6)
+ */
+export const processExcelWelcomer = async (file) => {
+  if (!file) return { welcomer: [], duplicadosEliminados: 0 };
+
+  try {
+    const fileName = file.name;
+    const fileNameUpper = fileName.toUpperCase();
+    
+    const tieneWelcomer = fileNameUpper.includes('WELCOMER');
+    
+    if (!tieneWelcomer) {
+      alert(`El archivo "${file.name}" no es válido.\n\nSolo se procesan archivos Excel que contengan "WELCOMER" en el nombre.`);
+      return { welcomer: [], duplicadosEliminados: 0 };
+    }
+
+    const arrayBuffer = await file.arrayBuffer();
+    const XLSXLib = await import('xlsx');
+    const workbook = XLSXLib.read(arrayBuffer, { type: 'array', defval: '' });
+    
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    
+    const allRows = XLSXLib.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+    
+    if (!allRows || allRows.length === 0) {
+      alert('El archivo Excel está vacío');
+      return { welcomer: [], duplicadosEliminados: 0 };
+    }
+
+    const startRowIndex = 3;
+    
+    if (allRows.length <= startRowIndex) {
+      alert('El archivo no tiene suficientes filas (mínimo 4 filas)');
+      return { welcomer: [], duplicadosEliminados: 0 };
+    }
+
+    const welcomerFromExcel = [];
+    let filasProcesadas = 0;
+    
+    console.log(`\n📊 Procesando Excel de Welcomer: ${file.name}`);
+    
+    for (let i = startRowIndex; i < allRows.length; i++) {
+      const row = allRows[i];
+      if (!row || row.length === 0) continue;
+      
+      filasProcesadas++;
+      
+      // Validación WELCOMER: Etiqueta de plano (E), Hostname (B), MAC (D), Sección (H), Nº de Probadores (J)
+      // NO tiene condición de "Alta", solo se muestran los que se instalen
+      const etiquetaPlano = String(row[4] || '').trim(); // Columna E (índice 4)
+      const hostname = String(row[1] || '').trim(); // Columna B (índice 1)
+      const mac = String(row[3] || '').trim(); // Columna D (índice 3)
+      const seccion = String(row[7] || '').trim(); // Columna H (índice 7)
+      const numProbadores = String(row[9] || '').trim(); // Columna J (índice 9)
+      
+      // Si no hay etiqueta de plano, no se muestra
+      if (!etiquetaPlano) {
+        continue;
+      }
+      
+      welcomerFromExcel.push({
+        etiquetaPlano: etiquetaPlano,
+        hostname: hostname,
+        mac: mac,
+        seccion: seccion,
+        numProbadores: numProbadores,
+        puertoPatch: '',
+        puertoSwitch: '',
+        contrato: '',
+        termicoPantalla: '',
+        termicoPC: ''
+      });
+    }
+    
+    if (welcomerFromExcel.length === 0) {
+      // No mostrar alerta si no hay welcomer, simplemente retornar vacío
+      console.log('No se encontraron welcomer con etiquetas de plano');
+      return { welcomer: [], duplicadosEliminados: 0 };
+    }
+
+    // No aplicar filtro anti-duplicados para Welcomer
+    const duplicadosEliminados = [];
+    
+    return { 
+      welcomer: welcomerFromExcel, 
+      duplicadosEliminados: duplicadosEliminados.length
+    };
+  } catch (error) {
+    console.error('Error al procesar el Excel de Welcomer:', error);
+    alert('Error: ' + error.message);
+    return { welcomer: [], duplicadosEliminados: 0 };
   }
 };
 

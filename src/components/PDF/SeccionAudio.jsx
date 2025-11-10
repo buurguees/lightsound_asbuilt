@@ -17,6 +17,8 @@ export const SeccionAudio = ({ audio }) => {
     { key: 'subGrave', label: 'Sub-grave' },
     { key: 'altavozProbadores', label: 'Altavoz Probadores' },
     { key: 'cluster', label: 'Cluster' },
+    { key: 'microfono', label: 'Micrófono' },
+    { key: 'bucleInduccion', label: 'Bucle de Inducción' },
     { key: 'altavoz', label: 'Altavoz' },
     { key: 'torre', label: 'Torre' },
     { key: 'subwoofer', label: 'Subwoofer' },

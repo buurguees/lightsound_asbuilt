@@ -1,9 +1,128 @@
 import { useEffect, useRef } from 'react';
 import { Button } from '../UI/Button';
+import { Input } from '../UI/Input';
 import { compressImage } from '../../utils/imageUtils';
 
 export const DocumentacionEditor = ({ data, setData, imageInputRefs, documentacionFilesFromFolder }) => {
   const processedFilesRef = useRef(new Set());
+
+  // Sincronizar data.documentacion.conexionado con todas las etiquetas de planos
+  useEffect(() => {
+    const todasEtiquetas = [];
+    
+    if (data.pantallas && Array.isArray(data.pantallas)) {
+      data.pantallas.forEach(p => {
+        if (p.etiquetaPlano) {
+          todasEtiquetas.push({
+            etiquetaPlano: p.etiquetaPlano,
+            puertoPatch: p.puertoPatch || '',
+            puertoSwitch: p.puertoSwitch || '',
+            contrato: p.contrato || '',
+            termicoPantalla: p.termicoPantalla || '',
+            termicoPC: p.termicoPC || ''
+          });
+        }
+      });
+    }
+    
+    if (data.banners && Array.isArray(data.banners)) {
+      data.banners.forEach(b => {
+        if (b.etiquetaPlano) {
+          todasEtiquetas.push({
+            etiquetaPlano: b.etiquetaPlano,
+            puertoPatch: b.puertoPatch || '',
+            puertoSwitch: b.puertoSwitch || '',
+            contrato: b.contrato || '',
+            termicoPantalla: b.termicoPantalla || '',
+            termicoPC: b.termicoPC || ''
+          });
+        }
+      });
+    }
+    
+    if (data.turnomatic && Array.isArray(data.turnomatic)) {
+      data.turnomatic.forEach(t => {
+        if (t.etiquetaPlano) {
+          todasEtiquetas.push({
+            etiquetaPlano: t.etiquetaPlano,
+            puertoPatch: t.puertoPatch || '',
+            puertoSwitch: t.puertoSwitch || '',
+            contrato: t.contrato || '',
+            termicoPantalla: t.termicoPantalla || '',
+            termicoPC: t.termicoPC || ''
+          });
+        }
+      });
+    }
+    
+    if (data.welcomer && Array.isArray(data.welcomer)) {
+      data.welcomer.forEach(w => {
+        if (w.etiquetaPlano) {
+          todasEtiquetas.push({
+            etiquetaPlano: w.etiquetaPlano,
+            puertoPatch: w.puertoPatch || '',
+            puertoSwitch: w.puertoSwitch || '',
+            contrato: w.contrato || '',
+            termicoPantalla: w.termicoPantalla || '',
+            termicoPC: w.termicoPC || ''
+          });
+        }
+      });
+    }
+    
+    if (todasEtiquetas.length > 0) {
+      setData((d) => {
+        const c = structuredClone(d);
+        if (!c.documentacion) {
+          c.documentacion = { docBox: [], avBox: [], conexionado: [] };
+        }
+        if (!c.documentacion.conexionado) {
+          c.documentacion.conexionado = [];
+        }
+        
+        const etiquetasExistentes = new Set(
+          c.documentacion.conexionado.map(item => String(item.etiquetaPlano || '').trim())
+        );
+        
+        todasEtiquetas.forEach(etiqueta => {
+          const etiquetaStr = String(etiqueta.etiquetaPlano || '').trim();
+          if (etiquetaStr && !etiquetasExistentes.has(etiquetaStr)) {
+            c.documentacion.conexionado.push({
+              etiquetaPlano: etiquetaStr,
+              puertoPatch: etiqueta.puertoPatch || '',
+              puertoSwitch: etiqueta.puertoSwitch || '',
+              contrato: etiqueta.contrato || '',
+              termicoPantalla: etiqueta.termicoPantalla || '',
+              termicoPC: etiqueta.termicoPC || ''
+            });
+          } else if (etiquetasExistentes.has(etiquetaStr)) {
+            // Actualizar campos desde los módulos si están vacíos en conexionado
+            const index = c.documentacion.conexionado.findIndex(item => 
+              String(item.etiquetaPlano || '').trim() === etiquetaStr
+            );
+            if (index >= 0) {
+              const item = c.documentacion.conexionado[index];
+              if (!item.puertoPatch && etiqueta.puertoPatch) item.puertoPatch = etiqueta.puertoPatch;
+              if (!item.puertoSwitch && etiqueta.puertoSwitch) item.puertoSwitch = etiqueta.puertoSwitch;
+              if (!item.contrato && etiqueta.contrato) item.contrato = etiqueta.contrato;
+              if (!item.termicoPantalla && etiqueta.termicoPantalla) item.termicoPantalla = etiqueta.termicoPantalla;
+              if (!item.termicoPC && etiqueta.termicoPC) item.termicoPC = etiqueta.termicoPC;
+            }
+          }
+        });
+        
+        const etiquetasValidas = new Set(
+          todasEtiquetas.map(e => String(e.etiquetaPlano || '').trim())
+        );
+        c.documentacion.conexionado = c.documentacion.conexionado.filter(item => {
+          const etiquetaStr = String(item.etiquetaPlano || '').trim();
+          return !etiquetaStr || etiquetasValidas.has(etiquetaStr);
+        });
+        
+        return c;
+      });
+    }
+  }, [data.pantallas, data.banners, data.turnomatic, data.welcomer, setData]);
 
   // Procesar archivos de documentación recibidos desde App.jsx (importación de carpeta)
   useEffect(() => {
@@ -329,6 +448,138 @@ export const DocumentacionEditor = ({ data, setData, imageInputRefs, documentaci
             </div>
           );
         })}
+      </div>
+
+      {/* Tabla: Conexionado e información relevante */}
+      <div className="mt-6">
+        <h3 className="font-semibold text-neutral-700 mb-2">Conexionado e información relevante</h3>
+        <div className="overflow-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="bg-neutral-100 text-[11px]">
+                {[
+                  "Etiqueta de plano", "Puerto patch", "Puerto switch", "Contrato", "Térmico pantalla", "Térmico PC", ""
+                ].map((h) => (
+                  <th key={h} className="border px-2 py-1 text-left font-semibold">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {(data.documentacion && data.documentacion.conexionado && data.documentacion.conexionado.length > 0
+                ? data.documentacion.conexionado
+                : []
+              ).map((r, i) => (
+                  <tr key={i} className="odd:bg-white even:bg-neutral-50">
+                    <td className="border px-1 py-1">
+                      <Input
+                        value={r.etiquetaPlano}
+                        disabled
+                        className="bg-neutral-100 cursor-not-allowed"
+                      />
+                    </td>
+                    <td className="border px-1 py-1">
+                      <Input
+                        value={r.puertoPatch}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setData((d) => {
+                            const c = structuredClone(d);
+                            if (!c.documentacion) c.documentacion = { docBox: [], avBox: [], conexionado: [] };
+                            if (!c.documentacion.conexionado) c.documentacion.conexionado = [];
+                            if (c.documentacion.conexionado[i]) {
+                              c.documentacion.conexionado[i].puertoPatch = v;
+                            }
+                            return c;
+                          });
+                        }}
+                      />
+                    </td>
+                    <td className="border px-1 py-1">
+                      <Input
+                        value={r.puertoSwitch}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setData((d) => {
+                            const c = structuredClone(d);
+                            if (!c.documentacion) c.documentacion = { docBox: [], avBox: [], conexionado: [] };
+                            if (!c.documentacion.conexionado) c.documentacion.conexionado = [];
+                            if (c.documentacion.conexionado[i]) {
+                              c.documentacion.conexionado[i].puertoSwitch = v;
+                            }
+                            return c;
+                          });
+                        }}
+                      />
+                    </td>
+                    <td className="border px-1 py-1">
+                      <Input
+                        value={r.contrato}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setData((d) => {
+                            const c = structuredClone(d);
+                            if (!c.documentacion) c.documentacion = { docBox: [], avBox: [], conexionado: [] };
+                            if (!c.documentacion.conexionado) c.documentacion.conexionado = [];
+                            if (c.documentacion.conexionado[i]) {
+                              c.documentacion.conexionado[i].contrato = v;
+                            }
+                            return c;
+                          });
+                        }}
+                      />
+                    </td>
+                    <td className="border px-1 py-1">
+                      <Input
+                        value={r.termicoPantalla}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setData((d) => {
+                            const c = structuredClone(d);
+                            if (!c.documentacion) c.documentacion = { docBox: [], avBox: [], conexionado: [] };
+                            if (!c.documentacion.conexionado) c.documentacion.conexionado = [];
+                            if (c.documentacion.conexionado[i]) {
+                              c.documentacion.conexionado[i].termicoPantalla = v;
+                            }
+                            return c;
+                          });
+                        }}
+                      />
+                    </td>
+                    <td className="border px-1 py-1">
+                      <Input
+                        value={r.termicoPC}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setData((d) => {
+                            const c = structuredClone(d);
+                            if (!c.documentacion) c.documentacion = { docBox: [], avBox: [], conexionado: [] };
+                            if (!c.documentacion.conexionado) c.documentacion.conexionado = [];
+                            if (c.documentacion.conexionado[i]) {
+                              c.documentacion.conexionado[i].termicoPC = v;
+                            }
+                            return c;
+                          });
+                        }}
+                      />
+                    </td>
+                    <td className="border px-1 py-1 text-right">
+                      <Button onClick={() => {
+                        setData((d) => {
+                          const c = structuredClone(d);
+                          if (c.documentacion && c.documentacion.conexionado) {
+                            c.documentacion.conexionado.splice(i, 1);
+                          }
+                          return c;
+                        });
+                      }}>
+                        Borrar
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

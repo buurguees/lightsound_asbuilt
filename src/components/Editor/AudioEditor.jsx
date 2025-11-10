@@ -91,6 +91,16 @@ export const AudioEditor = ({ data, setData, imageInputRefs, audioFilesFromFolde
           tipoFoto = 'subGrabe';
           tipoNombre = 'SUB-GRABE';
         }
+        // Detectar MICRO (renombrar a MICRÓFONO)
+        else if (fileName.includes('MICRO')) {
+          tipoFoto = 'microfono';
+          tipoNombre = 'MICRÓFONO';
+        }
+        // Detectar BUCLE (renombrar a BUCLE DE INDUCCIÓN)
+        else if (fileName.includes('BUCLE')) {
+          tipoFoto = 'bucleInduccion';
+          tipoNombre = 'BUCLE DE INDUCCIÓN';
+        }
         
         if (tipoFoto) {
           try {
@@ -202,6 +212,14 @@ export const AudioEditor = ({ data, setData, imageInputRefs, audioFilesFromFolde
     }
     else if (nombreUpper.includes('SUB-GRABE') || nombreUpper.includes('SUBGRABE') || nombreUpper.includes('SUB_GRABE')) {
       return { key: 'subGrabe', label: 'Sub-grabe' };
+    }
+    // Detectar MICRO (renombrar a MICRÓFONO)
+    else if (nombreUpper.includes('MICRO')) {
+      return { key: 'microfono', label: 'Micrófono' };
+    }
+    // Detectar BUCLE (renombrar a BUCLE DE INDUCCIÓN)
+    else if (nombreUpper.includes('BUCLE')) {
+      return { key: 'bucleInduccion', label: 'Bucle de Inducción' };
     }
     
     return null;
@@ -332,7 +350,9 @@ export const AudioEditor = ({ data, setData, imageInputRefs, audioFilesFromFolde
     { key: 'altavozFullRange', label: 'ALTAVOZ FULL RANGE' },
     { key: 'subGrave', label: 'SUB-GRAVE' },
     { key: 'altavozProbadores', label: 'ALTAVOZ PROBADORES' },
-    { key: 'cluster', label: 'CLUSTER' }
+    { key: 'cluster', label: 'CLUSTER' },
+    { key: 'microfono', label: 'MICRÓFONO' },
+    { key: 'bucleInduccion', label: 'BUCLE DE INDUCCIÓN' }
   ];
 
   // Mostrar todos los tipos específicos, no solo los que tienen fotos
