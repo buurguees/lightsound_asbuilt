@@ -48,9 +48,6 @@ export const Printable = React.memo(({ data, onPageRendered }) => (
     {data.secciones.documentacion && (
       <SeccionDocumentacion documentacion={data.documentacion} />
     )}
-    {data.secciones.unifilarVideo && (
-      <SeccionRack titulo="UNIFILAR VIDEO" data={data.unifilarVideo} />
-    )}
     {data.secciones.planostienda && (
       <SeccionPlanostienda planostienda={data.planostienda} onPageRendered={onPageRendered} />
     )}

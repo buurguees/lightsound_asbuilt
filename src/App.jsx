@@ -25,7 +25,6 @@ import { RackVideoEditor } from './components/Editor/RackVideoEditor';
 import { RackAudioEditor } from './components/Editor/RackAudioEditor';
 import { CuadrosAVEditor } from './components/Editor/CuadrosAVEditor';
 import { DocumentacionEditor } from './components/Editor/DocumentacionEditor';
-import { UnifilarVideoEditor } from './components/Editor/UnifilarVideoEditor';
 import { PlanosTiendaEditor } from './components/Editor/PlanosTiendaEditor';
 // Utils
 import { PAGE } from './utils/constants';
@@ -98,7 +97,6 @@ const defaultReport = {
     rackAudio: true,
     cuadrosAV: true,
     documentacion: false,
-    unifilarVideo: true,
     planostienda: true,
     medicionPartidas: false,
   },
@@ -181,12 +179,6 @@ const defaultReport = {
         ]
       },
     ],
-  },
-  unifilarVideo: { 
-    detalle: "",
-    fotos: [
-      { url: "", fileName: undefined, fileSize: undefined, descripcion: "" }
-    ]
   },
   configuracion: {
     elementos: [] // Plantilla de elementos instalados
@@ -746,8 +738,6 @@ const Editor = ({
         return <CuadrosAVEditor data={data} setData={setData} imageInputRefs={imageInputRefs} cuadrosAVFilesFromFolder={cuadrosAVFilesFromFolder} />;
       case 'documentacion':
         return <DocumentacionEditor data={data} setData={setData} imageInputRefs={imageInputRefs} documentacionFilesFromFolder={documentacionFilesFromFolder} />;
-      case 'unifilar':
-        return <UnifilarVideoEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />;
       case 'planos':
   return (
           <PlanosTiendaEditor
@@ -1211,7 +1201,6 @@ export default function App() {
         rackAudio: true,
         cuadrosAV: true,
     documentacion: false,
-        unifilarVideo: true,
         planostienda: true,
         medicionPartidas: false,
       },
