@@ -1,10 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { Field } from '../UI/Field';
-import { Textarea } from '../UI/Textarea';
-import { Input } from '../UI/Input';
 import { Button } from '../UI/Button';
 import { compressImage } from '../../utils/imageUtils';
-import { updateData } from '../../utils/dataUtils';
 
 export const RackAudioEditor = ({ data, setData, imageInputRefs, rackAudioFilesFromFolder }) => {
   const processedFilesRef = useRef(new Set());
@@ -226,13 +222,6 @@ export const RackAudioEditor = ({ data, setData, imageInputRefs, rackAudioFilesF
   return (
     <div>
       <h2 className="font-semibold text-neutral-800 mb-4">Rack de audio</h2>
-      
-      <Field label="Descripción">
-        <Textarea rows={4} value={data.rackAudio.descripcion} onChange={(e) => updateData(setData, "rackAudio.descripcion", e.target.value)} />
-      </Field>
-      <Field label="Observaciones (opcional)" className="mt-3">
-        <Textarea rows={2} value={data.rackAudio.observaciones || ''} onChange={(e) => updateData(setData, "rackAudio.observaciones", e.target.value)} />
-      </Field>
 
       {/* Botón general para subir múltiples imágenes */}
       <div className="mt-4 mb-4 p-4 bg-neutral-50 rounded-lg border border-neutral-300">

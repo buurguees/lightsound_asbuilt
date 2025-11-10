@@ -7,6 +7,7 @@ import { SeccionProbadores } from './SeccionProbadores';
 import { SeccionAudio } from './SeccionAudio';
 import { SeccionAltavocesInstalacion } from './SeccionAltavocesInstalacion';
 import { SeccionRack } from './SeccionRack';
+import { SeccionRacksCombinados } from './SeccionRacksCombinados';
 import { SeccionCuadros } from './SeccionCuadros';
 import { SeccionPlanostienda } from './SeccionPlanostienda';
 import { SeccionTexto } from './SeccionTexto';
@@ -36,11 +37,8 @@ export const Printable = React.memo(({ data, onPageRendered }) => (
     {data.secciones.altavocesInstalacion && (
       <SeccionAltavocesInstalacion equipamiento={data.equipamiento} />
     )}
-    {data.secciones.rackVideo && (
-      <SeccionRack titulo="RACK DE VÍDEO" data={data.rackVideo} />
-    )}
-    {data.secciones.rackAudio && (
-      <SeccionRack titulo="RACK DE AUDIO" data={data.rackAudio} />
+    {(data.secciones.rackVideo || data.secciones.rackAudio) && (
+      <SeccionRacksCombinados rackVideo={data.rackVideo} rackAudio={data.rackAudio} />
     )}
     {data.secciones.cuadrosAV && (
       <SeccionCuadros cuadros={data.cuadrosAV} />
