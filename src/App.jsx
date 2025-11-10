@@ -38,6 +38,35 @@ const download = (filename, text) => {
   URL.revokeObjectURL(url);
 };
 
+// Funciones de utilidad para formato de fecha DD-MM-AAAA
+const formatDateToDDMMYYYY = (dateString) => {
+  if (!dateString) return "";
+  // Si ya está en formato DD-MM-AAAA, devolverlo tal cual
+  if (/^\d{2}-\d{2}-\d{4}$/.test(dateString)) return dateString;
+  // Si está en formato YYYY-MM-DD, convertir
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+    const [year, month, day] = dateString.split("-");
+    return `${day}-${month}-${year}`;
+  }
+  // Si es una fecha válida, convertir
+  const date = new Date(dateString);
+  if (!isNaN(date.getTime())) {
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+  }
+  return dateString;
+};
+
+const getTodayDDMMYYYY = () => {
+  const today = new Date();
+  const day = String(today.getDate()).padStart(2, "0");
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const year = today.getFullYear();
+  return `${day}-${month}-${year}`;
+};
+
 // (LoadingModal ahora está en components/UI/LoadingModal.jsx)
 
 const defaultReport = {
@@ -49,7 +78,7 @@ const defaultReport = {
     pm: "",
     direccion: "",
     versionPlano: "",
-    fecha: new Date().toISOString().slice(0,10),
+    fecha: getTodayDDMMYYYY(),
     logo: { url: "/logo.svg", fileName: "logo.svg", fileSize: undefined },
     fotoEntrada: { url: "", fileName: undefined, fileSize: undefined },
   },
@@ -293,7 +322,7 @@ const Portada = ({ meta, equipamiento, tipoInstalacionVideo, almacenExterno }) =
             </div>
             <div>
               <p className="font-semibold text-neutral-500 text-[10px] mb-0.5">FECHA</p>
-              <p className="text-neutral-800 font-medium">{meta.fecha}</p>
+              <p className="text-neutral-800 font-medium">{formatDateToDDMMYYYY(meta.fecha)}</p>
             </div>
           </div>
         </div>
@@ -331,7 +360,6 @@ const Portada = ({ meta, equipamiento, tipoInstalacionVideo, almacenExterno }) =
               <thead>
                 <tr className="bg-neutral-100 text-[10px]">
                   <th className="border px-2 py-1.5 text-left font-semibold">Tipo de equipo</th>
-                  <th className="border px-2 py-1.5 text-center font-semibold" style={{ width: '80px' }}>Cantidad</th>
                   <th className="border px-2 py-1.5 text-left font-semibold">Nota</th>
                 </tr>
               </thead>
@@ -339,7 +367,6 @@ const Portada = ({ meta, equipamiento, tipoInstalacionVideo, almacenExterno }) =
                 {equipamiento.filter(item => item.nombre && item.nombre.trim() !== "").map((item, i) => (
                   <tr key={i} className="odd:bg-white even:bg-neutral-50">
                     <td className="border px-2 py-1.5 font-medium">{item.nombre}</td>
-                    <td className="border px-2 py-1.5 text-center">{item.cantidad || "-"}</td>
                     <td className="border px-2 py-1.5 text-xs">{item.nota || "-"}</td>
                   </tr>
                 ))}
@@ -611,7 +638,6 @@ const SeccionAltavocesInstalacion = ({ equipamiento }) => {
             <thead>
               <tr className="bg-neutral-100 text-[11px]">
                 <th className="border px-3 py-2 text-left font-semibold">Tipo de equipo</th>
-                <th className="border px-3 py-2 text-left font-semibold">Cantidad</th>
                 <th className="border px-3 py-2 text-left font-semibold">Nota</th>
               </tr>
             </thead>
@@ -619,7 +645,6 @@ const SeccionAltavocesInstalacion = ({ equipamiento }) => {
               {todosEquipamientos.map((equipo, i) => (
                 <tr key={i} className="odd:bg-white even:bg-neutral-50">
                   <td className="border px-3 py-2 font-medium">{equipo.nombre}</td>
-                  <td className="border px-3 py-2">{equipo.cantidad || "-"}</td>
                   <td className="border px-3 py-2">{equipo.nota || "-"}</td>
                 </tr>
               ))}
@@ -859,6 +884,20 @@ export default function App() {
   const [fotosProcessedInfo, setFotosProcessedInfo] = useState(null);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const inputFolder = useRef(null);
+
+  // Convertir fecha al formato DD-MM-AAAA si está en otro formato
+  useEffect(() => {
+    if (data.meta.fecha && !/^\d{2}-\d{2}-\d{4}$/.test(data.meta.fecha)) {
+      const fechaConvertida = formatDateToDDMMYYYY(data.meta.fecha);
+      if (fechaConvertida !== data.meta.fecha) {
+        setData((d) => {
+          const c = structuredClone(d);
+          c.meta.fecha = fechaConvertida;
+          return c;
+        });
+      }
+    }
+  }, [data.meta.fecha]);
   
 
   // Función para comprimir imagen
@@ -1059,7 +1098,7 @@ export default function App() {
         pm: "",
         direccion: "",
         versionPlano: "",
-        fecha: new Date().toISOString().slice(0,10),
+        fecha: getTodayDDMMYYYY(),
         logo: { url: "/logo.svg", fileName: "logo.svg", fileSize: undefined },
         fotoEntrada: { url: "", fileName: undefined, fileSize: undefined },
       },

@@ -42,7 +42,13 @@ export const MetadatosEditor = ({ data, setData, imageInputRefs }) => {
           <Input value={data.meta.versionPlano} onChange={(e) => upd(setData, "meta.versionPlano", e.target.value)} />
         </Field>
         <Field label="Fecha">
-          <Input value={data.meta.fecha} onChange={(e) => upd(setData, "meta.fecha", e.target.value)} />
+          <Input 
+            value={data.meta.fecha} 
+            onChange={(e) => upd(setData, "meta.fecha", e.target.value)}
+            placeholder="DD-MM-AAAA"
+            pattern="\d{2}-\d{2}-\d{4}"
+            title="Formato: DD-MM-AAAA (ejemplo: 25-12-2024)"
+          />
         </Field>
       </div>
       <div className="mt-4 pt-4 border-t">
