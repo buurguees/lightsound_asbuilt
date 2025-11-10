@@ -17,6 +17,7 @@ import { SeccionTexto } from './SeccionTexto';
 
 export const Printable = React.memo(({ data, onPageRendered }) => (
   <div>
+    {/* Portada (incluye Elementos Instalados) */}
     {data.secciones.portada && (
       <Portada 
         meta={data.meta} 
@@ -25,36 +26,52 @@ export const Printable = React.memo(({ data, onPageRendered }) => (
         almacenExterno={data.almacenExterno}
       />
     )}
+    {/* MKD */}
     {data.secciones.desglosePantallas && (
       <SeccionDesglosePantallas pantallas={data.pantallas} />
     )}
-    {data.secciones.fotosPantallas && (
-      <SeccionFotosPantallas fotos={data.fotos} />
-    )}
+    {/* Banners */}
     {data.secciones.banners && (
       <SeccionBanners banners={data.banners} />
     )}
-    {data.secciones.probadores && (
-      <SeccionProbadores probadores={data.probadores} />
+    {/* Turnomatic */}
+    {data.secciones.turnomatic && (
+      <SeccionTexto titulo="TURNOMATIC" contenido={data.turnomatic?.contenido || ""} />
     )}
+    {/* Welcomer */}
+    {data.secciones.welcomer && (
+      <SeccionTexto titulo="WELCOMER" contenido={data.welcomer?.contenido || ""} />
+    )}
+    {/* Pantallas */}
+    {data.secciones.fotosPantallas && (
+      <SeccionFotosPantallas fotos={data.fotos} />
+    )}
+    {/* Audio */}
     {data.secciones.audio && (
       <SeccionAudio audio={data.audio} />
     )}
-    {data.secciones.altavocesInstalacion && (
-      <SeccionAltavocesInstalacion equipamiento={data.equipamiento} />
+    {/* Probadores */}
+    {data.secciones.probadores && (
+      <SeccionProbadores probadores={data.probadores} />
     )}
-    {(data.secciones.rackVideo || data.secciones.rackAudio) && (
+    {/* Rack de Video */}
+    {data.secciones.rackVideo && (
       <SeccionRacksCombinados rackVideo={data.rackVideo} rackAudio={data.rackAudio} />
     )}
+    {/* Rack de Audio - se muestra junto con Rack Video en SeccionRacksCombinados */}
+    {/* Cuadro Eléctrico */}
     {data.secciones.cuadrosAV && (
       <SeccionCuadrosAV cuadrosAV={data.cuadrosAV} />
     )}
+    {/* Documentación */}
     {data.secciones.documentacion && (
       <SeccionDocumentacion documentacion={data.documentacion} />
     )}
+    {/* Planos de Tienda */}
     {data.secciones.planostienda && (
       <SeccionPlanostienda planostienda={data.planostienda} onPageRendered={onPageRendered} />
     )}
+    {/* Elementos Instalados - se mantiene en la portada, no se muestra aquí */}
     {data.secciones.medicionPartidas && (
       <SeccionTexto titulo="INFORME MEDICIÓN - DESGLOSE POR PARTIDAS" contenido={""} />
     )}

@@ -93,6 +93,8 @@ const defaultReport = {
     desglosePantallas: true,
     fotosPantallas: true,
     banners: false,
+    turnomatic: false,
+    welcomer: false,
     probadores: false,
     audio: false,
     altavocesInstalacion: true,
@@ -112,11 +114,11 @@ const defaultReport = {
   pantallas: [],
   fotos: [],
   banners: [],
-      probadores: {
-        activo: false,
-        probadorOcupado: { url: "", fileName: undefined, fileSize: undefined },
-        probadorLiberado: { url: "", fileName: undefined, fileSize: undefined },
-        pasilloProbadores: { url: "", fileName: undefined, fileSize: undefined },
+  probadores: {
+    activo: false,
+    probadorOcupado: { url: "", fileName: undefined, fileSize: undefined },
+    probadorLiberado: { url: "", fileName: undefined, fileSize: undefined },
+    pasilloProbadores: { url: "", fileName: undefined, fileSize: undefined },
         tablaProbadores: [],
         encabezados: [],
         masters: [],
@@ -138,7 +140,7 @@ const defaultReport = {
         torre: [],
         subwoofer: [],
         subGrabe: []
-      },
+  },
   rackVideo: {
     descripcion: "",
     observaciones: "",
@@ -150,7 +152,7 @@ const defaultReport = {
     ]
   },
   rackAudio: { 
-    descripcion: "",
+    descripcion: "", 
     observaciones: "",
     frontal: [],
     frontalOnTheSpot: [],
@@ -681,12 +683,12 @@ const SeccionCuadros = ({ cuadros }) => (
 );
 
 // --- Editor con módulo activo ---
-const Editor = ({
-  data,
-  setData,
+const Editor = ({ 
+  data, 
+  setData, 
   activeModule,
-  onPageRendered,
-  pdfPagesRendering,
+  onPageRendered, 
+  pdfPagesRendering, 
   setPdfPagesRendering,
   loadingPDFs,
   setLoadingPDFs,
@@ -740,6 +742,20 @@ const Editor = ({
             bannerExcelFilesFromFolder={bannerExcelFilesFromFolder}
           />
         );
+      case 'turnomatic':
+        return (
+          <div className="p-4">
+            <h2 className="font-semibold text-neutral-800 mb-4">Turnomatic</h2>
+            <p className="text-neutral-600">Módulo en desarrollo</p>
+          </div>
+        );
+      case 'welcomer':
+        return (
+          <div className="p-4">
+            <h2 className="font-semibold text-neutral-800 mb-4">Welcomer</h2>
+            <p className="text-neutral-600">Módulo en desarrollo</p>
+          </div>
+        );
       case 'probadores':
         return <ProbadoresEditor data={data} setData={setData} imageInputRefs={imageInputRefs} probadorFilesFromFolder={probadorFilesFromFolder} probadorExcelFilesFromFolder={probadorExcelFilesFromFolder} />;
       case 'audio':
@@ -753,7 +769,7 @@ const Editor = ({
       case 'documentacion':
         return <DocumentacionEditor data={data} setData={setData} imageInputRefs={imageInputRefs} documentacionFilesFromFolder={documentacionFilesFromFolder} />;
       case 'planos':
-  return (
+    return (
           <PlanosTiendaEditor
             data={data}
             setData={setData}
@@ -930,7 +946,7 @@ export default function App() {
     
     // Filtrar archivos de probadores (misma carpeta As Built/Fotos/)
     const probadorFiles = fotoFiles.filter(file => {
-      const fileName = file.name.toUpperCase();
+        const fileName = file.name.toUpperCase();
       return fileName.includes('PROBADORES_GENERAL') || 
              fileName.includes('DEVICE_SENSOR') || 
              fileName.includes('CABINA_OCUPADA');
@@ -1277,6 +1293,8 @@ export default function App() {
         desglosePantallas: true,
         fotosPantallas: true,
         banners: false,
+        turnomatic: false,
+        welcomer: false,
         probadores: false,
         audio: false,
         altavocesInstalacion: true,

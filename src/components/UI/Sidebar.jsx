@@ -1,17 +1,19 @@
 export const Sidebar = ({ activeModule, setActiveModule }) => {
   const modules = [
     { id: 'metadatos', label: 'Metadatos' },
-    { id: 'elementos', label: 'Elementos Instalados' },
     { id: 'desglose', label: 'MKD' },
-    { id: 'fotos', label: 'Pantallas' },
     { id: 'banners', label: 'Banners' },
-    { id: 'probadores', label: 'Probadores' },
+    { id: 'turnomatic', label: 'Turnomatic' },
+    { id: 'welcomer', label: 'Welcomer' },
+    { id: 'fotos', label: 'Pantallas' },
     { id: 'audio', label: 'Audio' },
-    { id: 'rackVideo', label: 'Rack Video' },
-    { id: 'rackAudio', label: 'Rack Audio' },
+    { id: 'probadores', label: 'Probadores' },
+    { id: 'rackVideo', label: 'Rack de Video' },
+    { id: 'rackAudio', label: 'Rack de Audio' },
     { id: 'cuadrosAV', label: 'Cuadro Eléctrico' },
     { id: 'documentacion', label: 'Documentación' },
     { id: 'planos', label: 'Planos de Tienda' },
+    { id: 'elementos', label: 'Elementos Instalados' },
   ];
 
   return (
