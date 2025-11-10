@@ -3,6 +3,11 @@ import { PAGE } from '../../utils/constants';
 import { PageFooter } from '../Page/PageFooter';
 
 export const SeccionFotosPantallas = ({ fotos }) => {
+  // Verificar que hay fotos para mostrar
+  if (!fotos || fotos.length === 0) {
+    return null;
+  }
+  
   // Agrupar fotos de 2 en 2 (máximo 2 bloques por página)
   const grupos = [];
   for (let i = 0; i < fotos.length; i += 2) {

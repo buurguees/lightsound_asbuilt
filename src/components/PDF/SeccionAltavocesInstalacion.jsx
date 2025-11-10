@@ -4,7 +4,19 @@ import { PageHeader } from '../Page/PageHeader';
 import { PageFooter } from '../Page/PageFooter';
 
 export const SeccionAltavocesInstalacion = ({ equipamiento }) => {
-  const elementosInstalados = Object.keys(equipamiento || {}).filter(nombre => equipamiento[nombre] === true);
+  // Filtrar elementos instalados (compatibilidad con estructura antigua y nueva)
+  const elementosInstalados = Object.keys(equipamiento || {}).filter(nombre => {
+    const elemento = equipamiento[nombre];
+    // Compatibilidad con estructura antigua (true/false) y nueva (objeto)
+    if (typeof elemento === 'boolean') {
+      return elemento === true;
+    }
+    if (typeof elemento === 'object' && elemento !== null) {
+      return elemento.instalado === true;
+    }
+    return false;
+  });
+  
   if (elementosInstalados.length === 0) return null;
 
   return (

@@ -54,7 +54,12 @@ const TablaPantallasManuales = ({ filas }) => (
 );
 
 export const SeccionDesglosePantallas = ({ pantallas }) => {
-  const numFilas = pantallas?.length || 0;
+  // Verificar que hay pantallas para mostrar
+  if (!pantallas || pantallas.length === 0) {
+    return null;
+  }
+  
+  const numFilas = pantallas.length;
   const debeSeparar = numFilas > 10;
 
   // Si hay 10 o menos líneas, mostrar ambas tablas en la misma página
