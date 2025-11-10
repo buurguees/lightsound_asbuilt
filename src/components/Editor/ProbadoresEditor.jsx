@@ -99,6 +99,7 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
       let archivosProcesados = 0;
       const mastersUnicos = new Map();
       const probadoresSet = new Set();
+      const probadoresArray = [];
 
       for (const file of probadorExcelFilesFromFolder) {
         // Evitar procesar el mismo archivo dos veces
@@ -127,7 +128,21 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
               });
             }
             if (probadores && probadores.length > 0) {
-              probadores.forEach(p => probadoresSet.add(p));
+              probadores.forEach(p => {
+                // Si es un objeto, crear clave única; si es string, agregarlo directamente
+                if (typeof p === 'object') {
+                  const clave = `${p.probador}|${p.sn}|${p.master}`;
+                  if (!probadoresSet.has(clave)) {
+                    probadoresSet.add(clave);
+                    probadoresArray.push(p);
+                  }
+                } else {
+                  if (!probadoresSet.has(p)) {
+                    probadoresSet.add(p);
+                    probadoresArray.push({ probador: p, sn: '0', master: '' });
+                  }
+                }
+              });
             }
             archivosProcesados++;
             processedExcelFilesRef.current.add(fileKey);
@@ -137,11 +152,15 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
         }
       }
 
-      // Convertir Map y Set a arrays
+      // Convertir Map a array
       const mastersArray = Array.from(mastersUnicos.values());
-      const probadoresArray = Array.from(probadoresSet).sort((a, b) => {
-        const numA = parseInt(a.match(/\d+/)?.[0] || '0');
-        const numB = parseInt(b.match(/\d+/)?.[0] || '0');
+      
+      // Ordenar probadores por número
+      probadoresArray.sort((a, b) => {
+        const probadorA = typeof a === 'object' ? a.probador : a;
+        const probadorB = typeof b === 'object' ? b.probador : b;
+        const numA = parseInt(probadorA.match(/\d+/)?.[0] || '0');
+        const numB = parseInt(probadorB.match(/\d+/)?.[0] || '0');
         return numA - numB;
       });
 
