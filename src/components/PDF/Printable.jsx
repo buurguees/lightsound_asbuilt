@@ -1,4 +1,5 @@
 import React from 'react';
+import './pdf.css';
 import { Portada } from './Portada';
 import { SeccionDesglosePantallas } from './SeccionDesglosePantallas';
 import { SeccionFotosPantallas } from './SeccionFotosPantallas';
