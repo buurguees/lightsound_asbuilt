@@ -38,8 +38,18 @@ export const DesglosePantallasEditor = ({ data, setData, imageInputRefs, excelFi
   };
 
   // Procesar archivos Excel recibidos desde App.jsx (importación de carpeta)
+  // IMPORTANTE: Solo procesar una vez, no volver a procesar si ya hay pantallas importadas
   useEffect(() => {
     if (!excelFilesFromFolder || excelFilesFromFolder.length === 0) return;
+    
+    // Si ya hay pantallas importadas, no volver a procesar el Excel
+    // Esto permite al usuario modificar/eliminar pantallas sin que se regeneren
+    if (data.pantallas && data.pantallas.length > 0) {
+      console.log('⚠️ Ya hay pantallas importadas. No se volverá a procesar el Excel automáticamente.');
+      console.log(`   Pantallas actuales: ${data.pantallas.length}`);
+      console.log(`   Para reimportar, usa el botón "Cargar Excel" manualmente.`);
+      return;
+    }
 
     const processExcelFiles = async () => {
       let todasPantallas = [];
@@ -93,7 +103,7 @@ export const DesglosePantallasEditor = ({ data, setData, imageInputRefs, excelFi
     };
 
     processExcelFiles();
-  }, [excelFilesFromFolder, setData]);
+  }, [excelFilesFromFolder, setData, data.pantallas]);
 
   return (
     <div>

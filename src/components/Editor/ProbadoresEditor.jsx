@@ -88,8 +88,17 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
   }, [probadorFilesFromFolder, data, setData]);
 
   // Procesar archivos Excel de probadores recibidos desde App.jsx (importación de carpeta)
+  // IMPORTANTE: Solo procesar una vez, no volver a procesar si ya hay tabla importada
   useEffect(() => {
     if (!probadorExcelFilesFromFolder || probadorExcelFilesFromFolder.length === 0) {
+      return;
+    }
+    
+    // Si ya hay tabla importada, no volver a procesar el Excel
+    // Esto permite al usuario modificar/eliminar datos sin que se regeneren
+    if (data.probadores?.tablaProbadores && data.probadores.tablaProbadores.length > 0) {
+      console.log('⚠️ Ya hay tabla de probadores importada. No se volverá a procesar el Excel automáticamente.');
+      console.log(`   Filas actuales: ${data.probadores.tablaProbadores.length}`);
       return;
     }
 
@@ -147,7 +156,7 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
     };
 
     processExcelFiles();
-  }, [probadorExcelFilesFromFolder, setData]);
+  }, [probadorExcelFilesFromFolder, data.probadores?.tablaProbadores, setData]);
 
   return (
     <div>
