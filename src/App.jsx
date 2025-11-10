@@ -651,12 +651,12 @@ const SeccionCuadros = ({ cuadros }) => (
 );
 
 // --- Editor con módulo activo ---
-const Editor = ({ 
-  data, 
-  setData, 
+const Editor = ({
+  data,
+  setData,
   activeModule,
-  onPageRendered, 
-  pdfPagesRendering, 
+  onPageRendered,
+  pdfPagesRendering,
   setPdfPagesRendering,
   loadingPDFs,
   setLoadingPDFs,
@@ -664,6 +664,7 @@ const Editor = ({
   setCurrentLoadingPDF,
   excelFilesFromFolder,
   fotoFilesFromFolder,
+  probadorFilesFromFolder,
   onFotosProcessed
 }) => {
   const imageInputRefs = useRef({});
@@ -694,7 +695,7 @@ const Editor = ({
           />
         );
       case 'probadores':
-        return <ProbadoresEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />;
+        return <ProbadoresEditor data={data} setData={setData} imageInputRefs={imageInputRefs} probadorFilesFromFolder={probadorFilesFromFolder} />;
       case 'rackVideo':
         return <RackVideoEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />;
       case 'rackAudio':
@@ -783,6 +784,7 @@ export default function App() {
   const [currentLoadingPDF, setCurrentLoadingPDF] = useState(null);
   const [excelFilesFromFolder, setExcelFilesFromFolder] = useState([]);
   const [fotoFilesFromFolder, setFotoFilesFromFolder] = useState([]);
+  const [probadorFilesFromFolder, setProbadorFilesFromFolder] = useState([]);
   const [fotosProcessedInfo, setFotosProcessedInfo] = useState(null);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [activeModule, setActiveModule] = useState('metadatos'); // Módulo activo en el sidebar
@@ -858,6 +860,21 @@ export default function App() {
     // Enviar archivos de fotos a FotosPantallasEditor.jsx para procesamiento
     if (fotoFiles.length > 0) {
       setFotoFilesFromFolder(fotoFiles);
+    }
+    
+    // Filtrar archivos de probadores (misma carpeta As Built/Fotos/)
+    const probadorFiles = fotoFiles.filter(file => {
+      const fileName = file.name.toUpperCase();
+      return fileName.includes('PROBADORES_GENERAL') || 
+             fileName.includes('DEVICE_SENSOR') || 
+             fileName.includes('CABINA_OCUPADA');
+    });
+    
+    console.log('Archivos de probadores encontrados:', probadorFiles.length);
+    
+    // Enviar archivos de probadores a ProbadoresEditor.jsx para procesamiento
+    if (probadorFiles.length > 0) {
+      setProbadorFilesFromFolder(probadorFiles);
     }
     
     // Buscar y cargar foto de entrada de la tienda (se procesa en App.jsx)
@@ -1172,6 +1189,7 @@ export default function App() {
               setCurrentLoadingPDF={setCurrentLoadingPDF}
             excelFilesFromFolder={excelFilesFromFolder}
             fotoFilesFromFolder={fotoFilesFromFolder}
+            probadorFilesFromFolder={probadorFilesFromFolder}
             onFotosProcessed={setFotosProcessedInfo}
             />
         </div>

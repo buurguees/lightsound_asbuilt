@@ -33,10 +33,10 @@ export const SeccionProbadores = ({ probadores }) => {
               </div>
             </div>
             <div>
-              <div className="text-xs font-semibold text-neutral-700 mb-2 text-center">PROBADOR LIBERADO</div>
+              <div className="text-xs font-semibold text-neutral-700 mb-2 text-center">SENSOR INSTALADO</div>
               <div className="flex items-center justify-center rounded-lg border-2 border-neutral-300 bg-neutral-50 overflow-hidden" style={{ height: '200px' }}>
                 {probadores.probadorLiberado?.url ? (
-                  <img loading="lazy" src={probadores.probadorLiberado.url} alt="Probador liberado" className="w-full h-full object-contain" />
+                  <img loading="lazy" src={probadores.probadorLiberado.url} alt="Sensor instalado" className="w-full h-full object-contain" />
                 ) : (
                   <div className="text-center p-2">
                     <div className="text-neutral-300 text-3xl mb-1">📷</div>
