@@ -184,14 +184,14 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
       {/* Tabla de Masters (sin duplicados) */}
       {data.probadores.masters && data.probadores.masters.length > 0 && (
         <div className="mb-4">
-          <h3 className="font-semibold text-neutral-700 mb-2">Masters</h3>
+          <h3 className="font-semibold text-neutral-700 mb-2">Master</h3>
           <div className="overflow-auto border rounded-lg">
             <table className="w-full text-xs">
               <thead>
                 <tr className="bg-neutral-100 text-[11px]">
                   <th className="border px-2 py-1 text-left font-semibold">Master</th>
                   <th className="border px-2 py-1 text-left font-semibold">MAC</th>
-                  <th className="border px-2 py-1 text-left font-semibold">Master Location</th>
+                  <th className="border px-2 py-1 text-left font-semibold">Ubicación</th>
                 </tr>
               </thead>
               <tbody>
@@ -211,20 +211,30 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
       {/* Tabla de Probadores/Sensores */}
       {data.probadores.probadores && data.probadores.probadores.length > 0 && (
         <div className="mb-4">
-          <h3 className="font-semibold text-neutral-700 mb-2">Probadores</h3>
+          <h3 className="font-semibold text-neutral-700 mb-2">Sensores</h3>
           <div className="overflow-auto border rounded-lg">
             <table className="w-full text-xs">
               <thead>
                 <tr className="bg-neutral-100 text-[11px]">
                   <th className="border px-2 py-1 text-left font-semibold">Probador</th>
+                  <th className="border px-2 py-1 text-left font-semibold">S/N</th>
+                  <th className="border px-2 py-1 text-left font-semibold">Master</th>
                 </tr>
               </thead>
               <tbody>
-                {data.probadores.probadores.map((probador, i) => (
-                  <tr key={i} className="odd:bg-white even:bg-neutral-50">
-                    <td className="border px-2 py-1">{probador}</td>
-                  </tr>
-                ))}
+                {data.probadores.probadores.map((item, i) => {
+                  // Manejar tanto objetos como strings (compatibilidad)
+                  const probador = typeof item === 'object' ? item.probador : item;
+                  const sn = typeof item === 'object' ? item.sn : '0';
+                  const master = typeof item === 'object' ? item.master : '';
+                  return (
+                    <tr key={i} className="odd:bg-white even:bg-neutral-50">
+                      <td className="border px-2 py-1">{probador}</td>
+                      <td className="border px-2 py-1">{sn}</td>
+                      <td className="border px-2 py-1">{master}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

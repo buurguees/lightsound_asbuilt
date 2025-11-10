@@ -344,18 +344,23 @@ export const processExcelProbadores = async (file) => {
     const masterIdx = findColumnIndex('Master');
     const macIdx = findColumnIndex('MAC');
     const masterLocationIdx = findColumnIndex('Master Location');
-    const probadorIdx = findColumnIndex('Probador') !== -1 ? findColumnIndex('Probador') : findColumnIndex('Fitting');
+    // Buscar "Master Service" o "Servicio de la Master" para los probadores
+    const masterServiceIdx = findColumnIndex('Master Service') !== -1 ? findColumnIndex('Master Service') : 
+                             findColumnIndex('Servicio de la Master') !== -1 ? findColumnIndex('Servicio de la Master') : -1;
+    const snIdx = findColumnIndex('S/N') !== -1 ? findColumnIndex('S/N') : 
+                  findColumnIndex('Serial Number') !== -1 ? findColumnIndex('Serial Number') : -1;
     
     console.log(`\n📋 Columnas encontradas:`);
     console.log(`   Master: índice ${masterIdx >= 0 ? masterIdx : 'NO ENCONTRADO'}`);
     console.log(`   MAC: índice ${macIdx >= 0 ? macIdx : 'NO ENCONTRADO'}`);
     console.log(`   Master Location: índice ${masterLocationIdx >= 0 ? masterLocationIdx : 'NO ENCONTRADO'}`);
-    console.log(`   Probador: índice ${probadorIdx >= 0 ? probadorIdx : 'NO ENCONTRADO'}`);
+    console.log(`   Master Service: índice ${masterServiceIdx >= 0 ? masterServiceIdx : 'NO ENCONTRADO'}`);
+    console.log(`   S/N: índice ${snIdx >= 0 ? snIdx : 'NO ENCONTRADO'}`);
     
     // Procesar todas las filas de datos (desde la fila 2, índice 1)
     const todasLasFilas = [];
     const mastersUnicos = new Map(); // Clave: combinación de Master+MAC+Location, Valor: { master, mac, location }
-    const probadoresSet = new Set();
+    const probadoresArray = []; // Array de objetos: { probador, sn, master }
     
     for (let i = 1; i < allRows.length; i++) {
       const row = allRows[i];
@@ -388,29 +393,42 @@ export const processExcelProbadores = async (file) => {
         const mac = String(row[macIdx] || '').trim();
         const location = String(row[masterLocationIdx] || '').trim();
         
-        if (master && mac && location) {
+        // Ignorar filas con "BACK UP" o valores vacíos
+        if (master && mac && location && 
+            !master.toUpperCase().includes('BACK UP') && 
+            !master.toUpperCase().includes('BACKUP')) {
           // Crear clave única basada en la combinación de los tres valores
           const clave = `${master}|${mac}|${location}`;
           if (!mastersUnicos.has(clave)) {
             mastersUnicos.set(clave, { master, mac, location });
           }
-        }
-      }
-      
-      // Extraer probadores (desde "Fitting (probador 1)" hasta el último)
-      if (probadorIdx >= 0) {
-        const probador = String(row[probadorIdx] || '').trim();
-        if (probador && probador.toLowerCase().includes('fitting')) {
-          probadoresSet.add(probador);
+          
+          // Extraer probadores desde "Master Service / Servicio de la Master"
+          if (masterServiceIdx >= 0) {
+            const masterService = String(row[masterServiceIdx] || '').trim();
+            // Solo procesar si contiene "Fitting" y no es "BACK UP" o "AV BOX"
+            if (masterService && 
+                masterService.toLowerCase().includes('fitting') &&
+                !masterService.toUpperCase().includes('BACK UP') &&
+                !masterService.toUpperCase().includes('BACKUP') &&
+                !masterService.toUpperCase().includes('AV BOX')) {
+              const sn = snIdx >= 0 ? String(row[snIdx] || '').trim() : '0';
+              // Agregar el probador con su S/N y el Master (MAC) asociado
+              probadoresArray.push({
+                probador: masterService,
+                sn: sn || '0',
+                master: mac
+              });
+            }
+          }
         }
       }
     }
     
-    // Convertir Set de probadores a array ordenado
-    const probadoresArray = Array.from(probadoresSet).sort((a, b) => {
-      // Extraer números de "Fitting (probador 1)", "Fitting (probador 2)", etc.
-      const numA = parseInt(a.match(/\d+/)?.[0] || '0');
-      const numB = parseInt(b.match(/\d+/)?.[0] || '0');
+    // Ordenar probadores por número
+    probadoresArray.sort((a, b) => {
+      const numA = parseInt(a.probador.match(/\d+/)?.[0] || '0');
+      const numB = parseInt(b.probador.match(/\d+/)?.[0] || '0');
       return numA - numB;
     });
     
