@@ -32,7 +32,7 @@ export const Modal = ({ isVisible, onClose, title, children }) => {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-neutral-800">{title}</h2>
+          <h2 className="font-bold text-neutral-800">{title}</h2>
           <button
             onClick={onClose}
             className="text-neutral-400 hover:text-neutral-600 text-2xl leading-none"

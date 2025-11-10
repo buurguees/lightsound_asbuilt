@@ -1179,7 +1179,7 @@ export default function App() {
         {/* Columna derecha: Vista Previa PDF */}
         <div className="w-1/2 bg-neutral-200 flex flex-col overflow-hidden" style={{ maxHeight: 'calc(100vh - 80px)' }}>
           <div className="flex-shrink-0 bg-neutral-100 border-b border-neutral-300 px-4 py-3 shadow-sm">
-            <h2 className="font-bold text-neutral-700">Vista Previa del Informe</h2>
+            <h2 className="font-bold text-neutral-700">Vista Previa del As Built</h2>
           </div>
           <div className="flex-1 overflow-hidden">
             <PDFPreviewWrapper>

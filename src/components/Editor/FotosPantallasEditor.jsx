@@ -300,7 +300,7 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
 
   return (
     <div>
-      <h2 className="text-lg font-semibold text-neutral-800 mb-4">Fotos de pantallas</h2>
+      <h2 className="font-semibold text-neutral-800 mb-4">Fotos de pantallas</h2>
       <div className="grid grid-cols-1 gap-4">
         <div className="mb-2">
           <Button onClick={addFoto}>Añadir foto</Button>
@@ -332,7 +332,7 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
               {/* Foto Frontal */}
               <div className="bg-white rounded-lg border p-3">
-                <div className="text-xs font-semibold text-neutral-700 mb-2">FOTO FRONTAL</div>
+                <h3 className="font-semibold text-neutral-700 mb-2">FOTO FRONTAL</h3>
                 <div className="flex gap-2 mb-2">
                   <Button onClick={() => imageInputRefs.current[`${i}_frontal`]?.click()}>
                     Subir
@@ -372,14 +372,14 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
                 {f.fotoFrontal?.url && (
                   <div>
                     <img loading="lazy" src={f.fotoFrontal.url} alt="Frontal" className="max-h-32 w-full object-contain rounded border" />
-                    <p className="text-xs text-neutral-600 mt-1">{f.fotoFrontal.fileName}</p>
+                    <small className="text-neutral-600 mt-1 block">{f.fotoFrontal.fileName}</small>
                   </div>
                 )}
               </div>
 
               {/* Foto Player + Sending */}
               <div className="bg-white rounded-lg border p-3">
-                <div className="text-xs font-semibold text-neutral-700 mb-2">PLAYER + SENDING</div>
+                <h3 className="font-semibold text-neutral-700 mb-2">PLAYER + SENDING</h3>
                 <div className="flex gap-2 mb-2">
                   <Button onClick={() => imageInputRefs.current[`${i}_player`]?.click()}>
                     Subir
@@ -419,14 +419,14 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
                 {f.fotoPlayer?.url && (
                   <div>
                     <img loading="lazy" src={f.fotoPlayer.url} alt="Player" className="max-h-32 w-full object-contain rounded border" />
-                    <p className="text-xs text-neutral-600 mt-1">{f.fotoPlayer.fileName}</p>
+                    <small className="text-neutral-600 mt-1 block">{f.fotoPlayer.fileName}</small>
                   </div>
                 )}
               </div>
 
               {/* Foto IP */}
               <div className="bg-white rounded-lg border p-3">
-                <div className="text-xs font-semibold text-neutral-700 mb-2">IP</div>
+                <h3 className="font-semibold text-neutral-700 mb-2">IP</h3>
                 <div className="flex gap-2 mb-2">
                   <Button onClick={() => imageInputRefs.current[`${i}_ip`]?.click()}>
                     Subir
@@ -466,7 +466,7 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
                 {f.fotoIP?.url && (
                   <div>
                     <img loading="lazy" src={f.fotoIP.url} alt="IP" className="max-h-32 w-full object-contain rounded border" />
-                    <p className="text-xs text-neutral-600 mt-1">{f.fotoIP.fileName}</p>
+                    <small className="text-neutral-600 mt-1 block">{f.fotoIP.fileName}</small>
                   </div>
                 )}
               </div>

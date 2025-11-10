@@ -4,7 +4,7 @@ import { compressImage } from '../../utils/imageUtils';
 export const ProbadoresEditor = ({ data, setData, imageInputRefs }) => {
   return (
     <div>
-      <h2 className="text-lg font-semibold text-neutral-800 mb-4">Probadores</h2>
+      <h2 className="font-semibold text-neutral-800 mb-4">Probadores</h2>
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <input
@@ -20,7 +20,7 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs }) => {
             }}
             className="w-4 h-4"
           />
-          <label className="text-sm font-semibold text-neutral-700">
+          <label className="font-semibold text-neutral-700">
             Incluir en PDF exportado
           </label>
         </div>
@@ -29,7 +29,7 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs }) => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Probador Ocupado */}
         <div className="bg-white rounded-lg border p-3">
-          <div className="text-xs font-semibold text-neutral-700 mb-2">PROBADOR OCUPADO</div>
+          <h3 className="font-semibold text-neutral-700 mb-2">PROBADOR OCUPADO</h3>
           <div className="flex gap-2 mb-2">
             <Button onClick={() => imageInputRefs.current['probadorOcupado']?.click()}>
               Subir
@@ -69,14 +69,14 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs }) => {
           {data.probadores.probadorOcupado?.url && (
             <div>
               <img loading="lazy" src={data.probadores.probadorOcupado.url} alt="Probador ocupado" className="max-h-32 w-full object-contain rounded border" />
-              <p className="text-xs text-neutral-600 mt-1">{data.probadores.probadorOcupado.fileName}</p>
+              <small className="text-neutral-600 mt-1 block">{data.probadores.probadorOcupado.fileName}</small>
             </div>
           )}
         </div>
 
         {/* Probador Liberado */}
         <div className="bg-white rounded-lg border p-3">
-          <div className="text-xs font-semibold text-neutral-700 mb-2">PROBADOR LIBERADO</div>
+          <h3 className="font-semibold text-neutral-700 mb-2">PROBADOR LIBERADO</h3>
           <div className="flex gap-2 mb-2">
             <Button onClick={() => imageInputRefs.current['probadorLiberado']?.click()}>
               Subir
@@ -116,14 +116,14 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs }) => {
           {data.probadores.probadorLiberado?.url && (
             <div>
               <img loading="lazy" src={data.probadores.probadorLiberado.url} alt="Probador liberado" className="max-h-32 w-full object-contain rounded border" />
-              <p className="text-xs text-neutral-600 mt-1">{data.probadores.probadorLiberado.fileName}</p>
+              <small className="text-neutral-600 mt-1 block">{data.probadores.probadorLiberado.fileName}</small>
             </div>
           )}
         </div>
 
         {/* Pasillo Probadores */}
         <div className="bg-white rounded-lg border p-3">
-          <div className="text-xs font-semibold text-neutral-700 mb-2">PASILLO PROBADORES</div>
+          <h3 className="font-semibold text-neutral-700 mb-2">PASILLO PROBADORES</h3>
           <div className="flex gap-2 mb-2">
             <Button onClick={() => imageInputRefs.current['pasilloProbadores']?.click()}>
               Subir
@@ -163,7 +163,7 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs }) => {
           {data.probadores.pasilloProbadores?.url && (
             <div>
               <img loading="lazy" src={data.probadores.pasilloProbadores.url} alt="Pasillo probadores" className="max-h-32 w-full object-contain rounded border" />
-              <p className="text-xs text-neutral-600 mt-1">{data.probadores.pasilloProbadores.fileName}</p>
+              <small className="text-neutral-600 mt-1 block">{data.probadores.pasilloProbadores.fileName}</small>
             </div>
           )}
         </div>

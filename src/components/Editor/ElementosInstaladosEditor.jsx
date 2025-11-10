@@ -63,23 +63,23 @@ export const ElementosInstaladosEditor = ({ data, setData }) => {
 
   return (
     <div>
-      <h2 className="text-lg font-semibold text-neutral-800 mb-4">Elementos Instalados</h2>
+      <h2 className="font-semibold text-neutral-800 mb-4">Elementos Instalados</h2>
       <div className="flex flex-col" style={{ maxHeight: '600px' }}>
         {/* Encabezado con contador */}
         <div className="flex items-center justify-between px-2 py-1 border-b border-neutral-200 bg-neutral-50 flex-shrink-0 mb-0">
-          <span className="text-xs text-neutral-600 font-medium">
+          <small className="text-neutral-600 font-medium">
             Marca los elementos que están instalados
-          </span>
-          <span className="text-xs text-neutral-500">
+          </small>
+          <small className="text-neutral-500">
             {elementosInstalados} de {elementosConfig.length} seleccionado{elementosInstalados !== 1 ? 's' : ''}
-          </span>
+          </small>
         </div>
 
         {/* Lista de checkboxes - Scrollable */}
         <div className="flex-1 overflow-auto">
           {elementosConfig.length === 0 ? (
-            <div className="text-center py-4 text-neutral-400 text-xs">
-              No hay elementos configurados. Configura los elementos en el menú de configuración.
+            <div className="text-center py-4 text-neutral-400">
+              <small>No hay elementos configurados. Configura los elementos en el menú de configuración.</small>
             </div>
           ) : (
             <div className="p-1">
@@ -97,7 +97,7 @@ export const ElementosInstaladosEditor = ({ data, setData }) => {
                       onChange={() => toggleElemento(nombre)}
                       className="w-3.5 h-3.5 text-blue-600 border-neutral-300 rounded focus:ring-blue-500 focus:ring-1 cursor-pointer"
                     />
-                    <span className={`ml-2 text-xs ${estaInstalado ? 'text-neutral-800 font-medium' : 'text-neutral-600'}`}>
+                    <span className={`ml-2 ${estaInstalado ? 'text-neutral-800 font-medium' : 'text-neutral-600'}`}>
                       {nombre}
                     </span>
                   </label>

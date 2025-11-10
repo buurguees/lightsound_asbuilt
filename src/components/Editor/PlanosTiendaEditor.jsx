@@ -11,7 +11,7 @@ export const PlanosTiendaEditor = ({
 }) => {
   return (
     <div>
-      <h2 className="text-lg font-semibold text-neutral-800 mb-4">Planos de tienda</h2>
+      <h2 className="font-semibold text-neutral-800 mb-4">Planos de tienda</h2>
       <PDFUploader
         data={data}
         setData={setData}

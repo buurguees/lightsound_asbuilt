@@ -97,17 +97,17 @@ export const DesglosePantallasEditor = ({ data, setData, imageInputRefs, excelFi
 
   return (
     <div>
-      <h2 className="text-lg font-semibold text-neutral-800 mb-4">Desglose de pantallas</h2>
+      <h2 className="font-semibold text-neutral-800 mb-4">Desglose de pantallas</h2>
       <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
         <div className="flex gap-2 items-center">
           <div className="flex-1">
-            <p className="text-sm font-semibold text-blue-800 mb-1">Cargar desde Excel</p>
-            <p className="text-xs text-blue-700">Sube el archivo Excel con terminación "Validación_MKD" o "Validacion_MKD"</p>
-            <p className="text-xs text-blue-600 mt-1">Se importarán solo las filas con Columna U que contenga "LED" y Columna C que contenga "Alta"</p>
+            <h3 className="font-semibold text-blue-800 mb-1">Cargar desde Excel</h3>
+            <p className="text-blue-700">Sube el archivo Excel con terminación "Validación_MKD" o "Validacion_MKD"</p>
+            <small className="text-blue-600 mt-1 block">Se importarán solo las filas con Columna U que contenga "LED" y Columna C que contenga "Alta"</small>
           </div>
           <div className="flex gap-2">
             <Button onClick={() => imageInputRefs.current['excel']?.click()}>
-              📊 Cargar Excel
+              Cargar Excel
             </Button>
             <input
               ref={el => imageInputRefs.current['excel'] = el}
@@ -128,7 +128,7 @@ export const DesglosePantallasEditor = ({ data, setData, imageInputRefs, excelFi
       </div>
       {/* Tabla 1: Datos importados del Excel */}
       <div className="mb-4">
-        <h3 className="text-sm font-semibold text-neutral-700 mb-2">Datos importados del Excel</h3>
+        <h3 className="font-semibold text-neutral-700 mb-2">Datos importados del Excel</h3>
         <div className="overflow-auto">
           <table className="w-full text-xs">
             <thead>
@@ -202,7 +202,7 @@ export const DesglosePantallasEditor = ({ data, setData, imageInputRefs, excelFi
 
       {/* Tabla 2: Datos manuales */}
       <div>
-        <h3 className="text-sm font-semibold text-neutral-700 mb-2">Datos manuales</h3>
+        <h3 className="font-semibold text-neutral-700 mb-2">Datos manuales</h3>
         <div className="overflow-auto">
           <table className="w-full text-xs">
             <thead>

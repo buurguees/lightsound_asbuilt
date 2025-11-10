@@ -7,7 +7,7 @@ import { compressImage } from '../../utils/imageUtils';
 export const CuadrosAVEditor = ({ data, setData, imageInputRefs }) => {
   return (
     <div>
-      <h2 className="text-lg font-semibold text-neutral-800 mb-4">Cuadros (Eléctrico / AV / Doc)</h2>
+      <h2 className="font-semibold text-neutral-800 mb-4">Cuadros (Eléctrico / AV / Doc)</h2>
       <div className="grid grid-cols-1 gap-3">
         {data.cuadrosAV.items.map((c, i) => (
           <div key={i} className="p-4 bg-neutral-50 rounded-lg border">
@@ -66,7 +66,7 @@ export const CuadrosAVEditor = ({ data, setData, imageInputRefs }) => {
               />
             </Field>
             <div className="mt-3">
-              <div className="text-sm font-semibold mb-2">Fotografías</div>
+              <h3 className="font-semibold mb-2">Fotografías</h3>
               {(c.fotos || []).map((foto, idx) => (
                 <div key={idx} className="mb-3 p-3 bg-white rounded border">
                   <div className="flex gap-2 mb-2">

@@ -8,7 +8,7 @@ import { updateData } from '../../utils/dataUtils';
 export const RackVideoEditor = ({ data, setData, imageInputRefs }) => {
   return (
     <div>
-      <h2 className="text-lg font-semibold text-neutral-800 mb-4">Rack de vídeo</h2>
+      <h2 className="font-semibold text-neutral-800 mb-4">Rack de vídeo</h2>
       <Field label="Descripción">
         <Textarea rows={4} value={data.rackVideo.descripcion} onChange={(e) => updateData(setData, "rackVideo.descripcion", e.target.value)} />
       </Field>
@@ -16,7 +16,7 @@ export const RackVideoEditor = ({ data, setData, imageInputRefs }) => {
         <Textarea rows={2} value={data.rackVideo.observaciones} onChange={(e) => updateData(setData, "rackVideo.observaciones", e.target.value)} />
       </Field>
       <div className="mt-4">
-        <div className="text-sm font-semibold mb-2">Fotografías</div>
+        <h3 className="font-semibold mb-2">Fotografías</h3>
         {data.rackVideo.fotos.map((foto, idx) => (
           <div key={idx} className="mb-3 p-3 bg-neutral-50 rounded-lg border">
             <div className="flex gap-2 mb-2">
