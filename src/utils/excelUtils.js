@@ -327,13 +327,18 @@ export const processExcelProbadores = async (file) => {
     // Los encabezados están en la fila 3 (índice 2)
     // Fila 1: "MASTERS PROVISION"
     // Fila 2: "Tablet"
-    // Fila 3: Encabezados reales (Master, MAC, Master Location, etc.)
+    // Fila 3: Encabezados reales (Tablet, Master, MAC, Master Location, etc.)
     const headerRowIndex = 2;
-    const encabezados = allRows[headerRowIndex] || [];
+    const encabezadosCompletos = allRows[headerRowIndex] || [];
+    
+    // Filtrar columnas: eliminar Tablet (índice 0), columna 7 (índice 6), columna 8 (índice 7)
+    const indicesAEliminar = [0, 6, 7]; // Tablet, columna 7, columna 8
+    const encabezados = encabezadosCompletos.filter((_, idx) => !indicesAEliminar.includes(idx));
     
     console.log(`\n📊 Procesando Excel de Probadores: ${file.name}`);
     console.log(`   Total de filas en el archivo: ${allRows.length}`);
-    console.log(`   Encabezados en fila ${headerRowIndex + 1}:`, encabezados);
+    console.log(`   Encabezados originales:`, encabezadosCompletos);
+    console.log(`   Encabezados filtrados:`, encabezados);
     console.log(`   Importando datos desde la fila ${headerRowIndex + 2}`);
     
     // Procesar todas las filas de datos (desde la fila 4, índice 3)
@@ -341,8 +346,9 @@ export const processExcelProbadores = async (file) => {
     const tablaProbadores = [];
     const sensoresFitting = []; // Array para almacenar valores de columna G que contengan "Fitting"
     
-    // Columna G = índice 6 (0-indexed)
-    const columnaGIndex = 6;
+    // Columna G (Master Service) = índice 5 en los datos filtrados (era índice 6 antes de filtrar)
+    // Pero necesitamos el índice original antes de filtrar para extraer los valores
+    const columnaGIndexOriginal = 5; // Master Service en el Excel original
     
     for (let i = startDataRowIndex; i < allRows.length; i++) {
       const row = allRows[i];
@@ -352,28 +358,32 @@ export const processExcelProbadores = async (file) => {
         continue;
       }
       
-      // Crear un objeto con los datos de la fila
+      // Filtrar las columnas de la fila (eliminar índices 0, 6, 7)
+      const filaFiltrada = row.filter((_, idx) => !indicesAEliminar.includes(idx));
+      
+      // Crear un objeto con los datos de la fila filtrada
       const filaData = {};
       
       if (encabezados.length > 0) {
         encabezados.forEach((header, idx) => {
           const key = String(header || `Columna${idx + 1}`).trim();
-          filaData[key] = String(row[idx] || '').trim();
+          filaData[key] = String(filaFiltrada[idx] || '').trim();
         });
       } else {
-        row.forEach((cell, idx) => {
+        filaFiltrada.forEach((cell, idx) => {
           filaData[`Columna${idx + 1}`] = String(cell || '').trim();
         });
       }
       
-      // También guardar la fila como array para mantener el orden
-      filaData._rowData = row.map(cell => String(cell || '').trim());
+      // También guardar la fila filtrada como array para mantener el orden
+      filaData._rowData = filaFiltrada.map(cell => String(cell || '').trim());
       
       tablaProbadores.push(filaData);
       
-      // Extraer valores de columna G que contengan "Fitting"
-      if (row.length > columnaGIndex) {
-        const columnaG = String(row[columnaGIndex] || '').trim();
+      // Extraer valores de columna G (Master Service) que contengan "Fitting"
+      // Usar el índice original antes de filtrar
+      if (row.length > columnaGIndexOriginal) {
+        const columnaG = String(row[columnaGIndexOriginal] || '').trim();
         if (columnaG && columnaG.toUpperCase().includes('FITTING')) {
           // Evitar duplicados
           if (!sensoresFitting.includes(columnaG)) {
