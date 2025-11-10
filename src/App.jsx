@@ -114,6 +114,9 @@ const defaultReport = {
         encabezados: [],
         masters: [],
         probadores: [],
+        // Tablas manuales
+        mastersManual: [], // [{ master:'', mac:'', ubicacion:'' }]
+        sensoresManual: [] // [{ probador:'', sn:'', masterLink:'' }]
       },
   rackVideo: {
     descripcion: "",
@@ -1079,6 +1082,9 @@ export default function App() {
         encabezados: [],
         masters: [],
         probadores: [],
+        // Tablas manuales
+        mastersManual: [],
+        sensoresManual: []
       },
       rackVideo: {
         descripcion: "",

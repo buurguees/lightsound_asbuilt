@@ -149,6 +149,85 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
     <div>
       <h2 className="font-semibold text-neutral-800 mb-4">Probadores</h2>
 
+      {/* Tablas manuales */}
+      <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Sensores manual */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-semibold text-neutral-700">Sensores (manual)</h3>
+            <Button onClick={() => setData(d => { const c = structuredClone(d); (c.probadores.sensoresManual ||= []).push({ probador:'', sn:'', masterLink:'' }); return c; })}>Añadir fila</Button>
+          </div>
+          <div className="overflow-auto border rounded-lg">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-neutral-100 text-[11px]">
+                  <th className="border px-2 py-1 text-left font-semibold">Nº de Probador</th>
+                  <th className="border px-2 py-1 text-left font-semibold">Nº de Serie</th>
+                  <th className="border px-2 py-1 text-left font-semibold">Master Link</th>
+                  <th className="border px-2 py-1 text-left"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {(data.probadores.sensoresManual || []).map((row, i) => (
+                  <tr key={i} className="odd:bg-white even:bg-neutral-50">
+                    <td className="border px-2 py-1">
+                      <input className="w-full outline-none" value={row.probador || ''} onChange={e => setData(d => { const c = structuredClone(d); c.probadores.sensoresManual[i].probador = e.target.value; return c; })} />
+                    </td>
+                    <td className="border px-2 py-1">
+                      <input className="w-full outline-none" value={row.sn || ''} onChange={e => setData(d => { const c = structuredClone(d); c.probadores.sensoresManual[i].sn = e.target.value; return c; })} />
+                    </td>
+                    <td className="border px-2 py-1">
+                      <input className="w-full outline-none" value={row.masterLink || ''} onChange={e => setData(d => { const c = structuredClone(d); c.probadores.sensoresManual[i].masterLink = e.target.value; return c; })} />
+                    </td>
+                    <td className="border px-2 py-1 text-right">
+                      <Button onClick={() => setData(d => { const c = structuredClone(d); c.probadores.sensoresManual.splice(i,1); return c; })}>Eliminar</Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Masters manual */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-semibold text-neutral-700">Master (manual)</h3>
+            <Button onClick={() => setData(d => { const c = structuredClone(d); (c.probadores.mastersManual ||= []).push({ master:'', mac:'', ubicacion:'' }); return c; })}>Añadir fila</Button>
+          </div>
+          <div className="overflow-auto border rounded-lg">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-neutral-100 text-[11px]">
+                  <th className="border px-2 py-1 text-left font-semibold">Master</th>
+                  <th className="border px-2 py-1 text-left font-semibold">MAC</th>
+                  <th className="border px-2 py-1 text-left font-semibold">Ubicación</th>
+                  <th className="border px-2 py-1 text-left"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {(data.probadores.mastersManual || []).map((row, i) => (
+                  <tr key={i} className="odd:bg-white even:bg-neutral-50">
+                    <td className="border px-2 py-1">
+                      <input className="w-full outline-none" value={row.master || ''} onChange={e => setData(d => { const c = structuredClone(d); c.probadores.mastersManual[i].master = e.target.value; return c; })} />
+                    </td>
+                    <td className="border px-2 py-1">
+                      <input className="w-full outline-none" value={row.mac || ''} onChange={e => setData(d => { const c = structuredClone(d); c.probadores.mastersManual[i].mac = e.target.value; return c; })} />
+                    </td>
+                    <td className="border px-2 py-1">
+                      <input className="w-full outline-none" value={row.ubicacion || ''} onChange={e => setData(d => { const c = structuredClone(d); c.probadores.mastersManual[i].ubicacion = e.target.value; return c; })} />
+                    </td>
+                    <td className="border px-2 py-1 text-right">
+                      <Button onClick={() => setData(d => { const c = structuredClone(d); c.probadores.mastersManual.splice(i,1); return c; })}>Eliminar</Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       {/* Tabla de probadores importada del Excel */}
       {data.probadores.tablaProbadores && data.probadores.tablaProbadores.length > 0 && (
         <div className="mb-4">
