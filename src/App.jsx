@@ -2,6 +2,7 @@
 import * as XLSX from 'xlsx';
 // Componentes PDF
 import { SeccionPlanostienda } from './components/PDF/SeccionPlanostienda';
+import { Printable as PDFPrintable } from './components/PDF/Printable';
 // Componentes UI
 import { Button } from './components/UI/Button';
 import { LoadingModal } from './components/UI/LoadingModal';
@@ -1270,15 +1271,15 @@ export default function App() {
             <h2 className="font-bold text-neutral-700">Vista Previa del Informe</h2>
             <p className="text-neutral-600">Esto es cómo se verá al imprimir</p>
           </div>
-          <div className="flex-1 overflow-y-auto p-4">
-            <Printable data={data} onPageRendered={handlePageRendered} />
+      <div className="flex-1 overflow-y-auto p-4">
+            <PDFPrintable data={data} onPageRendered={handlePageRendered} />
           </div>
         </div>
       </div>
 
       {/* Vista imprimible oculta pero disponible para impresión */}
       <div className="hidden print:block">
-        <Printable data={data} onPageRendered={handlePageRendered} />
+        <PDFPrintable data={data} onPageRendered={handlePageRendered} />
       </div>
     </div>
   );
