@@ -137,6 +137,9 @@ const defaultReport = {
       },
   rackVideo: {
     descripcion: "",
+    observaciones: "",
+    frontal: [],
+    trasera: [],
     fotos: [
       { url: "", fileName: undefined, fileSize: undefined, descripcion: "" }
     ]
@@ -691,6 +694,7 @@ const Editor = ({
   probadorFilesFromFolder,
   probadorExcelFilesFromFolder,
   audioFilesFromFolder,
+  rackVideoFilesFromFolder,
   onFotosProcessed
 }) => {
   const imageInputRefs = useRef({});
@@ -725,7 +729,7 @@ const Editor = ({
       case 'audio':
         return <AudioEditor data={data} setData={setData} imageInputRefs={imageInputRefs} audioFilesFromFolder={audioFilesFromFolder} />;
       case 'rackVideo':
-        return <RackVideoEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />;
+        return <RackVideoEditor data={data} setData={setData} imageInputRefs={imageInputRefs} rackVideoFilesFromFolder={rackVideoFilesFromFolder} />;
       case 'rackAudio':
         return <RackAudioEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />;
       case 'cuadrosAV':
@@ -818,6 +822,7 @@ export default function App() {
   const [probadorFilesFromFolder, setProbadorFilesFromFolder] = useState([]);
   const [probadorExcelFilesFromFolder, setProbadorExcelFilesFromFolder] = useState([]);
   const [audioFilesFromFolder, setAudioFilesFromFolder] = useState([]);
+  const [rackVideoFilesFromFolder, setRackVideoFilesFromFolder] = useState([]);
   const [fotosProcessedInfo, setFotosProcessedInfo] = useState(null);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [activeModule, setActiveModule] = useState('metadatos'); // Módulo activo en el sidebar
@@ -934,6 +939,22 @@ export default function App() {
     // Enviar archivos de audio a AudioEditor.jsx para procesamiento
     if (audioFiles.length > 0) {
       setAudioFilesFromFolder(audioFiles);
+    }
+    
+    // Filtrar archivos de rack video (misma carpeta As Built/Fotos/)
+    const rackVideoFiles = fotoFiles.filter(file => {
+      const fileName = file.name.toUpperCase();
+      return fileName.includes('FRONTAL_RACK_VIDEO') || 
+             fileName.includes('FRONTAL RACK VIDEO') ||
+             fileName.includes('TRASERA_RACK_VIDEO') || 
+             fileName.includes('TRASERA RACK VIDEO');
+    });
+    
+    console.log('Archivos de rack video encontrados:', rackVideoFiles.length);
+    
+    // Enviar archivos de rack video a RackVideoEditor.jsx para procesamiento
+    if (rackVideoFiles.length > 0) {
+      setRackVideoFilesFromFolder(rackVideoFiles);
     }
     
     // Buscar y cargar foto de entrada de la tienda (se procesa en App.jsx)
@@ -1293,7 +1314,8 @@ export default function App() {
           probadorFilesFromFolder={probadorFilesFromFolder}
           probadorExcelFilesFromFolder={probadorExcelFilesFromFolder}
           audioFilesFromFolder={audioFilesFromFolder}
-            onFotosProcessed={setFotosProcessedInfo}
+          rackVideoFilesFromFolder={rackVideoFilesFromFolder}
+          onFotosProcessed={setFotosProcessedInfo}
             />
         </div>
 
