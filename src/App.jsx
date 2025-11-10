@@ -158,14 +158,10 @@ const defaultReport = {
   },
 };
 
-// --- Estilos de impresión ---
+// --- Estilos de impresión mínimos (el resto está en pdf.css) ---
 const PrintStyles = () => (
   <style>{`
     @media print {
-      @page { 
-        size: A4 landscape; 
-        margin: 0; 
-      }
       .no-print { display: none !important; }
       html, body {
         width: 100%;
@@ -173,92 +169,6 @@ const PrintStyles = () => (
         margin: 0;
         padding: 0;
         overflow: visible;
-      }
-      .page { 
-        page-break-after: always;
-        page-break-inside: avoid;
-        width: 297mm;
-        min-height: 210mm;
-        height: 210mm;
-        max-height: 210mm;
-        display: flex;
-        flex-direction: column;
-        padding: 12mm 15mm;
-        box-sizing: border-box;
-        overflow: hidden;
-      }
-      .page:last-child { page-break-after: auto; }
-      .page-header {
-        flex-shrink: 0;
-        margin-bottom: 8mm;
-        min-height: fit-content;
-      }
-      .page-content {
-        flex: 1 1 auto;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        min-height: 0;
-      }
-      .page-footer {
-        flex-shrink: 0;
-        margin-top: auto;
-        padding-top: 3mm;
-        border-top: 1px solid #e5e5e5;
-      }
-      body { 
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-        margin: 0;
-        padding: 0;
-      }
-      * {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
-      img {
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: contain;
-        page-break-inside: avoid;
-      }
-      table {
-        width: 100%;
-        table-layout: auto;
-      }
-    }
-    
-    @media screen {
-      body {
-        background: #f5f5f5;
-      }
-      .page {
-        width: 100%;
-        max-width: 1000px;
-        min-height: auto;
-        margin: 0 auto 20px;
-        background: white;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        display: flex;
-        flex-direction: column;
-        padding: 30px;
-        box-sizing: border-box;
-        border-radius: 8px;
-      }
-      .page-header {
-        flex-shrink: 0;
-        margin-bottom: 20px;
-      }
-      .page-content {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-      }
-      .page-footer {
-        flex-shrink: 0;
-        margin-top: 20px;
-        padding-top: 15px;
-        border-top: 1px solid #e5e5e5;
       }
     }
   `}</style>
@@ -1266,13 +1176,15 @@ export default function App() {
         </div>
 
         {/* Columna derecha: Vista Previa PDF */}
-        <div className="w-1/2 bg-neutral-50 flex flex-col overflow-hidden" style={{ maxHeight: 'calc(100vh - 80px)' }}>
+        <div className="w-1/2 bg-neutral-200 flex flex-col overflow-hidden" style={{ maxHeight: 'calc(100vh - 80px)' }}>
           <div className="flex-shrink-0 bg-neutral-100 border-b border-neutral-300 px-4 py-3 shadow-sm">
             <h2 className="font-bold text-neutral-700">Vista Previa del Informe</h2>
-            <p className="text-neutral-600">Esto es cómo se verá al imprimir</p>
+            <p className="text-neutral-600">Vista exacta A4 horizontal (297mm x 210mm)</p>
           </div>
-      <div className="flex-1 overflow-y-auto p-4">
-            <PDFPrintable data={data} onPageRendered={handlePageRendered} />
+          <div className="flex-1 overflow-y-auto overflow-x-auto p-4">
+            <div className="pdf-preview">
+              <PDFPrintable data={data} onPageRendered={handlePageRendered} />
+            </div>
           </div>
         </div>
       </div>
