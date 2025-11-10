@@ -146,10 +146,11 @@ export const ElementosInstaladosEditor = ({ data, setData }) => {
                         <input
                           type="number"
                           min="1"
+                          max="9999"
                           value={cantidad}
                           onChange={(e) => actualizarCantidad(nombre, e.target.value)}
                           onClick={(e) => e.stopPropagation()}
-                          className="w-12 px-1 py-0.5 text-xs border border-neutral-300 rounded text-center focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          className="w-20 px-2 py-0.5 text-xs border border-neutral-300 rounded text-center focus:outline-none focus:ring-1 focus:ring-blue-500"
                           style={{ fontSize: '11px' }}
                         />
                       </div>
