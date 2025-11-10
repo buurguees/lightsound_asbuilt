@@ -120,9 +120,18 @@ const defaultReport = {
       },
       audio: {
         activo: false,
+        altavozEspecial: [],
+        altavozOffice: [],
+        altavozZonaComun: [],
+        altavozKitchenOffice: [],
+        torreAcustica: [],
+        altavozAlmacen: [],
+        altavozFullRange: [],
+        subGrave: [],
+        altavozProbadores: [],
+        cluster: [],
         altavoz: [],
         torre: [],
-        cluster: [],
         subwoofer: [],
         subGrabe: []
       },
@@ -910,7 +919,10 @@ export default function App() {
              fileName.includes('SUBWOOFER') || 
              fileName.includes('SUB-GRABE') || 
              fileName.includes('SUBGRABE') || 
-             fileName.includes('SUB_GRABE');
+             fileName.includes('SUB_GRABE') ||
+             fileName.includes('SUB-GRAVE') || 
+             fileName.includes('SUBGRAVE') || 
+             fileName.includes('SUB_GRAVE');
     });
     
     console.log('Archivos de audio encontrados:', audioFiles.length);
@@ -1120,9 +1132,18 @@ export default function App() {
       },
       audio: {
         activo: false,
+        altavozEspecial: [],
+        altavozOffice: [],
+        altavozZonaComun: [],
+        altavozKitchenOffice: [],
+        torreAcustica: [],
+        altavozAlmacen: [],
+        altavozFullRange: [],
+        subGrave: [],
+        altavozProbadores: [],
+        cluster: [],
         altavoz: [],
         torre: [],
-        cluster: [],
         subwoofer: [],
         subGrabe: []
       },
