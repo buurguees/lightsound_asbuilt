@@ -23,6 +23,11 @@ export const Portada = ({ meta, equipamiento, tipoInstalacionVideo, almacenExter
       {/* Columna izquierda: Metadatos */}
       <div className="portada-columna-izquierda">
         <div className="metadatos-container">
+          {/* Título del informe como encabezado de metadatos */}
+          <div className="mb-4">
+            <h1 className="text-2xl font-bold text-neutral-800 mb-2">{meta.titulo}</h1>
+            <div className="h-1 w-16 bg-neutral-800"></div>
+          </div>
           <div className="grid grid-cols-1 gap-4">
             <div>
               <h2 className="text-neutral-500 mb-1">PROYECTO</h2>
@@ -63,12 +68,6 @@ export const Portada = ({ meta, equipamiento, tipoInstalacionVideo, almacenExter
             </div>
           </div>
         )}
-
-        {/* Título del informe */}
-        <div className="mb-4">
-          <h1 className="text-3xl font-bold text-neutral-800 mb-2">{meta.titulo}</h1>
-          <div className="h-1 w-20 bg-neutral-800"></div>
-        </div>
 
         {/* Elementos Instalados */}
         {Object.keys(equipamiento || {}).filter(nombre => equipamiento[nombre] === true).length > 0 && (
