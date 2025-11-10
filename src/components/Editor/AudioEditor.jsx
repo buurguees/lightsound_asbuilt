@@ -207,35 +207,49 @@ export const AudioEditor = ({ data, setData, imageInputRefs, audioFilesFromFolde
               <h3 className="font-semibold text-neutral-700 mb-2">{tipo.label.toUpperCase()}</h3>
               <div className="flex gap-2 mb-2">
                 <Button onClick={() => imageInputRefs.current[`audio_${tipo.key}`]?.click()}>
-                  Subir
+                  Subir {fotos.length > 0 && `(${fotos.length})`}
                 </Button>
                 <input
                   ref={el => imageInputRefs.current[`audio_${tipo.key}`] = el}
                   type="file"
                   accept="image/*"
+                  multiple
                   className="hidden"
                   onChange={async (e) => {
-                    if (e.target.files?.[0]) {
-                      await handleImageUpload(tipo.key, tipo.label, e.target.files[0]);
+                    if (e.target.files && e.target.files.length > 0) {
+                      // Procesar todas las imágenes seleccionadas
+                      for (let i = 0; i < e.target.files.length; i++) {
+                        await handleImageUpload(tipo.key, tipo.label, e.target.files[i]);
+                      }
+                      // Limpiar el input para permitir seleccionar las mismas imágenes de nuevo
+                      e.target.value = '';
                     }
                   }}
                 />
               </div>
               
               {fotos.length > 0 && (
-                <div className="space-y-2">
+                <div className="space-y-3">
+                  <div className="text-xs text-neutral-500 mb-2">
+                    {fotos.length} foto{fotos.length !== 1 ? 's' : ''} subida{fotos.length !== 1 ? 's' : ''}
+                  </div>
                   {fotos.map((foto, index) => (
-                    <div key={index} className="relative">
+                    <div key={index} className="relative border rounded p-2 bg-neutral-50">
+                      <div className="text-xs font-semibold text-neutral-600 mb-1">
+                        Foto {index + 1}
+                      </div>
                       <img 
                         loading="lazy" 
                         src={foto.url} 
                         alt={`${tipo.label} ${index + 1}`} 
-                        className="max-h-32 w-full object-contain rounded border" 
+                        className="max-h-40 w-full object-contain rounded border bg-white" 
                       />
-                      <small className="text-neutral-600 mt-1 block">{foto.fileName}</small>
+                      <small className="text-neutral-600 mt-1 block text-xs truncate" title={foto.fileName}>
+                        {foto.fileName}
+                      </small>
                       <Button 
                         onClick={() => handleRemoveImage(tipo.key, index)}
-                        className="mt-1 text-xs"
+                        className="mt-2 text-xs w-full"
                       >
                         Eliminar
                       </Button>
