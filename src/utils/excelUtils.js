@@ -327,12 +327,16 @@ export const processExcelProbadores = async (file) => {
     // La primera fila son los encabezados
     const encabezados = allRows[0] || [];
     
-    console.log(`\n📊 Procesando Excel de Probadores: ${file.name}`);
+    console.log(`\n Procesando Excel de Probadores: ${file.name}`);
     console.log(`   Total de filas en el archivo: ${allRows.length}`);
     console.log(`   Importando tabla completa desde la fila 1`);
     
     // Procesar todas las filas de datos (desde la fila 2, índice 1)
     const tablaProbadores = [];
+    const sensoresFitting = []; // Array para almacenar valores de columna G que contengan "Fitting"
+    
+    // Columna G = índice 6 (0-indexed)
+    const columnaGIndex = 6;
     
     for (let i = 1; i < allRows.length; i++) {
       const row = allRows[i];
@@ -360,27 +364,47 @@ export const processExcelProbadores = async (file) => {
       filaData._rowData = row.map(cell => String(cell || '').trim());
       
       tablaProbadores.push(filaData);
+      
+      // Extraer valores de columna G que contengan "Fitting"
+      if (row.length > columnaGIndex) {
+        const columnaG = String(row[columnaGIndex] || '').trim();
+        if (columnaG && columnaG.toUpperCase().includes('FITTING')) {
+          // Evitar duplicados
+          if (!sensoresFitting.includes(columnaG)) {
+            sensoresFitting.push(columnaG);
+          }
+        }
+      }
     }
+    
+    // Ordenar sensores por número
+    sensoresFitting.sort((a, b) => {
+      const numA = parseInt(a.match(/\d+/)?.[0] || '0');
+      const numB = parseInt(b.match(/\d+/)?.[0] || '0');
+      return numA - numB;
+    });
     
     console.log(`\n📊 Resumen del procesamiento:`);
     console.log(`   Filas procesadas: ${tablaProbadores.length}`);
     console.log(`   Columnas detectadas: ${encabezados.length || (tablaProbadores[0]?._rowData?.length || 0)}`);
+    console.log(`   Sensores con "Fitting" encontrados: ${sensoresFitting.length}`);
     
     if (tablaProbadores.length === 0) {
       const mensaje = `No se encontraron datos en el archivo Excel.\n\nFilas procesadas: ${allRows.length - 1}`;
       console.error(mensaje);
       alert(mensaje);
-      return { tabla: [] };
+      return { tabla: [], sensoresFitting: [] };
     }
 
     return { 
       tabla: tablaProbadores,
-      encabezados: encabezados.map(h => String(h || '').trim())
+      encabezados: encabezados.map(h => String(h || '').trim()),
+      sensoresFitting: sensoresFitting
     };
   } catch (error) {
     console.error('Error al procesar el Excel de probadores:', error);
     alert('Error: ' + error.message);
-    return { tabla: [] };
+    return { tabla: [], sensoresFitting: [] };
   }
 };
 

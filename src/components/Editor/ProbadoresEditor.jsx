@@ -97,6 +97,7 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
       let todasTablas = [];
       let encabezados = [];
       let archivosProcesados = 0;
+      const sensoresFittingSet = new Set(); // Para evitar duplicados
 
       for (const file of probadorExcelFilesFromFolder) {
         // Evitar procesar el mismo archivo dos veces
@@ -108,13 +109,21 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
 
         try {
           console.log('Procesando archivo Excel de probadores desde carpeta:', file.name);
-          const { tabla, encabezados: enc } = await processExcelProbadores(file);
+          const { tabla, encabezados: enc, sensoresFitting } = await processExcelProbadores(file);
           
           if (tabla.length > 0) {
             todasTablas = todasTablas.concat(tabla);
             if (enc.length > 0 && encabezados.length === 0) {
               encabezados = enc; // Usar los encabezados del primer archivo
             }
+            
+            // Acumular sensores con "Fitting" de la columna G
+            if (sensoresFitting && sensoresFitting.length > 0) {
+              sensoresFitting.forEach(sensor => {
+                sensoresFittingSet.add(sensor);
+              });
+            }
+            
             archivosProcesados++;
             processedExcelFilesRef.current.add(fileKey);
           }
@@ -123,11 +132,42 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
         }
       }
 
-      if (todasTablas.length > 0) {
+      // Convertir Set a array ordenado
+      const sensoresFittingArray = Array.from(sensoresFittingSet).sort((a, b) => {
+        const numA = parseInt(a.match(/\d+/)?.[0] || '0');
+        const numB = parseInt(b.match(/\d+/)?.[0] || '0');
+        return numA - numB;
+      });
+
+      if (todasTablas.length > 0 || sensoresFittingArray.length > 0) {
         setData((d) => {
           const c = structuredClone(d);
           c.probadores.tablaProbadores = todasTablas;
           c.probadores.encabezados = encabezados;
+          
+          // Añadir sensores a la tabla manual (sin duplicar los que ya existen)
+          if (sensoresFittingArray.length > 0) {
+            if (!c.probadores.sensoresManual) {
+              c.probadores.sensoresManual = [];
+            }
+            
+            // Crear un Set con los probadores existentes para evitar duplicados
+            const probadoresExistentes = new Set(
+              c.probadores.sensoresManual.map(s => s.probador)
+            );
+            
+            // Añadir solo los nuevos sensores
+            sensoresFittingArray.forEach(sensor => {
+              if (!probadoresExistentes.has(sensor)) {
+                c.probadores.sensoresManual.push({
+                  probador: sensor,
+                  sn: '',
+                  masterLink: ''
+                });
+              }
+            });
+          }
+          
           // Activar automáticamente la sección si hay datos
           c.secciones.probadores = true;
           c.probadores.activo = true;
@@ -136,7 +176,12 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
 
         if (archivosProcesados > 0) {
           let mensaje = `✅ Se procesaron ${archivosProcesados} archivo(s) Excel de probadores desde la carpeta\n`;
-          mensaje += `✅ Se importaron ${todasTablas.length} fila(s) de la tabla`;
+          if (todasTablas.length > 0) {
+            mensaje += `✅ Se importaron ${todasTablas.length} fila(s) de la tabla\n`;
+          }
+          if (sensoresFittingArray.length > 0) {
+            mensaje += `✅ Se importaron ${sensoresFittingArray.length} sensor(es) a la tabla manual`;
+          }
           alert(mensaje);
         }
       }
