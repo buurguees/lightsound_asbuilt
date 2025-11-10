@@ -3,6 +3,7 @@ import './pdf.css';
 import { Portada } from './Portada';
 import { SeccionDesglosePantallas } from './SeccionDesglosePantallas';
 import { SeccionFotosPantallas } from './SeccionFotosPantallas';
+import { SeccionBanners } from './SeccionBanners';
 import { SeccionProbadores } from './SeccionProbadores';
 import { SeccionAudio } from './SeccionAudio';
 import { SeccionAltavocesInstalacion } from './SeccionAltavocesInstalacion';
@@ -29,6 +30,9 @@ export const Printable = React.memo(({ data, onPageRendered }) => (
     )}
     {data.secciones.fotosPantallas && (
       <SeccionFotosPantallas fotos={data.fotos} />
+    )}
+    {data.secciones.banners && (
+      <SeccionBanners banners={data.banners} />
     )}
     {data.secciones.probadores && (
       <SeccionProbadores probadores={data.probadores} />

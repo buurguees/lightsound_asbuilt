@@ -3,6 +3,7 @@ import * as XLSX from 'xlsx';
 // Componentes PDF
 import { SeccionPlanostienda } from './components/PDF/SeccionPlanostienda';
 import { SeccionAudio } from './components/PDF/SeccionAudio';
+import { SeccionBanners } from './components/PDF/SeccionBanners';
 import { Printable as PDFPrintable } from './components/PDF/Printable';
 import { PDFPreviewWrapper } from './components/PDF/PDFPreviewWrapper';
 // Componentes UI
@@ -19,6 +20,7 @@ import { MetadatosEditor } from './components/Editor/MetadatosEditor';
 import { ElementosInstaladosEditor } from './components/Editor/ElementosInstaladosEditor';
 import { DesglosePantallasEditor } from './components/Editor/DesglosePantallasEditor';
 import { FotosPantallasEditor } from './components/Editor/FotosPantallasEditor';
+import { BannersEditor } from './components/Editor/BannersEditor';
 import { ProbadoresEditor } from './components/Editor/ProbadoresEditor';
 import { AudioEditor } from './components/Editor/AudioEditor';
 import { RackVideoEditor } from './components/Editor/RackVideoEditor';
@@ -90,6 +92,7 @@ const defaultReport = {
     equipamiento: true,
     desglosePantallas: true,
     fotosPantallas: true,
+    banners: false,
     probadores: false,
     audio: false,
     altavocesInstalacion: true,
@@ -108,6 +111,7 @@ const defaultReport = {
   almacenExterno: "No",
   pantallas: [],
   fotos: [],
+  banners: [],
       probadores: {
         activo: false,
         probadorOcupado: { url: "", fileName: undefined, fileSize: undefined },
@@ -726,6 +730,15 @@ const Editor = ({
             onFotosProcessed={onFotosProcessed}
           />
         );
+      case 'banners':
+        return (
+          <BannersEditor 
+            data={data} 
+            setData={setData} 
+            imageInputRefs={imageInputRefs}
+            bannerFilesFromFolder={bannerFilesFromFolder}
+          />
+        );
       case 'probadores':
         return <ProbadoresEditor data={data} setData={setData} imageInputRefs={imageInputRefs} probadorFilesFromFolder={probadorFilesFromFolder} probadorExcelFilesFromFolder={probadorExcelFilesFromFolder} />;
       case 'audio':
@@ -784,6 +797,9 @@ const Printable = React.memo(({ data, onPageRendered }) => (
     {data.secciones.fotosPantallas && (
       <SeccionFotosPantallas fotos={data.fotos} />
     )}
+    {data.secciones.banners && (
+      <SeccionBanners banners={data.banners} />
+    )}
     {data.secciones.probadores && (
       <SeccionProbadores probadores={data.probadores} />
     )}
@@ -821,6 +837,7 @@ export default function App() {
   const [currentLoadingPDF, setCurrentLoadingPDF] = useState(null);
   const [excelFilesFromFolder, setExcelFilesFromFolder] = useState([]);
   const [fotoFilesFromFolder, setFotoFilesFromFolder] = useState([]);
+  const [bannerFilesFromFolder, setBannerFilesFromFolder] = useState([]);
   const [probadorFilesFromFolder, setProbadorFilesFromFolder] = useState([]);
   const [probadorExcelFilesFromFolder, setProbadorExcelFilesFromFolder] = useState([]);
   const [audioFilesFromFolder, setAudioFilesFromFolder] = useState([]);
@@ -1008,6 +1025,48 @@ export default function App() {
       setCuadrosAVFilesFromFolder(cuadrosAVFiles);
     }
     
+    // Filtrar archivos de banners (misma carpeta As Built/Fotos/)
+    // Por ahora, todos los archivos de imagen que no sean de otros módulos se consideran banners
+    // TODO: Añadir filtros específicos si es necesario
+    const bannerFiles = fotoFiles.filter(file => {
+      const fileName = file.name.toUpperCase();
+      // Excluir archivos que ya se asignaron a otros módulos
+      return !fileName.includes('PROBADORES_GENERAL') &&
+             !fileName.includes('DEVICE_SENSOR') &&
+             !fileName.includes('CABINA_OCUPADA') &&
+             !fileName.includes('ALTAVOZ') &&
+             !fileName.includes('TORRE') &&
+             !fileName.includes('CLUSTER') &&
+             !fileName.includes('SUBWOOFER') &&
+             !fileName.includes('SUB-GRABE') &&
+             !fileName.includes('SUBGRABE') &&
+             !fileName.includes('SUB_GRABE') &&
+             !fileName.includes('FRONTAL_RACK_VIDEO') &&
+             !fileName.includes('TRASERA_RACK_VIDEO') &&
+             !fileName.includes('FRONTAL_RACK_COMUNICACIONES') &&
+             !fileName.includes('FRONTAL_RACK_COMUNICACION') &&
+             !fileName.includes('FRONTAL RACK COMUNICACIONES') &&
+             !fileName.includes('FRONTAL_RACK_AUDIO') &&
+             !fileName.includes('TRASERA_RACK_AUDIO') &&
+             !fileName.includes('FRONTAL_ON_THE_SPOT') &&
+             !fileName.includes('CUADRO_LSG') &&
+             !fileName.includes('CUADRO_ELECTRICO_GENERAL') &&
+             !fileName.includes('TÉRMICOS_PANTALLA') &&
+             !fileName.includes('TÉRMICOS_RACK') &&
+             !fileName.includes('DOC_BOX') &&
+             !fileName.includes('AV_BOX') &&
+             !fileName.includes('_FRONTAL') &&
+             !fileName.includes('_PLAYER') &&
+             !fileName.includes('_SENDING') &&
+             !fileName.includes('_IP');
+    });
+    console.log('Archivos de banners encontrados:', bannerFiles.length);
+    
+    // Enviar archivos de banners a BannersEditor.jsx para procesamiento
+    if (bannerFiles.length > 0) {
+      setBannerFilesFromFolder(bannerFiles);
+    }
+
     // Filtrar archivos de documentación (misma carpeta As Built/Fotos/)
     const documentacionFiles = fotoFiles.filter(file => {
       const fileName = file.name.toUpperCase();
@@ -1194,6 +1253,7 @@ export default function App() {
         equipamiento: true,
         desglosePantallas: true,
         fotosPantallas: true,
+        banners: false,
         probadores: false,
         audio: false,
         altavocesInstalacion: true,
@@ -1212,6 +1272,7 @@ export default function App() {
       almacenExterno: "No",
       pantallas: [],
       fotos: [],
+      banners: [],
       probadores: {
         activo: false,
         probadorOcupado: { url: "", fileName: undefined, fileSize: undefined },
