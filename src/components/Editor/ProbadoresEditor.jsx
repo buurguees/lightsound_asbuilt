@@ -97,9 +97,6 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
       let todasTablas = [];
       let encabezados = [];
       let archivosProcesados = 0;
-      const mastersUnicos = new Map();
-      const probadoresSet = new Set();
-      const probadoresArray = [];
 
       for (const file of probadorExcelFilesFromFolder) {
         // Evitar procesar el mismo archivo dos veces
@@ -111,38 +108,12 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
 
         try {
           console.log('Procesando archivo Excel de probadores desde carpeta:', file.name);
-          const { tabla, encabezados: enc, masters, probadores } = await processExcelProbadores(file);
+          const { tabla, encabezados: enc } = await processExcelProbadores(file);
           
           if (tabla.length > 0) {
             todasTablas = todasTablas.concat(tabla);
             if (enc.length > 0 && encabezados.length === 0) {
               encabezados = enc; // Usar los encabezados del primer archivo
-            }
-            // Acumular masters y probadores únicos
-            if (masters && masters.length > 0) {
-              masters.forEach(m => {
-                const clave = `${m.master}|${m.mac}|${m.location}`;
-                if (!mastersUnicos.has(clave)) {
-                  mastersUnicos.set(clave, m);
-                }
-              });
-            }
-            if (probadores && probadores.length > 0) {
-              probadores.forEach(p => {
-                // Si es un objeto, crear clave única; si es string, agregarlo directamente
-                if (typeof p === 'object') {
-                  const clave = `${p.probador}|${p.sn}|${p.master}`;
-                  if (!probadoresSet.has(clave)) {
-                    probadoresSet.add(clave);
-                    probadoresArray.push(p);
-                  }
-                } else {
-                  if (!probadoresSet.has(p)) {
-                    probadoresSet.add(p);
-                    probadoresArray.push({ probador: p, sn: '0', master: '' });
-                  }
-                }
-              });
             }
             archivosProcesados++;
             processedExcelFilesRef.current.add(fileKey);
@@ -152,25 +123,11 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
         }
       }
 
-      // Convertir Map a array
-      const mastersArray = Array.from(mastersUnicos.values());
-      
-      // Ordenar probadores por número
-      probadoresArray.sort((a, b) => {
-        const probadorA = typeof a === 'object' ? a.probador : a;
-        const probadorB = typeof b === 'object' ? b.probador : b;
-        const numA = parseInt(probadorA.match(/\d+/)?.[0] || '0');
-        const numB = parseInt(probadorB.match(/\d+/)?.[0] || '0');
-        return numA - numB;
-      });
-
-      if (todasTablas.length > 0 || mastersArray.length > 0 || probadoresArray.length > 0) {
+      if (todasTablas.length > 0) {
         setData((d) => {
           const c = structuredClone(d);
           c.probadores.tablaProbadores = todasTablas;
           c.probadores.encabezados = encabezados;
-          c.probadores.masters = mastersArray;
-          c.probadores.probadores = probadoresArray;
           // Activar automáticamente la sección si hay datos
           c.secciones.probadores = true;
           c.probadores.activo = true;
@@ -179,15 +136,7 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
 
         if (archivosProcesados > 0) {
           let mensaje = `✅ Se procesaron ${archivosProcesados} archivo(s) Excel de probadores desde la carpeta\n`;
-          if (todasTablas.length > 0) {
-            mensaje += `✅ Se importaron ${todasTablas.length} fila(s) de la tabla\n`;
-          }
-          if (mastersArray.length > 0) {
-            mensaje += `✅ Se encontraron ${mastersArray.length} Master(s) único(s)\n`;
-          }
-          if (probadoresArray.length > 0) {
-            mensaje += `✅ Se encontraron ${probadoresArray.length} Probador(es)`;
-          }
+          mensaje += `✅ Se importaron ${todasTablas.length} fila(s) de la tabla`;
           alert(mensaje);
         }
       }
@@ -200,60 +149,39 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
     <div>
       <h2 className="font-semibold text-neutral-800 mb-4">Probadores</h2>
 
-      {/* Tabla de Masters (sin duplicados) */}
-      {data.probadores.masters && data.probadores.masters.length > 0 && (
+      {/* Tabla de probadores importada del Excel */}
+      {data.probadores.tablaProbadores && data.probadores.tablaProbadores.length > 0 && (
         <div className="mb-4">
-          <h3 className="font-semibold text-neutral-700 mb-2">Master</h3>
+          <h3 className="font-semibold text-neutral-700 mb-2">Tabla de Probadores</h3>
           <div className="overflow-auto border rounded-lg">
             <table className="w-full text-xs">
               <thead>
                 <tr className="bg-neutral-100 text-[11px]">
-                  <th className="border px-2 py-1 text-left font-semibold">Master</th>
-                  <th className="border px-2 py-1 text-left font-semibold">MAC</th>
-                  <th className="border px-2 py-1 text-left font-semibold">Ubicación</th>
+                  {data.probadores.encabezados && data.probadores.encabezados.length > 0 ? (
+                    data.probadores.encabezados.map((h, i) => (
+                      <th key={i} className="border px-2 py-1 text-left font-semibold">{h || `Columna ${i + 1}`}</th>
+                    ))
+                  ) : (
+                    data.probadores.tablaProbadores[0]?._rowData?.map((_, i) => (
+                      <th key={i} className="border px-2 py-1 text-left font-semibold">Columna {i + 1}</th>
+                    ))
+                  )}
                 </tr>
               </thead>
               <tbody>
-                {data.probadores.masters.map((master, i) => (
+                {data.probadores.tablaProbadores.map((fila, i) => (
                   <tr key={i} className="odd:bg-white even:bg-neutral-50">
-                    <td className="border px-2 py-1">{master.master}</td>
-                    <td className="border px-2 py-1">{master.mac}</td>
-                    <td className="border px-2 py-1">{master.location}</td>
+                    {fila._rowData ? (
+                      fila._rowData.map((cell, j) => (
+                        <td key={j} className="border px-2 py-1">{cell}</td>
+                      ))
+                    ) : (
+                      data.probadores.encabezados?.map((header, j) => (
+                        <td key={j} className="border px-2 py-1">{fila[header] || ''}</td>
+                      ))
+                    )}
                   </tr>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Tabla de Probadores/Sensores */}
-      {data.probadores.probadores && data.probadores.probadores.length > 0 && (
-        <div className="mb-4">
-          <h3 className="font-semibold text-neutral-700 mb-2">Sensores</h3>
-          <div className="overflow-auto border rounded-lg">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="bg-neutral-100 text-[11px]">
-                  <th className="border px-2 py-1 text-left font-semibold">Probador</th>
-                  <th className="border px-2 py-1 text-left font-semibold">S/N</th>
-                  <th className="border px-2 py-1 text-left font-semibold">Master</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.probadores.probadores.map((item, i) => {
-                  // Manejar tanto objetos como strings (compatibilidad)
-                  const probador = typeof item === 'object' ? item.probador : item;
-                  const sn = typeof item === 'object' ? item.sn : '0';
-                  const master = typeof item === 'object' ? item.master : '';
-                  return (
-                    <tr key={i} className="odd:bg-white even:bg-neutral-50">
-                      <td className="border px-2 py-1">{probador}</td>
-                      <td className="border px-2 py-1">{sn}</td>
-                      <td className="border px-2 py-1">{master}</td>
-                    </tr>
-                  );
-                })}
               </tbody>
             </table>
           </div>

@@ -7,10 +7,9 @@ export const SeccionProbadores = ({ probadores }) => {
   const tieneImagenes = probadores.probadorOcupado?.url || 
                         probadores.probadorLiberado?.url || 
                         probadores.pasilloProbadores?.url;
-  const tieneMasters = probadores.masters && probadores.masters.length > 0;
-  const tieneProbadores = probadores.probadores && probadores.probadores.length > 0;
+  const tieneTabla = probadores.tablaProbadores && probadores.tablaProbadores.length > 0;
   
-  if (!tieneImagenes && !tieneMasters && !tieneProbadores) return null;
+  if (!tieneImagenes && !tieneTabla) return null;
 
   return (
     <section className={PAGE}>
@@ -65,60 +64,39 @@ export const SeccionProbadores = ({ probadores }) => {
         </div>
       </div>
 
-      {/* Tabla de Masters (sin duplicados) */}
-      {tieneMasters && (
+      {/* Tabla de probadores importada del Excel */}
+      {tieneTabla && (
         <div className="mt-4">
-          <h3 className="text-sm font-semibold text-neutral-700 mb-2">Master</h3>
+          <h3 className="text-sm font-semibold text-neutral-700 mb-2">Tabla de Probadores</h3>
           <div className="overflow-auto border rounded-lg">
             <table className="w-full text-xs">
               <thead>
                 <tr className="bg-neutral-100 text-[11px]">
-                  <th className="border px-2 py-1 text-left font-semibold">Master</th>
-                  <th className="border px-2 py-1 text-left font-semibold">MAC</th>
-                  <th className="border px-2 py-1 text-left font-semibold">Ubicación</th>
+                  {probadores.encabezados && probadores.encabezados.length > 0 ? (
+                    probadores.encabezados.map((h, i) => (
+                      <th key={i} className="border px-2 py-1 text-left font-semibold">{h || `Columna ${i + 1}`}</th>
+                    ))
+                  ) : (
+                    probadores.tablaProbadores[0]?._rowData?.map((_, i) => (
+                      <th key={i} className="border px-2 py-1 text-left font-semibold">Columna {i + 1}</th>
+                    ))
+                  )}
                 </tr>
               </thead>
               <tbody>
-                {probadores.masters.map((master, i) => (
+                {probadores.tablaProbadores.map((fila, i) => (
                   <tr key={i} className="odd:bg-white even:bg-neutral-50">
-                    <td className="border px-2 py-1">{master.master}</td>
-                    <td className="border px-2 py-1">{master.mac}</td>
-                    <td className="border px-2 py-1">{master.location}</td>
+                    {fila._rowData ? (
+                      fila._rowData.map((cell, j) => (
+                        <td key={j} className="border px-2 py-1">{cell}</td>
+                      ))
+                    ) : (
+                      probadores.encabezados?.map((header, j) => (
+                        <td key={j} className="border px-2 py-1">{fila[header] || ''}</td>
+                      ))
+                    )}
                   </tr>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Tabla de Probadores/Sensores */}
-      {tieneProbadores && (
-        <div className="mt-4">
-          <h3 className="text-sm font-semibold text-neutral-700 mb-2">Sensores</h3>
-          <div className="overflow-auto border rounded-lg">
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="bg-neutral-100 text-[11px]">
-                  <th className="border px-2 py-1 text-left font-semibold">Probador</th>
-                  <th className="border px-2 py-1 text-left font-semibold">S/N</th>
-                  <th className="border px-2 py-1 text-left font-semibold">Master</th>
-                </tr>
-              </thead>
-              <tbody>
-                {probadores.probadores.map((item, i) => {
-                  // Manejar tanto objetos como strings (compatibilidad)
-                  const probador = typeof item === 'object' ? item.probador : item;
-                  const sn = typeof item === 'object' ? item.sn : '0';
-                  const master = typeof item === 'object' ? item.master : '';
-                  return (
-                    <tr key={i} className="odd:bg-white even:bg-neutral-50">
-                      <td className="border px-2 py-1">{probador}</td>
-                      <td className="border px-2 py-1">{sn}</td>
-                      <td className="border px-2 py-1">{master}</td>
-                    </tr>
-                  );
-                })}
               </tbody>
             </table>
           </div>

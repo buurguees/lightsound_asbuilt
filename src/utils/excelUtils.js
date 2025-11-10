@@ -341,26 +341,11 @@ export const processExcelProbadores = async (file) => {
       );
     };
     
-    const masterIdx = findColumnIndex('Master');
-    const macIdx = findColumnIndex('MAC');
-    const masterLocationIdx = findColumnIndex('Master Location');
-    // Buscar "Master Service" o "Servicio de la Master" para los probadores
-    const masterServiceIdx = findColumnIndex('Master Service') !== -1 ? findColumnIndex('Master Service') : 
-                             findColumnIndex('Servicio de la Master') !== -1 ? findColumnIndex('Servicio de la Master') : -1;
-    const snIdx = findColumnIndex('S/N') !== -1 ? findColumnIndex('S/N') : 
-                  findColumnIndex('Serial Number') !== -1 ? findColumnIndex('Serial Number') : -1;
-    
-    console.log(`\n📋 Columnas encontradas:`);
-    console.log(`   Master: índice ${masterIdx >= 0 ? masterIdx : 'NO ENCONTRADO'}`);
-    console.log(`   MAC: índice ${macIdx >= 0 ? macIdx : 'NO ENCONTRADO'}`);
-    console.log(`   Master Location: índice ${masterLocationIdx >= 0 ? masterLocationIdx : 'NO ENCONTRADO'}`);
-    console.log(`   Master Service: índice ${masterServiceIdx >= 0 ? masterServiceIdx : 'NO ENCONTRADO'}`);
-    console.log(`   S/N: índice ${snIdx >= 0 ? snIdx : 'NO ENCONTRADO'}`);
+    // La primera fila son los encabezados
+    const encabezados = allRows[0] || [];
     
     // Procesar todas las filas de datos (desde la fila 2, índice 1)
-    const todasLasFilas = [];
-    const mastersUnicos = new Map(); // Clave: combinación de Master+MAC+Location, Valor: { master, mac, location }
-    const probadoresArray = []; // Array de objetos: { probador, sn, master }
+    const tablaProbadores = [];
     
     for (let i = 1; i < allRows.length; i++) {
       const row = allRows[i];
@@ -384,79 +369,31 @@ export const processExcelProbadores = async (file) => {
         });
       }
       
+      // También guardar la fila como array para mantener el orden
       filaData._rowData = row.map(cell => String(cell || '').trim());
-      todasLasFilas.push(filaData);
       
-      // Extraer datos de Master (sin duplicados)
-      if (masterIdx >= 0 && macIdx >= 0 && masterLocationIdx >= 0) {
-        const master = String(row[masterIdx] || '').trim();
-        const mac = String(row[macIdx] || '').trim();
-        const location = String(row[masterLocationIdx] || '').trim();
-        
-        // Ignorar filas con "BACK UP" o valores vacíos
-        if (master && mac && location && 
-            !master.toUpperCase().includes('BACK UP') && 
-            !master.toUpperCase().includes('BACKUP')) {
-          // Crear clave única basada en la combinación de los tres valores
-          const clave = `${master}|${mac}|${location}`;
-          if (!mastersUnicos.has(clave)) {
-            mastersUnicos.set(clave, { master, mac, location });
-          }
-          
-          // Extraer probadores desde "Master Service / Servicio de la Master"
-          if (masterServiceIdx >= 0) {
-            const masterService = String(row[masterServiceIdx] || '').trim();
-            // Solo procesar si contiene "Fitting" y no es "BACK UP" o "AV BOX"
-            if (masterService && 
-                masterService.toLowerCase().includes('fitting') &&
-                !masterService.toUpperCase().includes('BACK UP') &&
-                !masterService.toUpperCase().includes('BACKUP') &&
-                !masterService.toUpperCase().includes('AV BOX')) {
-              const sn = snIdx >= 0 ? String(row[snIdx] || '').trim() : '0';
-              // Agregar el probador con su S/N y el Master (MAC) asociado
-              probadoresArray.push({
-                probador: masterService,
-                sn: sn || '0',
-                master: mac
-              });
-            }
-          }
-        }
-      }
+      tablaProbadores.push(filaData);
     }
     
-    // Ordenar probadores por número
-    probadoresArray.sort((a, b) => {
-      const numA = parseInt(a.probador.match(/\d+/)?.[0] || '0');
-      const numB = parseInt(b.probador.match(/\d+/)?.[0] || '0');
-      return numA - numB;
-    });
-    
-    // Convertir Map de masters únicos a array
-    const mastersArray = Array.from(mastersUnicos.values());
-    
     console.log(`\n📊 Resumen del procesamiento:`);
-    console.log(`   Filas totales procesadas: ${todasLasFilas.length}`);
-    console.log(`   Masters únicos encontrados: ${mastersArray.length}`);
-    console.log(`   Probadores encontrados: ${probadoresArray.length}`);
+    console.log(`   Filas procesadas: ${tablaProbadores.length}`);
+    console.log(`   Columnas detectadas: ${encabezados.length || (tablaProbadores[0]?._rowData?.length || 0)}`);
     
-    if (todasLasFilas.length === 0) {
+    if (tablaProbadores.length === 0) {
       const mensaje = `No se encontraron datos en el archivo Excel.\n\nFilas procesadas: ${allRows.length - 1}`;
       console.error(mensaje);
       alert(mensaje);
-      return { tabla: [], masters: [], probadores: [] };
+      return { tabla: [] };
     }
 
     return { 
-      tabla: todasLasFilas,
-      encabezados: encabezados.map(h => String(h || '').trim()),
-      masters: mastersArray,
-      probadores: probadoresArray
+      tabla: tablaProbadores,
+      encabezados: encabezados.map(h => String(h || '').trim())
     };
   } catch (error) {
     console.error('Error al procesar el Excel de probadores:', error);
     alert('Error: ' + error.message);
-    return { tabla: [], masters: [], probadores: [] };
+    return { tabla: [] };
   }
 };
 
