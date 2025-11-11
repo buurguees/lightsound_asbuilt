@@ -53,7 +53,7 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
             try {
               console.log(`  📤 Importando imagen al bloque "${tipoNombre}":`);
               console.log(`     Archivo: ${file.name}`);
-              const base64 = await compressImage(file, { maxDim: 1600, quality: 0.85 });
+              const base64 = await compressImage(file, { maxDim: 1400, quality: 0.8 });
               c.probadores[tipoFoto] = {
                 url: base64,
                 fileName: file.name,
@@ -190,7 +190,7 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
               className="hidden"
               onChange={async (e) => {
                 if (e.target.files?.[0]) {
-                  const base64 = await compressImage(e.target.files[0], { maxDim: 1600, quality: 0.85 });
+                  const base64 = await compressImage(e.target.files[0], { maxDim: 1400, quality: 0.8 });
                   setData((d) => {
                     const c = structuredClone(d);
                     c.probadores.probadorOcupado = {
@@ -237,7 +237,7 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
               className="hidden"
               onChange={async (e) => {
                 if (e.target.files?.[0]) {
-                  const base64 = await compressImage(e.target.files[0], { maxDim: 1600, quality: 0.85 });
+                  const base64 = await compressImage(e.target.files[0], { maxDim: 1400, quality: 0.8 });
                   setData((d) => {
                     const c = structuredClone(d);
                     c.probadores.probadorLiberado = {
@@ -284,7 +284,7 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
               className="hidden"
               onChange={async (e) => {
                 if (e.target.files?.[0]) {
-                  const base64 = await compressImage(e.target.files[0], { maxDim: 1600, quality: 0.85 });
+                  const base64 = await compressImage(e.target.files[0], { maxDim: 1400, quality: 0.8 });
                   setData((d) => {
                     const c = structuredClone(d);
                     c.probadores.pasilloProbadores = {

@@ -29,7 +29,7 @@ const TablaConexionado = ({ filas }) => (
   </table>
 );
 
-export const SeccionDocumentacion = ({ documentacion, pantallas, banners, turnomatic, welcomer }) => {
+export const SeccionDocumentacion = ({ documentacion, pantallas, banners, turnomatic, welcomer, meta }) => {
   // Verificar que documentacion existe
   if (!documentacion) {
     return null;
@@ -51,43 +51,64 @@ export const SeccionDocumentacion = ({ documentacion, pantallas, banners, turnom
     return null;
   }
 
+  // Determinar si combinar en una sola página
+  const totalPantallas = (pantallas && Array.isArray(pantallas)) ? pantallas.length : 0;
+  const combinarEnUna = totalPantallas > 0 && totalPantallas <= 10 && tieneImagenes && tieneConexionado;
+
+  if (combinarEnUna) {
+    // Reunir conexionado
+    const todasEtiquetas = [];
+    (pantallas || []).forEach(p => {
+      if (p.etiquetaPlano) {
+        todasEtiquetas.push({
+          etiquetaPlano: p.etiquetaPlano,
+          puertoPatch: p.puertoPatch || '',
+          puertoSwitch: p.puertoSwitch || '',
+          contrato: p.contrato || '',
+          termicoPantalla: p.termicoPantalla || '',
+          termicoPC: p.termicoPC || ''
+        });
+      }
+    });
+    const conexionado = (documentacion.conexionado && documentacion.conexionado.length > 0)
+      ? documentacion.conexionado
+      : todasEtiquetas;
+
+    return (
+      <section className={PAGE}>
+        <PageHeader title="DOCUMENTACIÓN" meta={meta} />
+        <div className="page-content">
+          <div className="overflow-auto">
+            <TablaConexionado filas={conexionado} />
+          </div>
+          <div className="grid grid-cols-3 gap-3 mt-3">
+            {imagenes.map((imagen, i) => (
+              <div key={i} className="flex flex-col">
+                <div className="text-xs font-semibold text-neutral-700 mb-2 text-center">
+                  {imagen.tipo}
+                </div>
+                <div className="flex items-center justify-center rounded-lg border-2 border-neutral-300 bg-neutral-50 overflow-hidden" style={{ height: '150px' }}>
+                  {imagen.url ? (
+                    <img loading="lazy" src={imagen.url} alt={imagen.tipo} className="w-full h-full object-contain" />
+                  ) : (
+                    <div className="text-center p-2">
+                      <div className="text-neutral-300 text-3xl mb-1">📷</div>
+                      <span className="text-neutral-400 text-xs">Sin foto</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <PageFooter />
+      </section>
+    );
+  }
+
   return (
     <>
-      {/* Página de imágenes si hay */}
-      {tieneImagenes && (
-        <section className={PAGE}>
-          <PageHeader title="DOCUMENTACIÓN" />
-          <div className="page-content">
-            <div className="grid grid-cols-3 gap-3">
-              {imagenes.map((imagen, i) => (
-                <div key={i} className="flex flex-col">
-                  <div className="text-xs font-semibold text-neutral-700 mb-2 text-center">
-                    {imagen.tipo}
-                  </div>
-                  <div className="flex items-center justify-center rounded-lg border-2 border-neutral-300 bg-neutral-50 overflow-hidden" style={{ height: '150px' }}>
-                    {imagen.url ? (
-                      <img 
-                        loading="lazy" 
-                        src={imagen.url} 
-                        alt={imagen.tipo} 
-                        className="w-full h-full object-contain" 
-                      />
-                    ) : (
-                      <div className="text-center p-2">
-                        <div className="text-neutral-300 text-3xl mb-1">📷</div>
-                        <span className="text-neutral-400 text-xs">Sin foto</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-          <PageFooter />
-        </section>
-      )}
-
-      {/* Página de conexionado si hay */}
+      {/* Página de tabla primero */}
       {tieneConexionado && (() => {
         // Recopilar todas las etiquetas de planos de MKD, Banners, Turnomatic y Welcomers
         const todasEtiquetas = [];
@@ -161,7 +182,7 @@ export const SeccionDocumentacion = ({ documentacion, pantallas, banners, turnom
         
         return (
           <section className={PAGE}>
-            <PageHeader title="DOCUMENTACIÓN" subtitle="Conexionado e información relevante" />
+            <PageHeader title="DOCUMENTACIÓN" subtitle={undefined} />
             <div className="page-content">
               <div className="overflow-auto">
                 <TablaConexionado filas={conexionado} />
@@ -171,6 +192,35 @@ export const SeccionDocumentacion = ({ documentacion, pantallas, banners, turnom
           </section>
         );
       })()}
+
+      {/* Página de imágenes después */}
+      {tieneImagenes && (
+        <section className={PAGE}>
+          <PageHeader title="DOCUMENTACIÓN" meta={meta} />
+          <div className="page-content">
+            <div className="grid grid-cols-3 gap-3">
+              {imagenes.map((imagen, i) => (
+                <div key={i} className="flex flex-col">
+                  <div className="text-xs font-semibold text-neutral-700 mb-2 text-center">
+                    {imagen.tipo}
+                  </div>
+                  <div className="flex items-center justify-center rounded-lg border-2 border-neutral-300 bg-neutral-50 overflow-hidden" style={{ height: '150px' }}>
+                    {imagen.url ? (
+                      <img loading="lazy" src={imagen.url} alt={imagen.tipo} className="w-full h-full object-contain" />
+                    ) : (
+                      <div className="text-center p-2">
+                        <div className="text-neutral-300 text-3xl mb-1">📷</div>
+                        <span className="text-neutral-400 text-xs">Sin foto</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <PageFooter />
+        </section>
+      )}
     </>
   );
 };

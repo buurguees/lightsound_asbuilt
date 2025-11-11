@@ -3,7 +3,7 @@ import { PAGE } from '../../utils/constants';
 import { PageHeader } from '../Page/PageHeader';
 import { PageFooter } from '../Page/PageFooter';
 
-export const SeccionProbadores = ({ probadores }) => {
+export const SeccionProbadores = ({ probadores, meta }) => {
   const tieneImagenes = probadores.probadorOcupado?.url || 
                         probadores.probadorLiberado?.url || 
                         probadores.pasilloProbadores?.url;
@@ -104,11 +104,7 @@ export const SeccionProbadores = ({ probadores }) => {
   if (!debeSeparar) {
     return (
       <section className={PAGE}>
-        <div className="page-header">
-          <div className="border-b-2 border-neutral-800 pb-3">
-            <h2 className="text-xl font-bold text-neutral-800">PROBADORES</h2>
-          </div>
-        </div>
+        <PageHeader title="PROBADORES" meta={window?.__ASBUILT_META || null} />
         <div className="page-content">
           {tieneImagenes && <ImagenesProbadores />}
           {tieneTabla && <TablaProbadores filas={probadores.tablaProbadores} />}
@@ -129,11 +125,7 @@ export const SeccionProbadores = ({ probadores }) => {
     <>
       {/* Primera página: imágenes + primeras 10 filas */}
       <section className={PAGE}>
-        <div className="page-header">
-          <div className="border-b-2 border-neutral-800 pb-3">
-            <h2 className="text-xl font-bold text-neutral-800">PROBADORES</h2>
-          </div>
-        </div>
+        <PageHeader title="PROBADORES" meta={meta || window?.__ASBUILT_META || null} />
         <div className="page-content">
           {tieneImagenes && <ImagenesProbadores />}
           {tieneTabla && <TablaProbadores filas={paginas[0]} />}
@@ -144,11 +136,7 @@ export const SeccionProbadores = ({ probadores }) => {
       {/* Páginas adicionales: resto de filas con encabezado */}
       {paginas.slice(1).map((pagina, paginaIdx) => (
         <section key={paginaIdx + 1} className={PAGE}>
-          <div className="page-header">
-            <div className="border-b-2 border-neutral-800 pb-3">
-              <h2 className="text-xl font-bold text-neutral-800">PROBADORES</h2>
-            </div>
-          </div>
+          <PageHeader title="PROBADORES" meta={meta || window?.__ASBUILT_META || null} />
           <div className="page-content">
             <TablaProbadores filas={pagina} />
           </div>

@@ -3,7 +3,7 @@ import { PAGE } from '../../utils/constants';
 import { PageHeader } from '../Page/PageHeader';
 import { PageFooter } from '../Page/PageFooter';
 
-export const SeccionAltavocesInstalacion = ({ equipamiento }) => {
+export const SeccionAltavocesInstalacion = ({ equipamiento, meta }) => {
   // Filtrar elementos instalados (compatibilidad con estructura antigua y nueva)
   const elementosInstalados = Object.keys(equipamiento || {}).filter(nombre => {
     const elemento = equipamiento[nombre];
@@ -21,7 +21,7 @@ export const SeccionAltavocesInstalacion = ({ equipamiento }) => {
 
   return (
     <section className={PAGE}>
-      <PageHeader title="ELEMENTOS INSTALADOS" subtitle="Recuento de elementos instalados en la tienda" />
+      <PageHeader title="ELEMENTOS INSTALADOS" subtitle="Recuento de elementos instalados en la tienda" meta={meta} />
       <div className="page-content">
         <div className="overflow-auto">
           <table className="w-full text-xs">

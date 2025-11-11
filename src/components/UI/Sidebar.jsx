@@ -1,6 +1,7 @@
 export const Sidebar = ({ activeModule, setActiveModule }) => {
   const modules = [
     { id: 'metadatos', label: 'Metadatos' },
+    { id: 'informacion', label: 'Información' },
     { id: 'desglose', label: 'MKD' },
     { id: 'banners', label: 'Banners' },
     { id: 'turnomatic', label: 'Turnomatic' },

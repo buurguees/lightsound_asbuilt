@@ -4,7 +4,7 @@ import { getCachedPDFPageImage } from '../../utils/pdfUtils';
 /**
  * Componente para renderizar una página del PDF
  */
-export const PaginaPDF = React.memo(({ pdfData, pageNumber, onPageRendered }) => {
+export const PaginaPDF = React.memo(({ pdfData, pageNumber, onPageRendered, lazy = true }) => {
   const [imageSrc, setImageSrc] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -23,7 +23,7 @@ export const PaginaPDF = React.memo(({ pdfData, pageNumber, onPageRendered }) =>
         }
 
         // Obtener imagen de la página desde caché (o renderizar y cachear)
-        const imageData = await getCachedPDFPageImage(pdfData, pageNumber, 2, 0.85);
+        const imageData = await getCachedPDFPageImage(pdfData, pageNumber);
         setImageSrc(imageData);
         setLoading(false);
         if (onPageRendered) onPageRendered(true);
@@ -74,7 +74,7 @@ export const PaginaPDF = React.memo(({ pdfData, pageNumber, onPageRendered }) =>
 
   return (
     <img
-      loading="lazy"
+      loading={lazy ? "lazy" : undefined}
       src={imageSrc}
       style={{
         // Asegurar que siempre quepa en el área visible de la página

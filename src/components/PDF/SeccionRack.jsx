@@ -3,9 +3,9 @@ import { PAGE } from '../../utils/constants';
 import { PageHeader } from '../Page/PageHeader';
 import { PageFooter } from '../Page/PageFooter';
 
-export const SeccionRack = ({ titulo, data }) => (
+export const SeccionRack = ({ titulo, data, meta }) => (
   <section className={PAGE}>
-    <PageHeader title={titulo} />
+    <PageHeader title={titulo} meta={meta} />
     <div className="page-content">
       {data.descripcion && (
         <div className="mb-4 flex-shrink-0">

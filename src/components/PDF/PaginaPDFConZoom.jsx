@@ -34,22 +34,6 @@ export const PaginaPDFConZoom = React.memo(({ pdfData, pageNumber, onPageRendere
       <div style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'top center', transition: 'transform 0.1s', maxWidth: '100%', maxHeight: '100%' }}>
         <PaginaPDF pdfData={pdfData} pageNumber={pageNumber} onPageRendered={onPageRendered} />
       </div>
-      {zoom !== 100 && (
-        <div style={{
-          position: 'fixed',
-          bottom: '20px',
-          right: '20px',
-          backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          color: 'white',
-          padding: '8px 12px',
-          borderRadius: '6px',
-          fontSize: '14px',
-          pointerEvents: 'none',
-          zIndex: 1000
-        }}>
-          {zoom}%
-        </div>
-      )}
     </div>
   );
 });

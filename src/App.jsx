@@ -31,6 +31,7 @@ import { RackAudioEditor } from './components/Editor/RackAudioEditor';
 import { CuadrosAVEditor } from './components/Editor/CuadrosAVEditor';
 import { DocumentacionEditor } from './components/Editor/DocumentacionEditor';
 import { PlanosTiendaEditor } from './components/Editor/PlanosTiendaEditor';
+import { InformacionNombres } from './components/Editor/InformacionNombres';
 // Utils
 import { PAGE } from './utils/constants';
 import { fileToBase64 } from './utils/pdfUtils';
@@ -705,6 +706,7 @@ const Editor = ({
   excelFilesFromFolder,
   setExcelFilesFromFolder,
   fotoFilesFromFolder,
+  setFotoFilesFromFolder,
   probadorFilesFromFolder,
   probadorExcelFilesFromFolder,
   audioFilesFromFolder,
@@ -726,6 +728,8 @@ const Editor = ({
     switch (activeModule) {
       case 'metadatos':
         return <MetadatosEditor data={data} setData={setData} imageInputRefs={imageInputRefs} />;
+      case 'informacion':
+        return <InformacionNombres />;
       case 'elementos':
         return <ElementosInstaladosEditor data={data} setData={setData} />;
       case 'desglose':
@@ -745,6 +749,7 @@ const Editor = ({
             setData={setData} 
             imageInputRefs={imageInputRefs}
             fotoFilesFromFolder={fotoFilesFromFolder}
+            setFotoFilesFromFolder={setFotoFilesFromFolder}
             onFotosProcessed={onFotosProcessed}
           />
         );
@@ -1222,7 +1227,7 @@ export default function App() {
     if (fotoEntradaFile) {
       try {
         console.log('Procesando foto de entrada:', fotoEntradaFile.name);
-        fotoEntradaBase64 = await compressImage(fotoEntradaFile, { maxDim: 1600, quality: 0.85 });
+        fotoEntradaBase64 = await compressImage(fotoEntradaFile, { maxDim: 1400, quality: 0.8 });
         fotoEntradaFileName = fotoEntradaFile.name;
         fotoEntradaFileSize = fotoEntradaFile.size;
         fotoEntradaProcesada = true;
@@ -1581,7 +1586,24 @@ export default function App() {
               <Button onClick={() => setShowConfigModal(true)}>⚙️ Configuración</Button>
               <Button onClick={() => inputFolder.current?.click()}>📁 Importar Carpeta</Button>
               <Button onClick={limpiarPlantilla} className="bg-red-500 hover:bg-red-600 text-white">🗑️ Limpiar Plantilla</Button>
-              <Button onClick={() => window.print()}>Imprimir / Exportar PDF</Button>
+              <Button onClick={async () => {
+                // Optimizar planos antes de imprimir para cumplir presupuesto de 14.5MB
+                const { optimizePlanosForBudget } = await import('./utils/pdfUtils');
+                try {
+                  await optimizePlanosForBudget((data.planostienda && data.planostienda.pdfs) || [], 14.5 * 1024 * 1024);
+                } catch (e) {
+                  console.warn('No se pudo optimizar planos antes de imprimir:', e);
+                }
+                // Ajustar título del documento para que el PDF exportado tenga el nombre deseado
+                const prevTitle = document.title;
+                const titulo = String(data?.meta?.titulo || 'Informe');
+                const proyecto = String(data?.meta?.proyecto || '').trim();
+                const composed = `${titulo}${proyecto ? ' - ' + proyecto : ''}`.replace(/[\\/:*?"<>|]+/g, '_');
+                document.title = composed;
+                window.print();
+                // Restaurar el título poco después
+                setTimeout(() => { document.title = prevTitle; }, 500);
+              }}>Imprimir / Exportar PDF</Button>
               <input ref={inputFolder} type="file" className="hidden" webkitdirectory="true" directory="true"
                      onChange={importFolder} />
             </div>
@@ -1619,6 +1641,7 @@ export default function App() {
             excelFilesFromFolder={excelFilesFromFolder}
             setExcelFilesFromFolder={setExcelFilesFromFolder}
             fotoFilesFromFolder={fotoFilesFromFolder}
+            setFotoFilesFromFolder={setFotoFilesFromFolder}
           probadorFilesFromFolder={probadorFilesFromFolder}
           probadorExcelFilesFromFolder={probadorExcelFilesFromFolder}
           audioFilesFromFolder={audioFilesFromFolder}

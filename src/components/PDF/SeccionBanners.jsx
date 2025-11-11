@@ -1,8 +1,9 @@
 import React from 'react';
 import { PAGE } from '../../utils/constants';
 import { PageFooter } from '../Page/PageFooter';
+import { PageHeader } from '../Page/PageHeader';
 
-export const SeccionBanners = ({ fotosBanners }) => {
+export const SeccionBanners = ({ fotosBanners, meta }) => {
   // Verificar que hay fotos para mostrar
   if (!fotosBanners || fotosBanners.length === 0) {
     return null;
@@ -19,12 +20,7 @@ export const SeccionBanners = ({ fotosBanners }) => {
     <>
       {grupos.map((grupo, grupoIdx) => (
         <section className={PAGE} key={grupoIdx}>
-          <div className="page-header">
-            <div className="border-b-2 border-neutral-800 pb-3">
-              <h2 className="text-xl font-bold text-neutral-800">BANNERS</h2>
-              <p className="text-sm text-neutral-600 mt-1">Página {grupoIdx + 1} de {grupos.length}</p>
-            </div>
-          </div>
+          <PageHeader title="BANNERS" meta={meta || window?.__ASBUILT_META || null} />
 
           <div className="page-content space-y-4">
             {grupo.map((f, i) => (

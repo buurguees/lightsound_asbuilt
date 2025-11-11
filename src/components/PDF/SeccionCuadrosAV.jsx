@@ -3,7 +3,7 @@ import { PAGE } from '../../utils/constants';
 import { PageHeader } from '../Page/PageHeader';
 import { PageFooter } from '../Page/PageFooter';
 
-export const SeccionCuadrosAV = ({ cuadrosAV }) => {
+export const SeccionCuadrosAV = ({ cuadrosAV, meta }) => {
   // Recopilar todas las imágenes de cuadros AV
   const imagenes = [];
   if (cuadrosAV.cuadroLSG && Array.isArray(cuadrosAV.cuadroLSG) && cuadrosAV.cuadroLSG.length > 0) {
@@ -25,7 +25,7 @@ export const SeccionCuadrosAV = ({ cuadrosAV }) => {
 
   return (
     <section className={PAGE}>
-      <PageHeader title="CUADRO ELÉCTRICO" />
+      <PageHeader title="CUADRO ELÉCTRICO" meta={meta} />
       <div className="page-content">
         <div className="grid grid-cols-3 gap-3">
           {imagenes.map((imagen, i) => (

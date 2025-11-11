@@ -1,8 +1,9 @@
 import React from 'react';
 import { PAGE } from '../../utils/constants';
 import { PageFooter } from '../Page/PageFooter';
+import { PageHeader } from '../Page/PageHeader';
 
-export const SeccionAudio = ({ audio }) => {
+export const SeccionAudio = ({ audio, meta }) => {
   if (!audio) return null;
 
   // Tipos de audio ordenados (mismo orden que en el editor)
@@ -90,14 +91,7 @@ export const SeccionAudio = ({ audio }) => {
     <>
       {paginas.map((pagina, paginaIdx) => (
         <section className={PAGE} key={paginaIdx}>
-          <div className="page-header">
-            <div className="border-b-2 border-neutral-800 pb-3">
-              <h2 className="text-xl font-bold text-neutral-800">AUDIO</h2>
-              {paginas.length > 1 && (
-                <p className="text-sm text-neutral-600 mt-1">Página {paginaIdx + 1} de {paginas.length}</p>
-              )}
-            </div>
-          </div>
+          <PageHeader title="AUDIO" meta={meta || window?.__ASBUILT_META || null} />
 
           <div className="page-content space-y-4">
             {pagina.map((bloque, bloqueIdx) => (

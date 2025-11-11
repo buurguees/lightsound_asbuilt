@@ -6,8 +6,9 @@ import { Button } from '../UI/Button';
 import { compressImage } from '../../utils/imageUtils';
 import { extractSXPattern } from '../../utils/excelUtils';
 
-export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesFromFolder, onFotosProcessed }) => {
+export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesFromFolder, setFotoFilesFromFolder, onFotosProcessed }) => {
   const processedFilesRef = useRef(new Set());
+  const processedBatchKeysRef = useRef(new Set());
 
   // Sincronizar data.fotos con data.pantallas: crear entradas de fotos para pantallas nuevas
   useEffect(() => {
@@ -95,8 +96,15 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
     console.log(`   Pantallas: ${data.pantallas.length}`);
     console.log(`   Entradas de fotos: ${data.fotos.length}`);
 
-    // Resetear archivos procesados cuando cambian las pantallas o los archivos
-    processedFilesRef.current.clear();
+    // Evitar reprocesar el mismo lote: clave estable por nombres+tamaños
+    const batchKey = fotoFilesFromFolder
+      .map(f => `${f.name}#${f.size}`)
+      .sort()
+      .join('|');
+    if (processedBatchKeysRef.current.has(batchKey)) {
+      console.log('⏭️ Lote de fotos ya procesado anteriormente. Se omite reprocesado.');
+      return;
+    }
 
     const processFotoFiles = async () => {
       console.log(`\n🚀 Iniciando procesamiento de ${fotoFilesFromFolder.length} archivo(s) de fotos...`);
@@ -230,7 +238,7 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
             try {
               console.log(`  📤 Importando imagen al bloque "${sxPattern} ${tipoNombre}":`);
               console.log(`     Archivo: ${file.name}`);
-              const base64 = await compressImage(file, { maxDim: 1600, quality: 0.85 });
+              const base64 = await compressImage(file, { maxDim: 1400, quality: 0.8 });
               c.fotos[fotoIndex][tipoFoto] = {
                 url: base64,
                 fileName: file.name,
@@ -291,10 +299,15 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
         console.log('  2. Los nombres contengan FRONTAL, PLAYER_SENDING, o IP');
         console.log('  3. Las etiquetas de plano en "Desglose de pantallas" contengan el mismo patrón SX');
       }
+      // Marcar lote como procesado y limpiar cola en App para no reintentar
+      processedBatchKeysRef.current.add(batchKey);
+      if (setFotoFilesFromFolder) {
+        setFotoFilesFromFolder([]);
+      }
     };
 
     processFotoFiles();
-  }, [fotoFilesFromFolder, data.pantallas, data.fotos, setData, onFotosProcessed]);
+  }, [fotoFilesFromFolder, data.pantallas, data.fotos, setData, onFotosProcessed, setFotoFilesFromFolder]);
 
   const addFoto = () => {
     setData((d) => ({
@@ -354,7 +367,7 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
                     className="hidden"
                     onChange={async (e) => {
                       if (e.target.files?.[0]) {
-                        const base64 = await compressImage(e.target.files[0], { maxDim: 1600, quality: 0.85 });
+                        const base64 = await compressImage(e.target.files[0], { maxDim: 1400, quality: 0.8 });
                         setData((d) => {
                           const c = structuredClone(d);
                           c.fotos[i].fotoFrontal = {
@@ -401,7 +414,7 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
                     className="hidden"
                     onChange={async (e) => {
                       if (e.target.files?.[0]) {
-                        const base64 = await compressImage(e.target.files[0], { maxDim: 1600, quality: 0.85 });
+                        const base64 = await compressImage(e.target.files[0], { maxDim: 1400, quality: 0.8 });
                         setData((d) => {
                           const c = structuredClone(d);
                           c.fotos[i].fotoPlayer = {
@@ -448,7 +461,7 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
                     className="hidden"
                     onChange={async (e) => {
                       if (e.target.files?.[0]) {
-                        const base64 = await compressImage(e.target.files[0], { maxDim: 1600, quality: 0.85 });
+                        const base64 = await compressImage(e.target.files[0], { maxDim: 1400, quality: 0.8 });
                         setData((d) => {
                           const c = structuredClone(d);
                           c.fotos[i].fotoIP = {

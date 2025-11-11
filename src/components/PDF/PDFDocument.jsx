@@ -1,6 +1,7 @@
 import React from 'react';
 import { usePDFPages } from '../../hooks/usePDFPages';
 import { PaginaPDFConZoom } from './PaginaPDFConZoom';
+import { PaginaPDF } from './PaginaPDF';
 import { PageHeader } from '../Page/PageHeader';
 import { PageFooter } from '../Page/PageFooter';
 
@@ -9,7 +10,7 @@ const PAGE = "page";
 /**
  * Componente que renderiza un documento PDF completo
  */
-export const PDFDocument = ({ pdf, pdfIdx, onPageRendered }) => {
+export const PDFDocument = ({ pdf, pdfIdx, onPageRendered, forPrint = false, meta }) => {
   const { numPages, loading } = usePDFPages(pdf.url);
 
   // Mientras se está cargando el PDF
@@ -25,6 +26,7 @@ export const PDFDocument = ({ pdf, pdfIdx, onPageRendered }) => {
         <PageHeader 
           title={`PLANOS DE TIENDA`} 
           subtitle={`${pdf.fileName} - Analizando documento...`}
+          meta={meta || window?.__ASBUILT_META || null}
         />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px', flexDirection: 'column', gap: '20px' }}>
           <div style={{
@@ -51,6 +53,7 @@ export const PDFDocument = ({ pdf, pdfIdx, onPageRendered }) => {
         <PageHeader 
           title={`PLANOS DE TIENDA`} 
           subtitle={`${pdf.fileName}`}
+          meta={meta || window?.__ASBUILT_META || null}
         />
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px', color: '#dc2626' }}>
           <div style={{ textAlign: 'center' }}>
@@ -69,14 +72,26 @@ export const PDFDocument = ({ pdf, pdfIdx, onPageRendered }) => {
         <section className={PAGE} key={`${pdfIdx}-${pageIdx}`} style={{ pageBreakInside: 'avoid' }}>
           <PageHeader 
             title={`PLANOS DE TIENDA`} 
-            subtitle={`${pdf.fileName}${numPages > 1 ? ` - Página ${pageIdx + 1} de ${numPages}` : ''}`}
+            subtitle={undefined}
+            meta={meta || window?.__ASBUILT_META || null}
           />
           <div className="page-content" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-            <PaginaPDFConZoom 
-              pdfData={pdf.url} 
-              pageNumber={pageIdx + 1} 
-              onPageRendered={(success) => onPageRendered && onPageRendered(pdf.fileName, success)} 
-            />
+            {forPrint ? (
+              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <PaginaPDF 
+                  pdfData={pdf.url} 
+                  pageNumber={pageIdx + 1} 
+                  onPageRendered={(success) => onPageRendered && onPageRendered(pdf.fileName, success)} 
+                  lazy={false}
+                />
+              </div>
+            ) : (
+              <PaginaPDFConZoom 
+                pdfData={pdf.url} 
+                pageNumber={pageIdx + 1} 
+                onPageRendered={(success) => onPageRendered && onPageRendered(pdf.fileName, success)} 
+              />
+            )}
           </div>
           <PageFooter />
         </section>

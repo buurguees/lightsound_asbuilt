@@ -55,7 +55,7 @@ export const CuadrosAVEditor = ({ data, setData, imageInputRefs, cuadrosAVFilesF
           try {
             console.log(`   Importando imagen al bloque "${tipoNombre}":`);
             console.log(`   Archivo: ${file.name}`);
-            const base64 = await compressImage(file, { maxDim: 1600, quality: 0.85 });
+            const base64 = await compressImage(file, { maxDim: 1400, quality: 0.8 });
             
             // Si no existe el array de fotos para este tipo, crearlo
             if (!c.cuadrosAV[tipoFoto]) {
@@ -136,7 +136,7 @@ export const CuadrosAVEditor = ({ data, setData, imageInputRefs, cuadrosAVFilesF
     if (!file) return;
     
     try {
-      const base64 = await compressImage(file, { maxDim: 1600, quality: 0.85 });
+      const base64 = await compressImage(file, { maxDim: 1400, quality: 0.8 });
       setData((d) => {
         const c = structuredClone(d);
         if (!c.cuadrosAV[tipoFoto]) {

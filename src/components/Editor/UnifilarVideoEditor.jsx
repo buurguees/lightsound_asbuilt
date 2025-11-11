@@ -30,7 +30,7 @@ export const UnifilarVideoEditor = ({ data, setData, imageInputRefs }) => {
                 className="hidden"
                 onChange={async (e) => {
                   if (e.target.files?.[0]) {
-                    const base64 = await compressImage(e.target.files[0], { maxDim: 1600, quality: 0.85 });
+                    const base64 = await compressImage(e.target.files[0], { maxDim: 1400, quality: 0.8 });
                     setData((d) => {
                       const c = structuredClone(d);
                       if (!c.unifilarVideo.fotos[idx]) c.unifilarVideo.fotos[idx] = {};

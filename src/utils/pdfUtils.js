@@ -5,6 +5,14 @@ import * as pdfjsWorker from 'pdfjs-dist/legacy/build/pdf.worker';
 const pdfDocumentCache = new Map(); // key -> Promise<pdfjsLib.PDFDocumentProxy>
 const pdfPageImageCache = new Map(); // `${key}|${page}|${scale}|${quality}` -> dataURL
 
+// Parámetros globales por defecto para render de planos
+let PLANOS_DEFAULT_SCALE = 1.5;
+let PLANOS_DEFAULT_QUALITY = 0.75;
+export const setPlanosRenderDefaults = (scale, quality) => {
+  if (typeof scale === 'number') PLANOS_DEFAULT_SCALE = scale;
+  if (typeof quality === 'number') PLANOS_DEFAULT_QUALITY = quality;
+};
+
 /**
  * Convierte un archivo a Base64
  * @param {File} file - Archivo a convertir
@@ -105,24 +113,84 @@ export const getCachedPDFDocument = (pdfData) => {
  * @param {number} quality - Calidad JPEG (0-1, por defecto 0.85)
  * @returns {Promise<string>} dataURL de la imagen renderizada
  */
-export const getCachedPDFPageImage = async (pdfData, pageNumber, scale = 2, quality = 0.85) => {
+export const getCachedPDFPageImage = async (pdfData, pageNumber, scale = 1.5, quality = 0.8) => {
+  // Permitir usar los valores globales por defecto si no se pasan
+  const effScale = typeof scale === 'number' ? scale : PLANOS_DEFAULT_SCALE;
+  const effQuality = typeof quality === 'number' ? quality : PLANOS_DEFAULT_QUALITY;
+
   const key = getPDFCacheKey(pdfData);
-  const pageKey = `${key}|${pageNumber}|${scale}|${quality}`;
+  const pageKey = `${key}|${pageNumber}|${effScale}|${effQuality}`;
   if (pdfPageImageCache.has(pageKey)) {
     return pdfPageImageCache.get(pageKey);
   }
   const pdf = await getCachedPDFDocument(pdfData);
   const page = await pdf.getPage(pageNumber);
 
-  const viewport = page.getViewport({ scale });
+  const viewport = page.getViewport({ scale: effScale });
   const canvas = document.createElement('canvas');
   canvas.width = viewport.width;
   canvas.height = viewport.height;
   const context = canvas.getContext('2d');
   await page.render({ canvasContext: context, viewport }).promise;
 
-  const dataUrl = canvas.toDataURL('image/jpeg', quality);
+  const dataUrl = canvas.toDataURL('image/jpeg', effQuality);
   pdfPageImageCache.set(pageKey, dataUrl);
   return dataUrl;
+};
+
+/**
+ * Prefetch de imágenes de páginas de planos con un presupuesto de tamaño total.
+ * Intenta varias combinaciones de escala/calidad hasta no superar budgetBytes.
+ * Devuelve la combinación usada.
+ */
+export const optimizePlanosForBudget = async (pdfs, budgetBytes = 14.5 * 1024 * 1024) => {
+  if (!pdfs || pdfs.length === 0) return { scale: PLANOS_DEFAULT_SCALE, quality: PLANOS_DEFAULT_QUALITY };
+
+  // Candidatos de escala/calidad (de mayor a menor calidad)
+  const candidates = [
+    { scale: 1.5, quality: 0.75 },
+    { scale: 1.4, quality: 0.70 },
+    { scale: 1.3, quality: 0.65 },
+    { scale: 1.2, quality: 0.60 },
+    { scale: 1.1, quality: 0.55 },
+    { scale: 1.0, quality: 0.50 },
+    { scale: 0.9, quality: 0.50 }
+  ];
+
+  // Función auxiliar para contar bytes de dataURL
+  const dataUrlSize = (dataUrl) => {
+    // Aproximación: longitud base64 * 3/4
+    const len = (dataUrl || '').length;
+    return Math.floor(len * 0.75);
+  };
+
+  for (const cand of candidates) {
+    let totalBytes = 0;
+    // Prefijar defaults globales (para posteriores renders)
+    setPlanosRenderDefaults(cand.scale, cand.quality);
+
+    for (const pdf of pdfs) {
+      // Cargar doc y contar páginas
+      const pdfDoc = await getCachedPDFDocument(pdf.url);
+      const numPages = pdfDoc.numPages || 0;
+      for (let p = 1; p <= numPages; p++) {
+        const img = await getCachedPDFPageImage(pdf.url, p, cand.scale, cand.quality);
+        totalBytes += dataUrlSize(img);
+        if (totalBytes > budgetBytes) break;
+      }
+      if (totalBytes > budgetBytes) break;
+    }
+
+    if (totalBytes <= budgetBytes) {
+      // Esta combinación cumple el presupuesto; establecer como defaults
+      setPlanosRenderDefaults(cand.scale, cand.quality);
+      return { scale: cand.scale, quality: cand.quality, totalBytes };
+    }
+  }
+
+  // Si ninguna combinación cumple, usar la más baja
+  const last = candidates[candidates.length - 1];
+  setPlanosRenderDefaults(last.scale, last.quality);
+  return { scale: last.scale, quality: last.quality };
 };
 

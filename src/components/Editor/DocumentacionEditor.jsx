@@ -163,7 +163,7 @@ export const DocumentacionEditor = ({ data, setData, imageInputRefs, documentaci
           try {
             console.log(`  📤 Importando imagen al bloque "${tipoNombre}":`);
             console.log(`     Archivo: ${file.name}`);
-            const base64 = await compressImage(file, { maxDim: 1600, quality: 0.85 });
+            const base64 = await compressImage(file, { maxDim: 1400, quality: 0.8 });
             
             // Asegurar que documentacion existe
             if (!c.documentacion) {
@@ -241,7 +241,7 @@ export const DocumentacionEditor = ({ data, setData, imageInputRefs, documentaci
     if (!file) return;
     
     try {
-      const base64 = await compressImage(file, { maxDim: 1600, quality: 0.85 });
+      const base64 = await compressImage(file, { maxDim: 1400, quality: 0.8 });
       setData((d) => {
         const c = structuredClone(d);
         // Asegurar que documentacion existe

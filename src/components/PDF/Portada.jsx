@@ -1,23 +1,20 @@
 import React from 'react';
 import { PAGE } from '../../utils/constants';
 import { PageFooter } from '../Page/PageFooter';
+import { PageHeader } from '../Page/PageHeader';
 
 export const Portada = ({ meta, equipamiento, tipoInstalacionVideo, almacenExterno }) => (
   <section className={PAGE}>
-    <div className="page-header">
-      {/* Header con logo y cliente */}
-      <div className="flex items-start justify-between mb-4 pb-3 border-b-2 border-neutral-800">
+    <PageHeader
+      meta={meta}
+      left={(
         <div>
           <div className="bg-neutral-900 px-2 py-1 inline-block rounded mb-1 flex items-center justify-center" style={{ height: '40px', maxWidth: '150px' }}>
             <img src="/logo.svg" alt="Logo" className="h-full w-auto object-contain" />
           </div>
         </div>
-        <div className="text-right">
-          <p className="text-2xl font-bold text-neutral-800">{meta.cliente}</p>
-          <p className="text-xs text-neutral-600 mt-0.5">Código: {meta.codigo}</p>
-        </div>
-      </div>
-    </div>
+      )}
+    />
 
     <div className="page-content portada-layout">
       {/* Columna izquierda: Metadatos */}

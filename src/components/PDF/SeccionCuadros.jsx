@@ -3,11 +3,11 @@ import { PAGE } from '../../utils/constants';
 import { PageHeader } from '../Page/PageHeader';
 import { PageFooter } from '../Page/PageFooter';
 
-export const SeccionCuadros = ({ cuadros }) => (
+export const SeccionCuadros = ({ cuadros, meta }) => (
   <>
     {cuadros.items.map((c, i) => (
       <section className={PAGE} key={i}>
-        <PageHeader title={`CUADRO ELÉCTRICO / AV BOX / DOC BOX - ${c.titulo}`} />
+        <PageHeader title={`CUADRO ELÉCTRICO / AV BOX / DOC BOX - ${c.titulo}`} meta={meta} />
         <div className="page-content">
           {c.detalle && (
             <div className="mb-4 flex-shrink-0">

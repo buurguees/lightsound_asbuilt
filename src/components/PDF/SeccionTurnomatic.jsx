@@ -1,8 +1,9 @@
 import React from 'react';
 import { PAGE } from '../../utils/constants';
 import { PageFooter } from '../Page/PageFooter';
+import { PageHeader } from '../Page/PageHeader';
 
-export const SeccionTurnomatic = ({ fotosTurnomatic }) => {
+export const SeccionTurnomatic = ({ fotosTurnomatic, meta }) => {
   if (!fotosTurnomatic || fotosTurnomatic.length === 0) {
     return null;
   }
@@ -17,12 +18,7 @@ export const SeccionTurnomatic = ({ fotosTurnomatic }) => {
     <>
       {grupos.map((grupo, grupoIdx) => (
         <section className={PAGE} key={grupoIdx}>
-          <div className="page-header">
-            <div className="border-b-2 border-neutral-800 pb-3">
-              <h2 className="text-xl font-bold text-neutral-800">TURNOMATIC</h2>
-              <p className="text-sm text-neutral-600 mt-1">Página {grupoIdx + 1} de {grupos.length}</p>
-            </div>
-          </div>
+          <PageHeader title="TURNOMATIC" meta={meta || window?.__ASBUILT_META || null} />
 
           <div className="page-content space-y-4">
             {grupo.map((f, i) => (

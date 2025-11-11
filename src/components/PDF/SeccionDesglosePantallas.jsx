@@ -28,7 +28,7 @@ const TablaPantallasImportadas = ({ filas }) => (
 );
 
 
-export const SeccionDesglosePantallas = ({ pantallas }) => {
+export const SeccionDesglosePantallas = ({ pantallas, meta }) => {
   // Verificar que hay pantallas para mostrar
   if (!pantallas || pantallas.length === 0) {
     return null;
@@ -37,7 +37,7 @@ export const SeccionDesglosePantallas = ({ pantallas }) => {
   // Mostrar solo la tabla de Información de los Players
   return (
     <section className={PAGE}>
-      <PageHeader title="MKD" subtitle="Información técnica de todas las pantallas instaladas" />
+      <PageHeader title="MKD" subtitle="Información técnica de todas las pantallas instaladas" meta={meta} />
       <div className="page-content">
         <div className="overflow-auto">
           <div>

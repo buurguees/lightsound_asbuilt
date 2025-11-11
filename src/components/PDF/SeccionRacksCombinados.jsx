@@ -3,7 +3,7 @@ import { PAGE } from '../../utils/constants';
 import { PageHeader } from '../Page/PageHeader';
 import { PageFooter } from '../Page/PageFooter';
 
-export const SeccionRacksCombinados = ({ rackVideo, rackAudio }) => {
+export const SeccionRacksCombinados = ({ rackVideo, rackAudio, meta }) => {
   // Recopilar todas las imágenes de rack video
   const imagenesRackVideo = [];
   if (rackVideo.frontal && Array.isArray(rackVideo.frontal) && rackVideo.frontal.length > 0) {
@@ -38,7 +38,7 @@ export const SeccionRacksCombinados = ({ rackVideo, rackAudio }) => {
 
   return (
     <section className={PAGE}>
-      <PageHeader title="RACKS" />
+      <PageHeader title="RACKS" meta={meta} />
       <div className="page-content">
         {/* Rack Video */}
         {tieneRackVideo && (

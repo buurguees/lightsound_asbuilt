@@ -162,6 +162,44 @@
   min-height: fit-content;
 }
 
+/* Estilos tipográficos consistentes */
+.section-title {
+  font-size: 22px;
+  line-height: 1.3;
+  font-weight: 700;
+  color: #1f2937;
+}
+.section-subtitle {
+  font-size: 14px;
+  line-height: 1.45;
+  color: #525252;
+}
+.text-body {
+  font-size: 15px;
+  line-height: 1.55;
+}
+.text-note {
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: #6b7280;
+}
+.table-text {
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+.meta-top-right .meta-cliente {
+  font-size: 24px;
+  line-height: 1.25;
+  font-weight: 700;
+  color: #1f2937;
+}
+.meta-top-right .meta-codigo {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #4b5563;
+  margin-top: 2px;
+}
+
 .pdf-preview .page-content {
   flex: 1 1 auto;
   display: flex;
@@ -240,6 +278,20 @@
   padding-top: 3mm;
   border-top: 1px solid #e5e5e5;
 }
+/* Numeración de página centrada en el footer (vista previa) */
+.pdf-preview .page-num-container {
+  min-width: 60px;
+  text-align: center;
+}
+.pdf-preview {
+  counter-reset: pageNumber;
+}
+.pdf-preview .page {
+  counter-increment: pageNumber;
+}
+.pdf-preview .page .page-num::before {
+  content: "Página " counter(pageNumber);
+}
 
 /* Estilos para impresión */
 @media print {
@@ -302,8 +354,39 @@
     line-height: 1.4;
   }
   
-  /* Asegurar que los colores de fondo se impriman */
+  /* Optimización: quitar fondos grises en impresión para reducir tamaño del PDF */
+  /* Solo mantener fondos donde sea crítico (código, etc.) */
   * {
+    -webkit-print-color-adjust: economy !important;
+    print-color-adjust: economy !important;
+  }
+  
+  /* Forzar fondos blancos en elementos con clases neutral (excepto headers oscuros) */
+  .bg-neutral-50,
+  .bg-neutral-100,
+  .bg-neutral-200,
+  .bg-neutral-300,
+  .bg-neutral-400,
+  .bg-neutral-500,
+  .bg-neutral-600,
+  .bg-neutral-700,
+  .even\:bg-neutral-50 {
+    background: white !important;
+    -webkit-print-color-adjust: economy !important;
+    print-color-adjust: economy !important;
+  }
+  
+  /* Mantener solo fondos oscuros críticos (headers) */
+  .bg-neutral-800,
+  .bg-neutral-900 {
+    background: #1f2937 !important; /* Mantener solo headers oscuros */
+    color: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* Código y elementos especiales mantienen su fondo */
+  code, pre, .monospace {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
@@ -474,5 +557,27 @@
     margin-top: auto;
     padding-top: 3mm;
     border-top: 1px solid #e5e5e5;
+  }
+  /* Numeración de páginas (impresión) */
+  body {
+    counter-reset: pageNumber;
+  }
+  .page {
+    counter-increment: pageNumber;
+  }
+  .page .page-num::before {
+    content: "Página " counter(pageNumber);
+  }
+  .meta-top-right .meta-cliente {
+    font-size: 24px;
+    line-height: 1.25;
+    font-weight: 700;
+    color: #1f2937;
+  }
+  .meta-top-right .meta-codigo {
+    font-size: 12px;
+    line-height: 1.5;
+    color: #4b5563;
+    margin-top: 2px;
   }
 }
