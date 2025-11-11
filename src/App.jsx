@@ -1587,22 +1587,53 @@ export default function App() {
               <Button onClick={() => inputFolder.current?.click()}>📁 Importar Carpeta</Button>
               <Button onClick={limpiarPlantilla} className="bg-red-500 hover:bg-red-600 text-white">🗑️ Limpiar Plantilla</Button>
               <Button onClick={async () => {
-                // Optimizar planos antes de imprimir para cumplir presupuesto de 14.5MB
-                const { optimizePlanosForBudget } = await import('./utils/pdfUtils');
                 try {
-                  await optimizePlanosForBudget((data.planostienda && data.planostienda.pdfs) || [], 14.5 * 1024 * 1024);
+                  // Mostrar indicador de optimización
+                  const loadingMsg = document.createElement('div');
+                  loadingMsg.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#1f2937;color:white;padding:20px 40px;border-radius:8px;z-index:10000;font-weight:600;';
+                  loadingMsg.textContent = 'Optimizando imágenes para exportación...';
+                  document.body.appendChild(loadingMsg);
+                  
+                  // Optimizar todas las imágenes del documento (presupuesto total de 14MB)
+                  const { optimizeAllImagesForBudget } = await import('./utils/imageUtils');
+                  const optimizedData = await optimizeAllImagesForBudget(data, 14 * 1024 * 1024);
+                  
+                  // Actualizar el estado con las imágenes optimizadas
+                  setData(optimizedData);
+                  
+                  // Optimizar planos también (con presupuesto ajustado según lo que quede)
+                  const { optimizePlanosForBudget } = await import('./utils/pdfUtils');
+                  // Dejar 1MB para estructura del PDF, el resto para planos
+                  await optimizePlanosForBudget((optimizedData.planostienda && optimizedData.planostienda.pdfs) || [], 13 * 1024 * 1024);
+                  
+                  // Remover indicador
+                  document.body.removeChild(loadingMsg);
+                  
+                  // Ajustar título del documento para que el PDF exportado tenga el nombre deseado
+                  const prevTitle = document.title;
+                  const titulo = String(optimizedData?.meta?.titulo || 'Informe');
+                  const proyecto = String(optimizedData?.meta?.proyecto || '').trim();
+                  const composed = `${titulo}${proyecto ? ' - ' + proyecto : ''}`.replace(/[\\/:*?"<>|]+/g, '_');
+                  document.title = composed;
+                  
+                  // Pequeño delay para asegurar que el estado se actualizó
+                  setTimeout(() => {
+                    window.print();
+                    // Restaurar el título poco después
+                    setTimeout(() => { document.title = prevTitle; }, 500);
+                  }, 100);
                 } catch (e) {
-                  console.warn('No se pudo optimizar planos antes de imprimir:', e);
+                  console.error('Error optimizando para exportación:', e);
+                  alert('Error al optimizar el documento. Se exportará con la calidad actual.');
+                  // Ajustar título del documento
+                  const prevTitle = document.title;
+                  const titulo = String(data?.meta?.titulo || 'Informe');
+                  const proyecto = String(data?.meta?.proyecto || '').trim();
+                  const composed = `${titulo}${proyecto ? ' - ' + proyecto : ''}`.replace(/[\\/:*?"<>|]+/g, '_');
+                  document.title = composed;
+                  window.print();
+                  setTimeout(() => { document.title = prevTitle; }, 500);
                 }
-                // Ajustar título del documento para que el PDF exportado tenga el nombre deseado
-                const prevTitle = document.title;
-                const titulo = String(data?.meta?.titulo || 'Informe');
-                const proyecto = String(data?.meta?.proyecto || '').trim();
-                const composed = `${titulo}${proyecto ? ' - ' + proyecto : ''}`.replace(/[\\/:*?"<>|]+/g, '_');
-                document.title = composed;
-                window.print();
-                // Restaurar el título poco después
-                setTimeout(() => { document.title = prevTitle; }, 500);
               }}>Imprimir / Exportar PDF</Button>
               <input ref={inputFolder} type="file" className="hidden" webkitdirectory="true" directory="true"
                      onChange={importFolder} />
