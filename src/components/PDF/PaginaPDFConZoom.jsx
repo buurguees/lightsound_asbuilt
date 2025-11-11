@@ -21,7 +21,8 @@ export const PaginaPDFConZoom = React.memo(({ pdfData, pageNumber, onPageRendere
       ref={containerRef}
       onWheel={handleWheel}
       style={{
-        overflow: 'auto',
+        // Evitar scroll interno; la imagen se ajusta con object-fit en PaginaPDF
+        overflow: 'hidden',
         width: '100%',
         height: '100%',
         display: 'flex',
@@ -30,7 +31,7 @@ export const PaginaPDFConZoom = React.memo(({ pdfData, pageNumber, onPageRendere
         cursor: 'grab'
       }}
     >
-      <div style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'top center', transition: 'transform 0.1s' }}>
+      <div style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'top center', transition: 'transform 0.1s', maxWidth: '100%', maxHeight: '100%' }}>
         <PaginaPDF pdfData={pdfData} pageNumber={pageNumber} onPageRendered={onPageRendered} />
       </div>
       {zoom !== 100 && (

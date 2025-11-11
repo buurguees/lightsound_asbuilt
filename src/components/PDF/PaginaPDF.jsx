@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf';
-import * as pdfjsWorker from 'pdfjs-dist/legacy/build/pdf.worker';
-import { base64ToBytes } from '../../utils/pdfUtils';
+import { getCachedPDFPageImage } from '../../utils/pdfUtils';
 
 /**
  * Componente para renderizar una página del PDF
@@ -24,40 +22,8 @@ export const PaginaPDF = React.memo(({ pdfData, pageNumber, onPageRendered }) =>
           return;
         }
 
-        // Configurar worker
-        pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
-        
-        // Convertir base64 a bytes
-        const bytes = base64ToBytes(pdfData);
-
-        // Cargar PDF
-        const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
-        
-        if (pageNumber > pdf.numPages) {
-          setError(`Página ${pageNumber} no existe`);
-          setLoading(false);
-          if (onPageRendered) onPageRendered(false);
-          return;
-        }
-
-        const page = await pdf.getPage(pageNumber);
-        
-        // Renderizar a canvas con mayor escala para mejor calidad
-        const canvas = document.createElement('canvas');
-        const viewport = page.getViewport({ scale: 2 });
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        
-        const context = canvas.getContext('2d');
-        const renderContext = {
-          canvasContext: context,
-          viewport: viewport
-        };
-        
-        await page.render(renderContext).promise;
-        
-        // Convertir canvas a imagen JPEG comprimida para reducir tamaño
-        const imageData = canvas.toDataURL('image/jpeg', 0.85);
+        // Obtener imagen de la página desde caché (o renderizar y cachear)
+        const imageData = await getCachedPDFPageImage(pdfData, pageNumber, 2, 0.85);
         setImageSrc(imageData);
         setLoading(false);
         if (onPageRendered) onPageRendered(true);
@@ -111,9 +77,13 @@ export const PaginaPDF = React.memo(({ pdfData, pageNumber, onPageRendered }) =>
       loading="lazy"
       src={imageSrc}
       style={{
-        width: '100%',
+        // Asegurar que siempre quepa en el área visible de la página
+        maxWidth: '100%',
+        maxHeight: '100%',
+        width: 'auto',
         height: 'auto',
         display: 'block',
+        objectFit: 'contain',
         imageRendering: 'crisp-edges',
         WebkitUserSelect: 'none',
         userSelect: 'none'

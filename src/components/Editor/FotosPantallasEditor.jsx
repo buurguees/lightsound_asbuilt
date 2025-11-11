@@ -130,13 +130,25 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
             (fileName.includes('PLAYER') && fileName.includes('SENDING'))) {
           tipoFoto = 'fotoPlayer';
         } 
-        // Detectar IP (debe contener IP pero NO PLAYER)
-        else if ((fileName.includes('_IP') || fileName.endsWith('IP') || fileName.includes('_IP_')) && 
-                 !fileName.includes('PLAYER')) {
+        // Detectar IP (debe contener IP pero NO PLAYER).
+        // Acepta variantes: "IP", "_IP", " IP ", "IPCONFIG", "IP CONFIG", "IP-CONFIG"
+        else if (!fileName.includes('PLAYER')) {
+          const isIPBasic = (
+            fileName.includes('_IP') ||
+            fileName.endsWith(' IP') ||
+            fileName.endsWith('_IP') ||
+            fileName.includes('_IP_') ||
+            fileName.includes(' IP ') ||
+            fileName.includes(' IP_') ||
+            fileName.includes('_IP ')
+          );
+          const isIPConfig = /IP[\s_\-]*CONFIG/.test(fileName);
+          if (isIPBasic || isIPConfig) {
           tipoFoto = 'fotoIP';
+          }
         } 
-        // Detectar FRONTAL (puede estar al final o en medio del nombre)
-        else if (fileName.includes('FRONTAL')) {
+        // Detectar FRONTAL (aceptar FRONT/FRONTAL como token separado)
+        else if (/(?:^|[_\s\-])FRONT(?:AL)?(?:$|[_\s\-])/.test(fileName)) {
           tipoFoto = 'fotoFrontal';
         }
         

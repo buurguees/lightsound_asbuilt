@@ -703,6 +703,7 @@ const Editor = ({
   currentLoadingPDF,
   setCurrentLoadingPDF,
   excelFilesFromFolder,
+  setExcelFilesFromFolder,
   fotoFilesFromFolder,
   probadorFilesFromFolder,
   probadorExcelFilesFromFolder,
@@ -734,6 +735,7 @@ const Editor = ({
             setData={setData} 
             imageInputRefs={imageInputRefs}
             excelFilesFromFolder={excelFilesFromFolder}
+            setExcelFilesFromFolder={setExcelFilesFromFolder}
           />
         );
       case 'fotos':
@@ -1615,6 +1617,7 @@ export default function App() {
               currentLoadingPDF={currentLoadingPDF}
               setCurrentLoadingPDF={setCurrentLoadingPDF}
             excelFilesFromFolder={excelFilesFromFolder}
+            setExcelFilesFromFolder={setExcelFilesFromFolder}
             fotoFilesFromFolder={fotoFilesFromFolder}
           probadorFilesFromFolder={probadorFilesFromFolder}
           probadorExcelFilesFromFolder={probadorExcelFilesFromFolder}

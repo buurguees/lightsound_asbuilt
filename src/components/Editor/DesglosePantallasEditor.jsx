@@ -3,7 +3,7 @@ import { Input } from '../UI/Input';
 import { Button } from '../UI/Button';
 import { processExcelPantallas, removeDuplicatesBySX } from '../../utils/excelUtils';
 
-export const DesglosePantallasEditor = ({ data, setData, imageInputRefs, excelFilesFromFolder }) => {
+export const DesglosePantallasEditor = ({ data, setData, imageInputRefs, excelFilesFromFolder, setExcelFilesFromFolder }) => {
   const lastImportedFileRef = useRef(null);
   const processedFilesRef = useRef(new Set());
 
@@ -48,6 +48,8 @@ export const DesglosePantallasEditor = ({ data, setData, imageInputRefs, excelFi
       console.log('⚠️ Ya hay pantallas importadas. No se volverá a procesar el Excel automáticamente.');
       console.log(`   Pantallas actuales: ${data.pantallas.length}`);
       console.log(`   Para reimportar, usa el botón "Cargar Excel" manualmente.`);
+      // Limpiar los archivos en cola para evitar reintentos en futuros montajes
+      if (setExcelFilesFromFolder) setExcelFilesFromFolder([]);
       return;
     }
 
@@ -100,10 +102,13 @@ export const DesglosePantallasEditor = ({ data, setData, imageInputRefs, excelFi
           alert(mensaje);
         }
       }
+
+      // Limpiar los archivos Excel en cola una vez finalizado el procesamiento
+      if (setExcelFilesFromFolder) setExcelFilesFromFolder([]);
     };
 
     processExcelFiles();
-  }, [excelFilesFromFolder, setData, data.pantallas]);
+  }, [excelFilesFromFolder, setData, data.pantallas, setExcelFilesFromFolder]);
 
   return (
     <div>
