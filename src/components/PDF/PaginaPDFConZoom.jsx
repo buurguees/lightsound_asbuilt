@@ -5,7 +5,7 @@ import { PaginaPDF } from './PaginaPDF';
  * Componente wrapper para PaginaPDF con zoom interactivo
  */
 export const PaginaPDFConZoom = React.memo(({ pdfData, pageNumber, onPageRendered }) => {
-  const [zoom, setZoom] = useState(100);
+  const [zoom, setZoom] = useState(85);
   const containerRef = useRef(null);
 
   const handleWheel = (e) => {
