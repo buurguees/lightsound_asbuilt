@@ -25,8 +25,7 @@ export const SeccionProbadores = ({ probadores, meta }) => {
               <img loading="lazy" src={probadores.probadorOcupado.url} alt="Probador ocupado" className="w-full h-full object-contain" />
             ) : (
               <div className="text-center p-2">
-                <div className="text-neutral-300 text-3xl mb-1">📷</div>
-                <span className="text-neutral-400 text-xs">Sin foto</span>
+                <span className="text-neutral-400 text-xs">Imagen no necesaria</span>
               </div>
             )}
           </div>
@@ -38,8 +37,7 @@ export const SeccionProbadores = ({ probadores, meta }) => {
               <img loading="lazy" src={probadores.probadorLiberado.url} alt="Sensor instalado" className="w-full h-full object-contain" />
             ) : (
               <div className="text-center p-2">
-                <div className="text-neutral-300 text-3xl mb-1">📷</div>
-                <span className="text-neutral-400 text-xs">Sin foto</span>
+                <span className="text-neutral-400 text-xs">Imagen no necesaria</span>
               </div>
             )}
           </div>
@@ -51,8 +49,7 @@ export const SeccionProbadores = ({ probadores, meta }) => {
               <img loading="lazy" src={probadores.pasilloProbadores.url} alt="Pasillo probadores" className="w-full h-full object-contain" />
             ) : (
               <div className="text-center p-2">
-                <div className="text-neutral-300 text-3xl mb-1">📷</div>
-                <span className="text-neutral-400 text-xs">Sin foto</span>
+                <span className="text-neutral-400 text-xs">Imagen no necesaria</span>
               </div>
             )}
           </div>

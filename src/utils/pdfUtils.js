@@ -5,9 +5,9 @@ import * as pdfjsWorker from 'pdfjs-dist/legacy/build/pdf.worker';
 const pdfDocumentCache = new Map(); // key -> Promise<pdfjsLib.PDFDocumentProxy>
 const pdfPageImageCache = new Map(); // `${key}|${page}|${scale}|${quality}` -> dataURL
 
-// Parámetros globales por defecto para render de planos
-let PLANOS_DEFAULT_SCALE = 1.5;
-let PLANOS_DEFAULT_QUALITY = 0.75;
+// Parámetros globales por defecto para render de planos (reducidos para optimizar peso)
+let PLANOS_DEFAULT_SCALE = 1.2;
+let PLANOS_DEFAULT_QUALITY = 0.60;
 export const setPlanosRenderDefaults = (scale, quality) => {
   if (typeof scale === 'number') PLANOS_DEFAULT_SCALE = scale;
   if (typeof quality === 'number') PLANOS_DEFAULT_QUALITY = quality;
@@ -113,7 +113,7 @@ export const getCachedPDFDocument = (pdfData) => {
  * @param {number} quality - Calidad JPEG (0-1, por defecto 0.85)
  * @returns {Promise<string>} dataURL de la imagen renderizada
  */
-export const getCachedPDFPageImage = async (pdfData, pageNumber, scale = 1.5, quality = 0.8) => {
+export const getCachedPDFPageImage = async (pdfData, pageNumber, scale = 1.2, quality = 0.6) => {
   // Permitir usar los valores globales por defecto si no se pasan
   const effScale = typeof scale === 'number' ? scale : PLANOS_DEFAULT_SCALE;
   const effQuality = typeof quality === 'number' ? quality : PLANOS_DEFAULT_QUALITY;
@@ -146,15 +146,14 @@ export const getCachedPDFPageImage = async (pdfData, pageNumber, scale = 1.5, qu
 export const optimizePlanosForBudget = async (pdfs, budgetBytes = 14.5 * 1024 * 1024) => {
   if (!pdfs || pdfs.length === 0) return { scale: PLANOS_DEFAULT_SCALE, quality: PLANOS_DEFAULT_QUALITY };
 
-  // Candidatos de escala/calidad (de mayor a menor calidad)
+  // Candidatos de escala/calidad (de mayor a menor calidad, empezando más bajo)
   const candidates = [
-    { scale: 1.5, quality: 0.75 },
-    { scale: 1.4, quality: 0.70 },
-    { scale: 1.3, quality: 0.65 },
     { scale: 1.2, quality: 0.60 },
     { scale: 1.1, quality: 0.55 },
     { scale: 1.0, quality: 0.50 },
-    { scale: 0.9, quality: 0.50 }
+    { scale: 0.9, quality: 0.50 },
+    { scale: 0.8, quality: 0.45 },
+    { scale: 0.7, quality: 0.40 }
   ];
 
   // Función auxiliar para contar bytes de dataURL

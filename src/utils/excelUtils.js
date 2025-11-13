@@ -506,10 +506,8 @@ export const processExcelTurnomatic = async (file) => {
  * Procesa un archivo Excel de Welcomer y extrae datos
  * Reglas:
  * - Archivo DEBE contener "WELCOMER" en el nombre (obligatorio)
- * - Leer desde la fila 4 (índice 3)
- * - FILTRO 1 (PRIMERO): Columna C (índice 2) "NOMBRE DE LA PANTALLA" debe contener patrón SX (S1, S2, etc.)
- * - FILTRO 2 (SEGUNDO): Columna B (índice 1) "Columna2" debe contener "Alta"
- * - Columnas: Etiqueta de plano (M, índice 12), Modelo (I, índice 8), Resolución (F, índice 5), Tamaño Lineal (G, índice 6)
+ * - Leer desde la fila 2 (índice 1), la fila 1 es encabezado
+ * - Columnas: Etiqueta de plano (A, índice 0), Hostname (B, índice 1), MAC (D, índice 3), Sección (G, índice 6), Nº de Probadores (I, índice 8)
  */
 export const processExcelWelcomer = async (file) => {
   if (!file) return { welcomer: [], duplicadosEliminados: 0 };
@@ -539,10 +537,10 @@ export const processExcelWelcomer = async (file) => {
       return { welcomer: [], duplicadosEliminados: 0 };
     }
 
-    const startRowIndex = 3;
+    const startRowIndex = 1; // Fila 2 (índice 1), la fila 1 es encabezado
     
     if (allRows.length <= startRowIndex) {
-      alert('El archivo no tiene suficientes filas (mínimo 4 filas)');
+      alert('El archivo no tiene suficientes filas (mínimo 2 filas)');
       return { welcomer: [], duplicadosEliminados: 0 };
     }
 
@@ -557,13 +555,12 @@ export const processExcelWelcomer = async (file) => {
       
       filasProcesadas++;
       
-      // Validación WELCOMER: Etiqueta de plano (E), Hostname (B), MAC (D), Sección (H), Nº de Probadores (J)
-      // NO tiene condición de "Alta", solo se muestran los que se instalen
-      const etiquetaPlano = String(row[4] || '').trim(); // Columna E (índice 4)
+      // Validación WELCOMER: Etiqueta de plano (A), Hostname (B), MAC (D), Sección (G), Nº de Probadores (I)
+      const etiquetaPlano = String(row[0] || '').trim(); // Columna A (índice 0)
       const hostname = String(row[1] || '').trim(); // Columna B (índice 1)
       const mac = String(row[3] || '').trim(); // Columna D (índice 3)
-      const seccion = String(row[7] || '').trim(); // Columna H (índice 7)
-      const numProbadores = String(row[9] || '').trim(); // Columna J (índice 9)
+      const seccion = String(row[6] || '').trim(); // Columna G (índice 6)
+      const numProbadores = String(row[8] || '').trim(); // Columna I (índice 8)
       
       // Si no hay etiqueta de plano, no se muestra
       if (!etiquetaPlano) {

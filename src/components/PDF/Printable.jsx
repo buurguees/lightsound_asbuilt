@@ -2,6 +2,7 @@ import React from 'react';
 import './pdf.css';
 import { Portada } from './Portada';
 import { SeccionDesglosePantallas } from './SeccionDesglosePantallas';
+import { SeccionTablasBannersTurnomaticWelcomer } from './SeccionTablasBannersTurnomaticWelcomer';
 import { SeccionFotosPantallas } from './SeccionFotosPantallas';
 import { SeccionBanners } from './SeccionBanners';
 import { SeccionTurnomatic } from './SeccionTurnomatic';
@@ -33,6 +34,13 @@ export const Printable = React.memo(({ data, onPageRendered }) => (
     {data.secciones.desglosePantallas && (
       <SeccionDesglosePantallas pantallas={data.pantallas} meta={data.meta} />
     )}
+    {/* Tablas de Banners, Turnomatic y Welcomer */}
+    <SeccionTablasBannersTurnomaticWelcomer 
+      banners={data.banners} 
+      turnomatic={data.turnomatic} 
+      welcomer={data.welcomer} 
+      meta={data.meta} 
+    />
     {/* Banners */}
     {data.secciones.banners && (
       <SeccionBanners fotosBanners={data.fotosBanners} meta={data.meta} />

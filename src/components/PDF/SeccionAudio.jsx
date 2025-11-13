@@ -119,8 +119,7 @@ export const SeccionAudio = ({ audio, meta }) => {
                               />
                             ) : (
                               <div className="text-center p-2">
-                                <div className="text-neutral-300 text-3xl mb-1">📷</div>
-                                <span className="text-neutral-400 text-xs">Sin foto</span>
+                                <span className="text-neutral-400 text-xs">Imagen no necesaria</span>
                               </div>
                             )}
                           </div>

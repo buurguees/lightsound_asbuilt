@@ -10,23 +10,58 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
   const processedFilesRef = useRef(new Set());
   const processedBatchKeysRef = useRef(new Set());
 
-  // Sincronizar data.fotos con data.pantallas: crear entradas de fotos para pantallas nuevas
+  // Sincronizar data.fotos con todas las etiquetas de plano: MKD, Banners, Turnomatic y Welcomer
   useEffect(() => {
-    if (!data.pantallas || data.pantallas.length === 0) return;
+    // Recopilar todas las etiquetas de plano de todas las fuentes
+    const todasEtiquetas = new Set();
+    
+    if (data.pantallas && Array.isArray(data.pantallas)) {
+      data.pantallas.forEach(p => {
+        const etiqueta = String(p.etiquetaPlano || '').trim();
+        if (etiqueta) todasEtiquetas.add(etiqueta);
+      });
+    }
+    
+    if (data.banners && Array.isArray(data.banners)) {
+      data.banners.forEach(b => {
+        const etiqueta = String(b.etiquetaPlano || '').trim();
+        if (etiqueta) todasEtiquetas.add(etiqueta);
+      });
+    }
+    
+    if (data.turnomatic && Array.isArray(data.turnomatic)) {
+      data.turnomatic.forEach(t => {
+        const etiqueta = String(t.etiquetaPlano || '').trim();
+        if (etiqueta) todasEtiquetas.add(etiqueta);
+      });
+    }
+    
+    if (data.welcomer && Array.isArray(data.welcomer)) {
+      data.welcomer.forEach(w => {
+        const etiqueta = String(w.etiquetaPlano || '').trim();
+        if (etiqueta) todasEtiquetas.add(etiqueta);
+      });
+    }
+
+    if (todasEtiquetas.size === 0) return;
 
     setData((d) => {
       const c = structuredClone(d);
+      if (!c.fotos) {
+        c.fotos = [];
+      }
+      
       const etiquetasExistentes = new Set(
         c.fotos.map(f => String(f.etiquetaPlano || '').trim())
       );
 
-      // Crear entradas de fotos para pantallas que no tengan entrada de foto
+      // Crear entradas de fotos para etiquetas que no tengan entrada de foto
       let nuevasEntradas = 0;
-      data.pantallas.forEach(pantalla => {
-        const etiqueta = String(pantalla.etiquetaPlano || '').trim();
-        if (etiqueta && !etiquetasExistentes.has(etiqueta)) {
+      todasEtiquetas.forEach(etiqueta => {
+        if (!etiquetasExistentes.has(etiqueta)) {
           c.fotos.push({
             etiquetaPlano: etiqueta,
+            nombreBloqueSX: extractSXPattern(etiqueta) || '', // Extraer SX automáticamente si es posible
             fotoFrontal: { url: "", fileName: undefined, fileSize: undefined },
             fotoPlayer: { url: "", fileName: undefined, fileSize: undefined },
             fotoIP: { url: "", fileName: undefined, fileSize: undefined }
@@ -35,23 +70,21 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
         }
       });
 
-      // Eliminar entradas de fotos que no tengan pantalla correspondiente
-      const etiquetasPantallas = new Set(
-        data.pantallas.map(p => String(p.etiquetaPlano || '').trim())
-      );
+      // Eliminar entradas de fotos que no tengan etiqueta correspondiente (pero mantener las que tienen etiqueta manual)
       c.fotos = c.fotos.filter(f => {
         const etiqueta = String(f.etiquetaPlano || '').trim();
-        return !etiqueta || etiquetasPantallas.has(etiqueta);
+        // Mantener si tiene etiqueta y está en la lista, o si es una entrada manual (sin etiqueta pero con nombre de bloque)
+        return !etiqueta || todasEtiquetas.has(etiqueta);
       });
 
       if (nuevasEntradas > 0) {
-        console.log(`📸 Se crearon ${nuevasEntradas} nuevas entradas de fotos para pantallas`);
+        console.log(`📸 Se crearon ${nuevasEntradas} nuevas entradas de fotos desde MKD, Banners, Turnomatic y Welcomer`);
         console.log(`   Total de entradas de fotos: ${c.fotos.length}`);
       }
 
       return c;
     });
-  }, [data.pantallas, setData]);
+  }, [data.pantallas, data.banners, data.turnomatic, data.welcomer, setData]);
 
   // Procesar archivos de fotos recibidos desde App.jsx (importación de carpeta)
   useEffect(() => {
@@ -59,33 +92,61 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
       console.log('⚠️ No hay archivos de fotos para procesar');
       return;
     }
-    if (!data.pantallas || data.pantallas.length === 0) {
-      console.log('⚠️ No hay pantallas importadas. Importa primero el Excel en "Desglose de pantallas"');
+    
+    // Recopilar todas las etiquetas de plano de todas las fuentes
+    const todasEtiquetas = new Set();
+    
+    if (data.pantallas && Array.isArray(data.pantallas)) {
+      data.pantallas.forEach(p => {
+        const etiqueta = String(p.etiquetaPlano || '').trim();
+        if (etiqueta) todasEtiquetas.add(etiqueta);
+      });
+    }
+    
+    if (data.banners && Array.isArray(data.banners)) {
+      data.banners.forEach(b => {
+        const etiqueta = String(b.etiquetaPlano || '').trim();
+        if (etiqueta) todasEtiquetas.add(etiqueta);
+      });
+    }
+    
+    if (data.turnomatic && Array.isArray(data.turnomatic)) {
+      data.turnomatic.forEach(t => {
+        const etiqueta = String(t.etiquetaPlano || '').trim();
+        if (etiqueta) todasEtiquetas.add(etiqueta);
+      });
+    }
+    
+    if (data.welcomer && Array.isArray(data.welcomer)) {
+      data.welcomer.forEach(w => {
+        const etiqueta = String(w.etiquetaPlano || '').trim();
+        if (etiqueta) todasEtiquetas.add(etiqueta);
+      });
+    }
+    
+    if (todasEtiquetas.size === 0) {
+      console.log('⚠️ No hay etiquetas de plano importadas. Importa primero el Excel en MKD, Banners, Turnomatic o Welcomer');
       return;
     }
     
     console.log(`\n🔄 Verificando sincronización...`);
-    console.log(`   Pantallas: ${data.pantallas.length}`);
+    console.log(`   Etiquetas totales: ${todasEtiquetas.size}`);
     console.log(`   Fotos: ${data.fotos?.length || 0}`);
     
-    // Verificar que las fotos estén sincronizadas con las pantallas
-    const etiquetasPantallas = new Set(
-      data.pantallas.map(p => String(p.etiquetaPlano || '').trim())
-    );
     const etiquetasFotos = new Set(
       (data.fotos || []).map(f => String(f.etiquetaPlano || '').trim())
     );
     
-    // Verificar que todas las pantallas tengan su entrada de foto
-    const todasPantallasTienenFoto = Array.from(etiquetasPantallas).every(etiqueta => 
+    // Verificar que todas las etiquetas tengan su entrada de foto
+    const todasTienenFoto = Array.from(todasEtiquetas).every(etiqueta => 
       etiquetasFotos.has(etiqueta)
     );
     
-    if (!todasPantallasTienenFoto || !data.fotos || data.fotos.length === 0) {
+    if (!todasTienenFoto || !data.fotos || data.fotos.length === 0) {
       console.log('⚠️ Las entradas de fotos aún no están sincronizadas. Esperando sincronización...');
-      const pantallasSinFoto = Array.from(etiquetasPantallas).filter(e => !etiquetasFotos.has(e));
-      if (pantallasSinFoto.length > 0) {
-        console.log(`   Pantallas sin foto:`, pantallasSinFoto);
+      const etiquetasSinFoto = Array.from(todasEtiquetas).filter(e => !etiquetasFotos.has(e));
+      if (etiquetasSinFoto.length > 0) {
+        console.log(`   Etiquetas sin foto:`, etiquetasSinFoto);
       }
       // No procesar hasta que las fotos estén sincronizadas
       return;
@@ -93,7 +154,7 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
 
     console.log(`✅ Sincronización OK. Iniciando procesamiento de fotos...`);
     console.log(`   Archivos de fotos: ${fotoFilesFromFolder.length}`);
-    console.log(`   Pantallas: ${data.pantallas.length}`);
+    console.log(`   Etiquetas totales: ${todasEtiquetas.size}`);
     console.log(`   Entradas de fotos: ${data.fotos.length}`);
 
     // Evitar reprocesar el mismo lote: clave estable por nombres+tamaños
@@ -203,14 +264,18 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
 
         console.log(`\n🔍 Procesando bloque de pantalla: "${etiquetaPlano}"`);
 
-        // Extraer SX de la etiqueta de plano (ej: "S1" de "LED_CIRCLE_0F_ENT_S1")
-        const sxPattern = extractSXPattern(etiquetaPlano);
+        // Usar el nombre del bloque SX de la entrada de foto, o extraerlo de la etiqueta de plano
+        let sxPattern = String(fotoEntry.nombreBloqueSX || '').trim();
         if (!sxPattern) {
-          console.log(`  ⚠️ No se encontró patrón SX en etiqueta de plano: ${etiquetaPlano}`);
+          sxPattern = extractSXPattern(etiquetaPlano);
+        }
+        
+        if (!sxPattern) {
+          console.log(`  ⚠️ No se encontró patrón SX en etiqueta de plano ni en nombre de bloque: ${etiquetaPlano}`);
           continue;
         }
 
-        console.log(`  ✓ SX extraído de la etiqueta: ${sxPattern}`);
+        console.log(`  ✓ SX usado: ${sxPattern} (${fotoEntry.nombreBloqueSX ? 'desde nombre de bloque' : 'extraído de etiqueta'})`);
 
         // Buscar fotos para este SX
         const fotosDelSX = fotosPorSX[sxPattern];
@@ -238,7 +303,7 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
             try {
               console.log(`  📤 Importando imagen al bloque "${sxPattern} ${tipoNombre}":`);
               console.log(`     Archivo: ${file.name}`);
-              const base64 = await compressImage(file, { maxDim: 1400, quality: 0.8 });
+              const base64 = await compressImage(file, { maxDim: 1000, quality: 0.65 });
               c.fotos[fotoIndex][tipoFoto] = {
                 url: base64,
                 fileName: file.name,
@@ -307,13 +372,14 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
     };
 
     processFotoFiles();
-  }, [fotoFilesFromFolder, data.pantallas, data.fotos, setData, onFotosProcessed, setFotoFilesFromFolder]);
+  }, [fotoFilesFromFolder, data.pantallas, data.banners, data.turnomatic, data.welcomer, data.fotos, setData, onFotosProcessed, setFotoFilesFromFolder]);
 
   const addFoto = () => {
     setData((d) => ({
       ...d,
-      fotos: [...d.fotos, {
+      fotos: [...(d.fotos || []), {
         etiquetaPlano: "",
+        nombreBloqueSX: "",
         fotoFrontal: { url: "", fileName: undefined, fileSize: undefined },
         fotoPlayer: { url: "", fileName: undefined, fileSize: undefined },
         fotoIP: { url: "", fileName: undefined, fileSize: undefined }
@@ -330,26 +396,53 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
         </div>
         {data.fotos.map((f, i) => (
           <div key={i} className="rounded-lg border-2 border-neutral-300 p-4 bg-neutral-50">
-            <div className="flex justify-between items-center mb-3">
-              <Field className="flex-grow mr-4" label="Etiqueta de plano">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+              <Field className="flex-grow" label="Etiqueta de plano">
                 <Input
-                  value={f.etiquetaPlano}
-                  disabled
-                  className="bg-neutral-100 cursor-not-allowed"
-                  title="La etiqueta de plano se sincroniza automáticamente desde 'Desglose de pantallas'"
+                  value={f.etiquetaPlano || ''}
+                  onChange={(e) => {
+                    setData((d) => {
+                      const c = structuredClone(d);
+                      c.fotos[i].etiquetaPlano = e.target.value;
+                      // Si no hay nombre de bloque SX, intentar extraerlo automáticamente
+                      if (!c.fotos[i].nombreBloqueSX) {
+                        const sxAuto = extractSXPattern(e.target.value);
+                        if (sxAuto) {
+                          c.fotos[i].nombreBloqueSX = sxAuto;
+                        }
+                      }
+                      return c;
+                    });
+                  }}
+                  placeholder="Ej: LED_CIRCLE_0F_ENT_S1"
+                  title="Etiqueta de plano (se sincroniza automáticamente desde MKD, Banners, Turnomatic y Welcomer, pero se puede editar manualmente)"
                 />
               </Field>
-              <div className="pt-6">
-                <Button onClick={() => {
-                  setData((d) => {
-                    const c = structuredClone(d);
-                    c.fotos.splice(i, 1);
-                    return c;
-                  });
-                }}>
-                  Borrar pantalla
-                </Button>
-              </div>
+              <Field className="flex-grow" label="Nombre del bloque SX (para asignación de fotos)">
+                <Input
+                  value={f.nombreBloqueSX || ''}
+                  onChange={(e) => {
+                    setData((d) => {
+                      const c = structuredClone(d);
+                      c.fotos[i].nombreBloqueSX = e.target.value;
+                      return c;
+                    });
+                  }}
+                  placeholder="Ej: S1, S2, etc."
+                  title="Nombre del bloque SX usado para asignar fotos. Se extrae automáticamente de la etiqueta de plano, pero se puede editar manualmente si es necesario."
+                />
+              </Field>
+            </div>
+            <div className="mb-3">
+              <Button onClick={() => {
+                setData((d) => {
+                  const c = structuredClone(d);
+                  c.fotos.splice(i, 1);
+                  return c;
+                });
+              }}>
+                Borrar pantalla
+              </Button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">

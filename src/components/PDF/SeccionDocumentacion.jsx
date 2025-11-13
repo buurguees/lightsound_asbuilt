@@ -92,8 +92,7 @@ export const SeccionDocumentacion = ({ documentacion, pantallas, banners, turnom
                     <img loading="lazy" src={imagen.url} alt={imagen.tipo} className="w-full h-full object-contain" />
                   ) : (
                     <div className="text-center p-2">
-                      <div className="text-neutral-300 text-3xl mb-1">📷</div>
-                      <span className="text-neutral-400 text-xs">Sin foto</span>
+                      <span className="text-neutral-400 text-xs">Imagen no necesaria</span>
                     </div>
                   )}
                 </div>
@@ -209,8 +208,7 @@ export const SeccionDocumentacion = ({ documentacion, pantallas, banners, turnom
                       <img loading="lazy" src={imagen.url} alt={imagen.tipo} className="w-full h-full object-contain" />
                     ) : (
                       <div className="text-center p-2">
-                        <div className="text-neutral-300 text-3xl mb-1">📷</div>
-                        <span className="text-neutral-400 text-xs">Sin foto</span>
+                        <span className="text-neutral-400 text-xs">Imagen no necesaria</span>
                       </div>
                     )}
                   </div>

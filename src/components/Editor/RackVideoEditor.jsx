@@ -50,7 +50,7 @@ export const RackVideoEditor = ({ data, setData, imageInputRefs, rackVideoFilesF
           try {
             console.log(`  📤 Importando imagen al bloque "${tipoNombre}":`);
             console.log(`     Archivo: ${file.name}`);
-            const base64 = await compressImage(file, { maxDim: 1400, quality: 0.8 });
+            const base64 = await compressImage(file, { maxDim: 1000, quality: 0.65 });
             
             // Si no existe el array de fotos para este tipo, crearlo
             if (!c.rackVideo[tipoFoto]) {

@@ -432,8 +432,7 @@ const SeccionFotosPantallas = ({ fotos }) => {
                         <img loading="lazy" src={f.fotoFrontal.url} alt="Foto frontal" className="w-full h-full object-contain" />
                       ) : (
                         <div className="text-center p-2">
-                          <div className="text-neutral-300 text-3xl mb-1">📷</div>
-                          <span className="text-neutral-400 text-xs">Sin foto</span>
+                          <span className="text-neutral-400 text-xs">Imagen no necesaria</span>
                         </div>
                       )}
                     </div>
@@ -446,8 +445,7 @@ const SeccionFotosPantallas = ({ fotos }) => {
                         <img loading="lazy" src={f.fotoPlayer.url} alt="Player + Sending" className="w-full h-full object-contain" />
                       ) : (
                         <div className="text-center p-2">
-                          <div className="text-neutral-300 text-3xl mb-1">💻</div>
-                          <span className="text-neutral-400 text-xs">Sin foto</span>
+                          <span className="text-neutral-400 text-xs">Imagen no necesaria</span>
                         </div>
                       )}
                     </div>
@@ -460,8 +458,7 @@ const SeccionFotosPantallas = ({ fotos }) => {
                         <img loading="lazy" src={f.fotoIP.url} alt="IP" className="w-full h-full object-contain" />
                       ) : (
                         <div className="text-center p-2">
-                          <div className="text-neutral-300 text-3xl mb-1">🌐</div>
-                          <span className="text-neutral-400 text-xs">Sin foto</span>
+                          <span className="text-neutral-400 text-xs">Imagen no necesaria</span>
                         </div>
                       )}
                     </div>
@@ -512,8 +509,7 @@ const SeccionProbadores = ({ probadores }) => {
                   <img loading="lazy" src={probadores.probadorOcupado.url} alt="Probador ocupado" className="w-full h-full object-contain" />
                 ) : (
                   <div className="text-center p-2">
-                    <div className="text-neutral-300 text-3xl mb-1">📷</div>
-                    <span className="text-neutral-400 text-xs">Sin foto</span>
+                    <span className="text-neutral-400 text-xs">Imagen no necesaria</span>
                   </div>
                 )}
               </div>
@@ -527,8 +523,7 @@ const SeccionProbadores = ({ probadores }) => {
                   <img loading="lazy" src={probadores.probadorLiberado.url} alt="Probador liberado" className="w-full h-full object-contain" />
                 ) : (
                   <div className="text-center p-2">
-                    <div className="text-neutral-300 text-3xl mb-1">📷</div>
-                    <span className="text-neutral-400 text-xs">Sin foto</span>
+                    <span className="text-neutral-400 text-xs">Imagen no necesaria</span>
                   </div>
                 )}
               </div>
@@ -542,8 +537,7 @@ const SeccionProbadores = ({ probadores }) => {
                   <img loading="lazy" src={probadores.pasilloProbadores.url} alt="Pasillo probadores" className="w-full h-full object-contain" />
                 ) : (
                   <div className="text-center p-2">
-                    <div className="text-neutral-300 text-3xl mb-1">📷</div>
-                    <span className="text-neutral-400 text-xs">Sin foto</span>
+                    <span className="text-neutral-400 text-xs">Imagen no necesaria</span>
                   </div>
                 )}
               </div>
@@ -915,11 +909,12 @@ export default function App() {
   }, [data.meta.fecha]);
   
 
-  // Función para comprimir imagen
-  const compressImage = (file, { maxDim = 1600, quality = 0.85 } = {}) => {
+  // Función para comprimir imagen (valores reducidos para optimizar peso)
+  const compressImage = (file, { maxDim = 1000, quality = 0.65 } = {}) => {
     return new Promise((resolve, reject) => {
       try {
-        if (file.size <= 2 * 1024 * 1024) {
+        // Reducido el umbral para forzar más compresión
+        if (file.size <= 1 * 1024 * 1024) {
           return fileToBase64(file).then(resolve).catch(reject);
         }
         const img = new Image();

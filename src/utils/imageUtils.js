@@ -269,19 +269,16 @@ export const optimizeAllImagesForBudget = async (data, budgetBytes = 14 * 1024 *
   const planosBudget = Math.min(planosSize * 1.2, budgetBytes * 0.3); // Máximo 30% del presupuesto para planos
   const imagesBudget = budgetBytes - planosBudget - (0.5 * 1024 * 1024); // 0.5MB para estructura del PDF
   
-  // Configuraciones de calidad (reducción exponencial)
-  // Empezamos con calidad alta y vamos reduciendo exponencialmente
+  // Configuraciones de calidad (reducción exponencial, empezando más bajo)
   const qualityLevels = [
-    { maxDim: 1600, quality: 0.85 },
-    { maxDim: 1400, quality: 0.80 },
-    { maxDim: 1200, quality: 0.75 },
-    { maxDim: 1000, quality: 0.70 },
-    { maxDim: 900, quality: 0.65 },
-    { maxDim: 800, quality: 0.60 },
-    { maxDim: 700, quality: 0.55 },
-    { maxDim: 600, quality: 0.50 },
-    { maxDim: 500, quality: 0.45 },
-    { maxDim: 400, quality: 0.40 }
+    { maxDim: 1200, quality: 0.70 },
+    { maxDim: 1000, quality: 0.65 },
+    { maxDim: 900, quality: 0.60 },
+    { maxDim: 800, quality: 0.55 },
+    { maxDim: 700, quality: 0.50 },
+    { maxDim: 600, quality: 0.45 },
+    { maxDim: 500, quality: 0.40 },
+    { maxDim: 400, quality: 0.35 }
   ];
   
   let optimizedData = structuredClone(data);
@@ -375,11 +372,12 @@ export const optimizeAllImagesForBudget = async (data, budgetBytes = 14 * 1024 *
 /**
  * Comprimir imagen: redimensiona y convierte a JPEG (o mantiene PNG si se pide)
  */
-export const compressImage = (file, { maxDim = 1600, quality = 0.85, preferPNG = false } = {}) => {
+export const compressImage = (file, { maxDim = 1200, quality = 0.70, preferPNG = false } = {}) => {
   return new Promise((resolve, reject) => {
     try {
       // Si la imagen es suficientemente pequeña, devolver base64 original
-      if (file.size <= 2 * 1024 * 1024) {
+      // Reducido el umbral para forzar más compresión
+      if (file.size <= 1 * 1024 * 1024) {
         return fileToBase64(file).then(resolve).catch(reject);
       }
 

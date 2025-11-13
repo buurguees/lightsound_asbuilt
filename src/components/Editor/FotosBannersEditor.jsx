@@ -206,7 +206,7 @@ export const FotosBannersEditor = ({ data, setData, imageInputRefs, fotoBannerFi
           // Solo actualizar si la foto no está ya asignada
           if (!c.fotosBanners[fotoIndex][tipoFoto]?.url) {
             try {
-              const base64 = await compressImage(file, { maxDim: 1400, quality: 0.8 });
+              const base64 = await compressImage(file, { maxDim: 1000, quality: 0.65 });
               c.fotosBanners[fotoIndex][tipoFoto] = {
                 url: base64,
                 fileName: file.name,

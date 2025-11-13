@@ -101,7 +101,7 @@ export const FotosWelcomerEditor = ({ data, setData, imageInputRefs, fotoWelcome
           if (!file || processedFilesRef.current.has(`${file.name}_${file.size}`)) continue;
           if (!c.fotosWelcomer[fotoIndex][tipoFoto]?.url) {
             try {
-              const base64 = await compressImage(file, { maxDim: 1400, quality: 0.8 });
+              const base64 = await compressImage(file, { maxDim: 1000, quality: 0.65 });
               c.fotosWelcomer[fotoIndex][tipoFoto] = {
                 url: base64,
                 fileName: file.name,

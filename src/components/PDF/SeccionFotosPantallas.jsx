@@ -36,8 +36,7 @@ export const SeccionFotosPantallas = ({ fotos, meta }) => {
                         <img loading="lazy" src={f.fotoFrontal.url} alt="Foto frontal" className="w-full h-full object-contain" />
                       ) : (
                         <div className="text-center p-2">
-                          <div className="text-neutral-300 text-3xl mb-1">📷</div>
-                          <span className="text-neutral-400 text-xs">Sin foto</span>
+                          <span className="text-neutral-400 text-xs">Imagen no requerida</span>
                         </div>
                       )}
                     </div>
@@ -49,8 +48,7 @@ export const SeccionFotosPantallas = ({ fotos, meta }) => {
                         <img loading="lazy" src={f.fotoPlayer.url} alt="Player + Sending" className="w-full h-full object-contain" />
                       ) : (
                         <div className="text-center p-2">
-                          <div className="text-neutral-300 text-3xl mb-1">💻</div>
-                          <span className="text-neutral-400 text-xs">Sin foto</span>
+                          <span className="text-neutral-400 text-xs">Imagen no necesaria</span>
                         </div>
                       )}
                     </div>
@@ -62,8 +60,7 @@ export const SeccionFotosPantallas = ({ fotos, meta }) => {
                         <img loading="lazy" src={f.fotoIP.url} alt="IP" className="w-full h-full object-contain" />
                       ) : (
                         <div className="text-center p-2">
-                          <div className="text-neutral-300 text-3xl mb-1">🌐</div>
-                          <span className="text-neutral-400 text-xs">Sin foto</span>
+                          <span className="text-neutral-400 text-xs">Imagen no necesaria</span>
                         </div>
                       )}
                     </div>
