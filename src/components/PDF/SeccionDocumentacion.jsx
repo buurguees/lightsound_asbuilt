@@ -43,6 +43,12 @@ export const SeccionDocumentacion = ({ documentacion, pantallas, banners, turnom
   if (documentacion.avBox && Array.isArray(documentacion.avBox) && documentacion.avBox.length > 0) {
     imagenes.push(...documentacion.avBox.map(img => ({ ...img, tipo: 'AV BOX' })));
   }
+  if (documentacion.listadoAVBox && Array.isArray(documentacion.listadoAVBox) && documentacion.listadoAVBox.length > 0) {
+    imagenes.push(...documentacion.listadoAVBox.map(img => ({ ...img, tipo: 'LISTADO AV BOX' })));
+  }
+  if (documentacion.medicion && Array.isArray(documentacion.medicion) && documentacion.medicion.length > 0) {
+    imagenes.push(...documentacion.medicion.map(img => ({ ...img, tipo: 'MEDICIÓN' })));
+  }
 
   const tieneImagenes = imagenes.length > 0;
   const mostrarTabla = documentacion.mostrarTablaConexionado !== false; // Por defecto true si no está definido

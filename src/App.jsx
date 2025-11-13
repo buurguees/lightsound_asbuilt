@@ -1194,8 +1194,14 @@ export default function App() {
       const fileName = file.name.toUpperCase();
       return fileName.includes('DOC_BOX') || 
              fileName.includes('DOC BOX') ||
+             fileName.includes('LISTADO_AV_BOX') || 
+             fileName.includes('LISTADO AV BOX') ||
+             fileName.includes('LISTADO_AVBOX') || 
+             fileName.includes('LISTADO AVBOX') ||
              fileName.includes('AV_BOX') || 
-             fileName.includes('AV BOX');
+             fileName.includes('AV BOX') ||
+             fileName.includes('MEDICION') ||
+             fileName.includes('MEDICIÓN');
     });
     
     console.log('Archivos de documentación encontrados:', documentacionFiles.length);
@@ -1514,6 +1520,8 @@ export default function App() {
   documentacion: {
     docBox: [],
     avBox: [],
+    listadoAVBox: [],
+    medicion: [],
     conexionado: []
   },
       unifilarVideo: { 

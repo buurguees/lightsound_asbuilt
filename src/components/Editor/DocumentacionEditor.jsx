@@ -74,7 +74,7 @@ export const DocumentacionEditor = ({ data, setData, imageInputRefs, documentaci
       setData((d) => {
         const c = structuredClone(d);
         if (!c.documentacion) {
-          c.documentacion = { docBox: [], avBox: [], conexionado: [] };
+          c.documentacion = { docBox: [], avBox: [], listadoAVBox: [], medicion: [], conexionado: [] };
         }
         if (!c.documentacion.conexionado) {
           c.documentacion.conexionado = [];
@@ -153,10 +153,20 @@ export const DocumentacionEditor = ({ data, setData, imageInputRefs, documentaci
           tipoFoto = 'docBox';
           tipoNombre = 'DOC BOX';
         } 
+        // Detectar LISTADO_AV_BOX (antes de AV_BOX para evitar conflictos)
+        else if (fileName.includes('LISTADO_AV_BOX') || fileName.includes('LISTADO AV BOX') || fileName.includes('LISTADO_AVBOX') || fileName.includes('LISTADO AVBOX')) {
+          tipoFoto = 'listadoAVBox';
+          tipoNombre = 'LISTADO AV BOX';
+        }
         // Detectar AV_BOX
         else if (fileName.includes('AV_BOX') || fileName.includes('AV BOX')) {
           tipoFoto = 'avBox';
           tipoNombre = 'AV BOX';
+        }
+        // Detectar MEDICION
+        else if (fileName.includes('MEDICION') || fileName.includes('MEDICIÓN')) {
+          tipoFoto = 'medicion';
+          tipoNombre = 'MEDICIÓN';
         }
         
         if (tipoFoto) {
@@ -167,7 +177,7 @@ export const DocumentacionEditor = ({ data, setData, imageInputRefs, documentaci
             
             // Asegurar que documentacion existe
             if (!c.documentacion) {
-              c.documentacion = { docBox: [], avBox: [] };
+              c.documentacion = { docBox: [], avBox: [], listadoAVBox: [], medicion: [] };
             }
             // Si no existe el array de fotos para este tipo, crearlo
             if (!c.documentacion[tipoFoto]) {
@@ -229,8 +239,14 @@ export const DocumentacionEditor = ({ data, setData, imageInputRefs, documentaci
     if (nombreUpper.includes('DOC_BOX') || nombreUpper.includes('DOC BOX')) {
       return { key: 'docBox', label: 'DOC BOX' };
     }
+    else if (nombreUpper.includes('LISTADO_AV_BOX') || nombreUpper.includes('LISTADO AV BOX') || nombreUpper.includes('LISTADO_AVBOX') || nombreUpper.includes('LISTADO AVBOX')) {
+      return { key: 'listadoAVBox', label: 'LISTADO AV BOX' };
+    }
     else if (nombreUpper.includes('AV_BOX') || nombreUpper.includes('AV BOX')) {
       return { key: 'avBox', label: 'AV BOX' };
+    }
+    else if (nombreUpper.includes('MEDICION') || nombreUpper.includes('MEDICIÓN')) {
+      return { key: 'medicion', label: 'MEDICIÓN' };
     }
     
     return null;
@@ -246,7 +262,7 @@ export const DocumentacionEditor = ({ data, setData, imageInputRefs, documentaci
         const c = structuredClone(d);
         // Asegurar que documentacion existe
         if (!c.documentacion) {
-          c.documentacion = { docBox: [], avBox: [] };
+          c.documentacion = { docBox: [], avBox: [], listadoAVBox: [], medicion: [] };
         }
         if (!c.documentacion[tipoFoto]) {
           c.documentacion[tipoFoto] = [];
@@ -335,7 +351,9 @@ export const DocumentacionEditor = ({ data, setData, imageInputRefs, documentaci
       
       // Si no hay imágenes, desactivar la sección
       const tieneImagenes = (c.documentacion.docBox && c.documentacion.docBox.length > 0) ||
-                            (c.documentacion.avBox && c.documentacion.avBox.length > 0);
+                            (c.documentacion.avBox && c.documentacion.avBox.length > 0) ||
+                            (c.documentacion.listadoAVBox && c.documentacion.listadoAVBox.length > 0) ||
+                            (c.documentacion.medicion && c.documentacion.medicion.length > 0);
       
       if (!tieneImagenes) {
         c.secciones.documentacion = false;
@@ -347,7 +365,9 @@ export const DocumentacionEditor = ({ data, setData, imageInputRefs, documentaci
 
   const tiposDocumentacion = [
     { key: 'docBox', label: 'DOC BOX' },
-    { key: 'avBox', label: 'AV BOX' }
+    { key: 'avBox', label: 'AV BOX' },
+    { key: 'listadoAVBox', label: 'LISTADO AV BOX' },
+    { key: 'medicion', label: 'MEDICIÓN' }
   ];
 
   return (
@@ -388,6 +408,11 @@ export const DocumentacionEditor = ({ data, setData, imageInputRefs, documentaci
           const fotos = data.documentacion && Array.isArray(data.documentacion[tipo.key]) 
             ? data.documentacion[tipo.key] 
             : (data.documentacion?.[tipo.key]?.url ? [data.documentacion[tipo.key]] : []);
+          
+          // Solo mostrar el bloque si tiene imágenes
+          if (fotos.length === 0) {
+            return null;
+          }
           
           return (
             <div key={tipo.key} className="bg-white rounded-lg border p-3">
@@ -462,7 +487,7 @@ export const DocumentacionEditor = ({ data, setData, imageInputRefs, documentaci
                 setData((d) => {
                   const c = structuredClone(d);
                   if (!c.documentacion) {
-                    c.documentacion = { docBox: [], avBox: [], conexionado: [] };
+                    c.documentacion = { docBox: [], avBox: [], listadoAVBox: [], medicion: [], conexionado: [] };
                   }
                   c.documentacion.mostrarTablaConexionado = e.target.checked;
                   return c;
