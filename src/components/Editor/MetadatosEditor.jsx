@@ -84,7 +84,7 @@ export const MetadatosEditor = ({ data, setData, imageInputRefs }) => {
                   c.meta.fotoEntrada = { url: '' };
                   return c;
                 });
-              }}>
+              }} className="text-neutral-800">
                 Limpiar
               </Button>
             )}

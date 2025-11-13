@@ -49,7 +49,7 @@ export const UnifilarVideoEditor = ({ data, setData, imageInputRefs }) => {
                     c.unifilarVideo.fotos[idx] = { url: '' };
                     return c;
                   });
-                }}>
+                }} className="text-neutral-800">
                   Limpiar
                 </Button>
               )}

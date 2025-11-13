@@ -1580,7 +1580,7 @@ export default function App() {
             <div className="flex items-center gap-2">
               <Button onClick={() => setShowConfigModal(true)}>⚙️ Configuración</Button>
               <Button onClick={() => inputFolder.current?.click()}>📁 Importar Carpeta</Button>
-              <Button onClick={limpiarPlantilla} className="bg-red-500 hover:bg-red-600 text-white">🗑️ Limpiar Plantilla</Button>
+              <Button onClick={limpiarPlantilla} className="bg-red-500 hover:bg-red-600 text-white font-medium">🗑️ Limpiar Plantilla</Button>
               <Button onClick={async () => {
                 try {
                   // Mostrar indicador de optimización

@@ -92,7 +92,7 @@
   list-style-position: outside;
   padding-left: 1.5em;
   margin: 0;
-  columns: 2;
+  columns: 1;
   column-gap: 2em;
   column-fill: auto;
 }
@@ -102,10 +102,27 @@
   margin-bottom: 0.4em;
   padding-left: 0.3em;
   line-height: 1.5;
+  font-size: inherit;
+}
+
+/* Si hay más de 6 elementos, usar 2 columnas y reducir tamaño de fuente */
+.pdf-preview .lista-elementos-instalados.lista-elementos-mas-de-seis {
+  columns: 2;
+}
+
+.pdf-preview .lista-elementos-instalados.lista-elementos-mas-de-seis li {
+  font-size: 0.9em;
+  line-height: 1.4;
+  margin-bottom: 0.3em;
 }
 
 .pdf-preview .lista-elementos-instalados:has(li:nth-child(21)) {
   columns: 3;
+}
+
+.pdf-preview .lista-elementos-instalados:has(li:nth-child(21)) li {
+  font-size: 0.85em;
+  line-height: 1.3;
 }
 
 /* Contenedor para la vista previa que ajusta el zoom automáticamente */
@@ -422,6 +439,58 @@
     width: calc(70% / 5);
   }
   
+  /* Tabla Turnomatic: más espacio para Etiqueta de plano */
+  .tabla-turnomatic {
+    table-layout: fixed;
+    width: 100%;
+  }
+  
+  .tabla-turnomatic th:first-child,
+  .tabla-turnomatic td:first-child {
+    width: 60%; /* Etiqueta de plano - más espacio */
+  }
+  
+  .tabla-turnomatic th:nth-child(2),
+  .tabla-turnomatic td:nth-child(2) {
+    width: 25%; /* Hostname - reducido */
+  }
+  
+  .tabla-turnomatic th:nth-child(3),
+  .tabla-turnomatic td:nth-child(3) {
+    width: 15%; /* MAC - reducido */
+  }
+  
+  /* Tabla Welcomer: más espacio para Etiqueta de plano */
+  .tabla-welcomer {
+    table-layout: fixed;
+    width: 100%;
+  }
+  
+  .tabla-welcomer th:first-child,
+  .tabla-welcomer td:first-child {
+    width: 50%; /* Etiqueta de plano - más espacio */
+  }
+  
+  .tabla-welcomer th:nth-child(2),
+  .tabla-welcomer td:nth-child(2) {
+    width: 15%; /* Hostname - reducido */
+  }
+  
+  .tabla-welcomer th:nth-child(3),
+  .tabla-welcomer td:nth-child(3) {
+    width: 12%; /* MAC - reducido */
+  }
+  
+  .tabla-welcomer th:nth-child(4),
+  .tabla-welcomer td:nth-child(4) {
+    width: 15%; /* Sección */
+  }
+  
+  .tabla-welcomer th:nth-child(5),
+  .tabla-welcomer td:nth-child(5) {
+    width: 8%; /* Nº de Probadores - reducido */
+  }
+  
   tr {
     page-break-inside: avoid;
     page-break-after: auto;
@@ -438,7 +507,7 @@
     list-style-position: outside;
     padding-left: 1.5em;
     margin: 0;
-    columns: 2;
+    columns: 1;
     column-gap: 2em;
     column-fill: auto;
   }
@@ -448,11 +517,28 @@
     margin-bottom: 0.4em;
     padding-left: 0.3em;
     line-height: 1.5;
+    font-size: inherit;
   }
   
-  /* Si hay muchos elementos (más de 20), usar 3 columnas */
+  /* Si hay más de 6 elementos, usar 2 columnas y reducir tamaño de fuente */
+  .lista-elementos-instalados.lista-elementos-mas-de-seis {
+    columns: 2;
+  }
+  
+  .lista-elementos-instalados.lista-elementos-mas-de-seis li {
+    font-size: 0.9em;
+    line-height: 1.4;
+    margin-bottom: 0.3em;
+  }
+  
+  /* Si hay muchos elementos (más de 20), usar 3 columnas y reducir más */
   .lista-elementos-instalados:has(li:nth-child(21)) {
     columns: 3;
+  }
+  
+  .lista-elementos-instalados:has(li:nth-child(21)) li {
+    font-size: 0.85em;
+    line-height: 1.3;
   }
   
   /* Estilos de página para impresión */

@@ -67,46 +67,53 @@ export const Portada = ({ meta, equipamiento, tipoInstalacionVideo, almacenExter
         )}
 
         {/* Elementos Instalados */}
-        {Object.keys(equipamiento || {}).filter(nombre => {
-          const elemento = equipamiento[nombre];
-          // Compatibilidad con estructura antigua (true/false) y nueva (objeto)
-          if (typeof elemento === 'boolean') {
-            return elemento === true;
-          }
-          if (typeof elemento === 'object' && elemento !== null) {
-            return elemento.instalado === true;
-          }
-          return false;
-        }).length > 0 && (
-          <div className="mb-4">
-            <h1 className="text-2xl font-bold text-neutral-800 mb-2">Elementos Instalados</h1>
-            <div className="h-1 w-16 bg-neutral-800 mb-3"></div>
-            <ul className="lista-elementos-instalados">
-              {Object.keys(equipamiento)
-                .filter(nombre => {
-                  const elemento = equipamiento[nombre];
-                  // Compatibilidad con estructura antigua (true/false) y nueva (objeto)
-                  if (typeof elemento === 'boolean') {
-                    return elemento === true;
-                  }
-                  if (typeof elemento === 'object' && elemento !== null) {
-                    return elemento.instalado === true;
-                  }
-                  return false;
-                })
-                .map((nombre, i) => {
-                  const elemento = equipamiento[nombre];
-                  // Obtener cantidad: si es objeto nuevo, usar cantidad; si es boolean antiguo, usar 1
-                  let cantidad = 1;
-                  if (typeof elemento === 'object' && elemento !== null && elemento.cantidad) {
-                    cantidad = elemento.cantidad || 1;
-                  }
-                  const texto = cantidad > 0 ? `${nombre} - ${cantidad} Unidad${cantidad !== 1 ? 'es' : ''}` : nombre;
-                  return <li key={i}>{texto}</li>;
-                })}
-            </ul>
-          </div>
-        )}
+        {(() => {
+          const elementosInstalados = Object.keys(equipamiento || {}).filter(nombre => {
+            const elemento = equipamiento[nombre];
+            // Compatibilidad con estructura antigua (true/false) y nueva (objeto)
+            if (typeof elemento === 'boolean') {
+              return elemento === true;
+            }
+            if (typeof elemento === 'object' && elemento !== null) {
+              return elemento.instalado === true;
+            }
+            return false;
+          });
+          
+          const numElementos = elementosInstalados.length;
+          const tieneMasDeSeis = numElementos > 6;
+          
+          return numElementos > 0 && (
+            <div className="mb-4">
+              <h1 className={`${tieneMasDeSeis ? 'text-xl' : 'text-2xl'} font-bold text-neutral-800 mb-2`}>Elementos Instalados</h1>
+              <div className="h-1 w-16 bg-neutral-800 mb-3"></div>
+              <ul className={`lista-elementos-instalados ${tieneMasDeSeis ? 'lista-elementos-mas-de-seis' : ''}`}>
+                {Object.keys(equipamiento)
+                  .filter(nombre => {
+                    const elemento = equipamiento[nombre];
+                    // Compatibilidad con estructura antigua (true/false) y nueva (objeto)
+                    if (typeof elemento === 'boolean') {
+                      return elemento === true;
+                    }
+                    if (typeof elemento === 'object' && elemento !== null) {
+                      return elemento.instalado === true;
+                    }
+                    return false;
+                  })
+                  .map((nombre, i) => {
+                    const elemento = equipamiento[nombre];
+                    // Obtener cantidad: si es objeto nuevo, usar cantidad; si es boolean antiguo, usar 1
+                    let cantidad = 1;
+                    if (typeof elemento === 'object' && elemento !== null && elemento.cantidad) {
+                      cantidad = elemento.cantidad || 1;
+                    }
+                    const texto = cantidad > 0 ? `${nombre} - ${cantidad} Unidad${cantidad !== 1 ? 'es' : ''}` : nombre;
+                    return <li key={i}>{texto}</li>;
+                  })}
+              </ul>
+            </div>
+          );
+        })()}
       </div>
     </div>
 

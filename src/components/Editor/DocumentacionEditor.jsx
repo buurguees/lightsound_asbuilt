@@ -359,7 +359,7 @@ export const DocumentacionEditor = ({ data, setData, imageInputRefs, documentaci
         <div className="flex items-center gap-3">
           <Button 
             onClick={() => imageInputRefs.current['documentacion_general']?.click()}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-medium"
           >
             Subir Imágenes (Detección Automática)
           </Button>
@@ -393,7 +393,7 @@ export const DocumentacionEditor = ({ data, setData, imageInputRefs, documentaci
             <div key={tipo.key} className="bg-white rounded-lg border p-3">
               <h3 className="font-semibold text-neutral-700 mb-2">{tipo.label.toUpperCase()}</h3>
               <div className="flex gap-2 mb-2">
-                <Button onClick={() => imageInputRefs.current[`documentacion_${tipo.key}`]?.click()}>
+                <Button onClick={() => imageInputRefs.current[`documentacion_${tipo.key}`]?.click()} className="text-neutral-800">
                   Subir {fotos.length > 0 && `(${fotos.length})`}
                 </Button>
                 <input
@@ -426,7 +426,7 @@ export const DocumentacionEditor = ({ data, setData, imageInputRefs, documentaci
                         </div>
                         <Button 
                           onClick={() => handleRemoveImage(tipo.key, index)}
-                          className="text-xs px-2 py-1 bg-red-600 hover:bg-red-700 text-white"
+                          className="text-base px-2 py-1 bg-red-600 hover:bg-red-700 text-white font-bold min-w-[28px] min-h-[28px] flex items-center justify-center"
                           title="Eliminar esta imagen"
                         >
                           ✕
@@ -452,7 +452,27 @@ export const DocumentacionEditor = ({ data, setData, imageInputRefs, documentaci
 
       {/* Tabla: Conexionado e información relevante */}
       <div className="mt-6">
-        <h3 className="font-semibold text-neutral-700 mb-2">Conexionado e información relevante</h3>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="font-semibold text-neutral-700">Conexionado e información relevante</h3>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={data.documentacion?.mostrarTablaConexionado !== false}
+              onChange={(e) => {
+                setData((d) => {
+                  const c = structuredClone(d);
+                  if (!c.documentacion) {
+                    c.documentacion = { docBox: [], avBox: [], conexionado: [] };
+                  }
+                  c.documentacion.mostrarTablaConexionado = e.target.checked;
+                  return c;
+                });
+              }}
+              className="w-4 h-4 text-blue-600 border-neutral-300 rounded focus:ring-blue-500 focus:ring-1 cursor-pointer"
+            />
+            <span className="text-sm text-neutral-600">Mostrar tabla en PDF</span>
+          </label>
+        </div>
         <div className="overflow-auto">
           <table className="w-full text-xs">
             <thead>

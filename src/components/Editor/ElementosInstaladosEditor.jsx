@@ -282,21 +282,23 @@ export const ElementosInstaladosEditor = ({ data, setData }) => {
               return (
                 <div
                   key={i}
-                  className="flex items-center px-2 py-1 hover:bg-neutral-50 rounded border border-transparent hover:border-neutral-200 transition-colors"
+                  className="flex items-center px-2 py-1.5 hover:bg-neutral-50 rounded border border-transparent hover:border-neutral-200 transition-colors"
                 >
-                  <label className="flex items-center flex-1 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={estaInstalado}
-                      onChange={() => toggleElemento(nombre)}
-                      className="w-3.5 h-3.5 text-blue-600 border-neutral-300 rounded focus:ring-blue-500 focus:ring-1 cursor-pointer"
-                    />
-                    <span className={`ml-2 flex-1 ${estaInstalado ? 'text-neutral-800 font-medium' : 'text-neutral-600'}`}>
-                      {nombre}
-                    </span>
+                  <input
+                    type="checkbox"
+                    id={`elemento-${i}`}
+                    checked={estaInstalado}
+                    onChange={() => toggleElemento(nombre)}
+                    className="w-4 h-4 text-blue-600 border-neutral-300 rounded focus:ring-blue-500 focus:ring-2 cursor-pointer flex-shrink-0"
+                  />
+                  <label 
+                    htmlFor={`elemento-${i}`}
+                    className={`ml-2 flex-1 cursor-pointer select-none ${estaInstalado ? 'text-neutral-800 font-medium' : 'text-neutral-600'}`}
+                  >
+                    {nombre}
                   </label>
                   {estaInstalado && (
-                    <div className="ml-2 flex items-center gap-1">
+                    <div className="ml-2 flex items-center gap-1 flex-shrink-0">
                       <input
                         type="number"
                         min="1"
@@ -304,7 +306,8 @@ export const ElementosInstaladosEditor = ({ data, setData }) => {
                         value={cantidad}
                         onChange={(e) => actualizarCantidad(nombre, e.target.value)}
                         onClick={(e) => e.stopPropagation()}
-                        className="w-20 px-2 py-0.5 text-xs border border-neutral-300 rounded text-center focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        onFocus={(e) => e.stopPropagation()}
+                        className="w-20 px-2 py-0.5 text-xs border border-neutral-300 rounded text-center focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                         style={{ fontSize: '11px' }}
                       />
                     </div>

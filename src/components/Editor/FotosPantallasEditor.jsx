@@ -450,7 +450,7 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
               <div className="bg-white rounded-lg border p-3">
                 <h3 className="font-semibold text-neutral-700 mb-2">FOTO FRONTAL</h3>
                 <div className="flex gap-2 mb-2">
-                  <Button onClick={() => imageInputRefs.current[`${i}_frontal`]?.click()}>
+                  <Button onClick={() => imageInputRefs.current[`${i}_frontal`]?.click()} className="text-neutral-800">
                     Subir
                   </Button>
                   <input
@@ -480,7 +480,7 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
                         c.fotos[i].fotoFrontal = { url: '' };
                         return c;
                       });
-                    }}>
+                    }} className="text-neutral-800">
                       Limpiar
                     </Button>
                   )}
@@ -497,7 +497,7 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
               <div className="bg-white rounded-lg border p-3">
                 <h3 className="font-semibold text-neutral-700 mb-2">PLAYER + SENDING</h3>
                 <div className="flex gap-2 mb-2">
-                  <Button onClick={() => imageInputRefs.current[`${i}_player`]?.click()}>
+                  <Button onClick={() => imageInputRefs.current[`${i}_player`]?.click()} className="text-neutral-800">
                     Subir
                   </Button>
                   <input
@@ -527,7 +527,7 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
                         c.fotos[i].fotoPlayer = { url: '' };
                         return c;
                       });
-                    }}>
+                    }} className="text-neutral-800">
                       Limpiar
                     </Button>
                   )}
@@ -544,7 +544,7 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
               <div className="bg-white rounded-lg border p-3">
                 <h3 className="font-semibold text-neutral-700 mb-2">IP</h3>
                 <div className="flex gap-2 mb-2">
-                  <Button onClick={() => imageInputRefs.current[`${i}_ip`]?.click()}>
+                  <Button onClick={() => imageInputRefs.current[`${i}_ip`]?.click()} className="text-neutral-800">
                     Subir
                   </Button>
                   <input
@@ -574,7 +574,7 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
                         c.fotos[i].fotoIP = { url: '' };
                         return c;
                       });
-                    }}>
+                    }} className="text-neutral-800">
                       Limpiar
                     </Button>
                   )}

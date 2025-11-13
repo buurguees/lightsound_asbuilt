@@ -180,7 +180,7 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
         <div className="bg-white rounded-lg border p-3">
           <h3 className="font-semibold text-neutral-700 mb-2">PROBADOR OCUPADO</h3>
           <div className="flex gap-2 mb-2">
-            <Button onClick={() => imageInputRefs.current['probadorOcupado']?.click()}>
+            <Button onClick={() => imageInputRefs.current['probadorOcupado']?.click()} className="text-neutral-800">
               Subir
             </Button>
             <input
@@ -210,7 +210,7 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
                   c.probadores.probadorOcupado = { url: '', fileName: undefined, fileSize: undefined };
                   return c;
                 });
-              }}>
+              }} className="text-neutral-800">
                 Limpiar
               </Button>
             )}
@@ -227,7 +227,7 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
         <div className="bg-white rounded-lg border p-3">
           <h3 className="font-semibold text-neutral-700 mb-2">SENSOR INSTALADO</h3>
           <div className="flex gap-2 mb-2">
-            <Button onClick={() => imageInputRefs.current['probadorLiberado']?.click()}>
+            <Button onClick={() => imageInputRefs.current['probadorLiberado']?.click()} className="text-neutral-800">
               Subir
             </Button>
             <input
@@ -257,7 +257,7 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
                   c.probadores.probadorLiberado = { url: '', fileName: undefined, fileSize: undefined };
                   return c;
                 });
-              }}>
+              }} className="text-neutral-800">
                 Limpiar
               </Button>
             )}
@@ -274,7 +274,7 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
         <div className="bg-white rounded-lg border p-3">
           <h3 className="font-semibold text-neutral-700 mb-2">PASILLO PROBADORES</h3>
           <div className="flex gap-2 mb-2">
-            <Button onClick={() => imageInputRefs.current['pasilloProbadores']?.click()}>
+            <Button onClick={() => imageInputRefs.current['pasilloProbadores']?.click()} className="text-neutral-800">
               Subir
             </Button>
             <input
@@ -304,7 +304,7 @@ export const ProbadoresEditor = ({ data, setData, imageInputRefs, probadorFilesF
                   c.probadores.pasilloProbadores = { url: '', fileName: undefined, fileSize: undefined };
                   return c;
                 });
-              }}>
+              }} className="text-neutral-800">
                 Limpiar
               </Button>
             )}

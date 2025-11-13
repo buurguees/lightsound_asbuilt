@@ -40,7 +40,7 @@ const TablaTurnomatic = ({ filas }) => {
   return (
     <div className="mb-6">
       <h3 className="text-sm font-semibold text-neutral-700 mb-2">TURNOMATIC</h3>
-      <table className="w-full text-xs mb-4 tabla-importadas">
+      <table className="w-full text-xs mb-4 tabla-turnomatic">
         <thead>
           <tr className="bg-neutral-100 text-[11px]">
             {[
@@ -70,7 +70,7 @@ const TablaWelcomer = ({ filas }) => {
   return (
     <div className="mb-6">
       <h3 className="text-sm font-semibold text-neutral-700 mb-2">WELCOMER</h3>
-      <table className="w-full text-xs mb-4 tabla-importadas">
+      <table className="w-full text-xs mb-4 tabla-welcomer">
         <thead>
           <tr className="bg-neutral-100 text-[11px]">
             {[

@@ -45,13 +45,14 @@ export const SeccionDocumentacion = ({ documentacion, pantallas, banners, turnom
   }
 
   const tieneImagenes = imagenes.length > 0;
-  const tieneConexionado = documentacion.conexionado && Array.isArray(documentacion.conexionado) && documentacion.conexionado.length > 0;
+  const mostrarTabla = documentacion.mostrarTablaConexionado !== false; // Por defecto true si no está definido
+  const tieneConexionado = mostrarTabla && documentacion.conexionado && Array.isArray(documentacion.conexionado) && documentacion.conexionado.length > 0;
 
   if (!tieneImagenes && !tieneConexionado) {
     return null;
   }
 
-  // Determinar si combinar en una sola página
+  // Determinar si combinar en una sola página (solo si la tabla está habilitada)
   const totalPantallas = (pantallas && Array.isArray(pantallas)) ? pantallas.length : 0;
   const combinarEnUna = totalPantallas > 0 && totalPantallas <= 10 && tieneImagenes && tieneConexionado;
 
@@ -78,10 +79,12 @@ export const SeccionDocumentacion = ({ documentacion, pantallas, banners, turnom
       <section className={PAGE}>
         <PageHeader title="DOCUMENTACIÓN" meta={meta} />
         <div className="page-content">
-          <div className="overflow-auto">
-            <TablaConexionado filas={conexionado} />
-          </div>
-          <div className="grid grid-cols-3 gap-3 mt-3">
+          {tieneConexionado && (
+            <div className="overflow-auto">
+              <TablaConexionado filas={conexionado} />
+            </div>
+          )}
+          <div className={`grid grid-cols-3 gap-3 ${tieneConexionado ? 'mt-3' : ''}`}>
             {imagenes.map((imagen, i) => (
               <div key={i} className="flex flex-col">
                 <div className="text-xs font-semibold text-neutral-700 mb-2 text-center">
@@ -92,7 +95,7 @@ export const SeccionDocumentacion = ({ documentacion, pantallas, banners, turnom
                     <img loading="lazy" src={imagen.url} alt={imagen.tipo} className="w-full h-full object-contain" />
                   ) : (
                     <div className="text-center p-2">
-                      <span className="text-neutral-400 text-xs">Imagen no necesaria</span>
+                      <span className="text-neutral-400 text-xs">Imagen no requerida</span>
                     </div>
                   )}
                 </div>
@@ -207,9 +210,9 @@ export const SeccionDocumentacion = ({ documentacion, pantallas, banners, turnom
                     {imagen.url ? (
                       <img loading="lazy" src={imagen.url} alt={imagen.tipo} className="w-full h-full object-contain" />
                     ) : (
-                      <div className="text-center p-2">
-                        <span className="text-neutral-400 text-xs">Imagen no necesaria</span>
-                      </div>
+                    <div className="text-center p-2">
+                      <span className="text-neutral-400 text-xs">Imagen no requerida</span>
+                    </div>
                     )}
                   </div>
                 </div>
