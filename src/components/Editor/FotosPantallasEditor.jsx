@@ -199,10 +199,14 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
             (fileName.includes('PLAYER') && fileName.includes('SENDING'))) {
           tipoFoto = 'fotoPlayer';
         } 
-        // Detectar IP (debe contener IP pero NO PLAYER).
-        // Acepta variantes: "IP", "_IP", " IP ", "IPCONFIG", "IP CONFIG", "IP-CONFIG"
+        // Detectar IP CONFIG (prioridad: siempre buscar IP CONFIG o variantes)
+        // Acepta variantes: "IP CONFIG", "IP_CONFIG", "IP-CONFIG", "IPCONFIG"
         else if (!fileName.includes('PLAYER')) {
-          const isIPBasic = (
+          // Priorizar detección de IP CONFIG (con o sin separadores)
+          const isIPConfig = /IP[\s_\-]*CONFIG/i.test(fileName);
+          
+          // También aceptar variantes básicas de IP si no hay IP CONFIG
+          const isIPBasic = !isIPConfig && (
             fileName.includes('_IP') ||
             fileName.endsWith(' IP') ||
             fileName.endsWith('_IP') ||
@@ -211,9 +215,12 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
             fileName.includes(' IP_') ||
             fileName.includes('_IP ')
           );
-          const isIPConfig = /IP[\s_\-]*CONFIG/.test(fileName);
-          if (isIPBasic || isIPConfig) {
-          tipoFoto = 'fotoIP';
+          
+          if (isIPConfig || isIPBasic) {
+            tipoFoto = 'fotoIP';
+            if (isIPConfig) {
+              console.log(`  ✅ Detectado IP CONFIG en: ${file.name}`);
+            }
           }
         } 
         // Detectar FRONTAL (aceptar FRONT/FRONTAL como token separado)
