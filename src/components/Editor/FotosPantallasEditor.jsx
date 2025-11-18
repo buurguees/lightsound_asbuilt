@@ -191,48 +191,70 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
         }
         
         // Determinar tipo de foto según el contenido del nombre del archivo
-        // Orden importante: primero PLAYER_SENDING, luego IP, luego FRONTAL
+        // Orden importante: primero los más específicos (PLAYER_SENDING, IP_CONFIG), luego FRONTAL
+        // Cada tipo es independiente dentro del mismo bloque SX
         let tipoFoto = null;
         
-        // Detectar PLAYER_SENDING (debe contener PLAYER y SENDING)
+        // 1. Detectar PLAYER_SENDING (más específico - debe contener PLAYER y SENDING)
+        // Asignar a campo "PLAYER + SENDING"
         if ((fileName.includes('PLAYER_SENDING') || fileName.includes('PLAYER+SENDING')) || 
             (fileName.includes('PLAYER') && fileName.includes('SENDING'))) {
           tipoFoto = 'fotoPlayer';
+          console.log(`  ✅ Detectado PLAYER_SENDING en: ${file.name} → Se asignará a "PLAYER + SENDING"`);
         } 
-        // Detectar IP CONFIG (prioridad: siempre buscar IP CONFIG o variantes)
-        // Acepta variantes: "IP CONFIG", "IP_CONFIG", "IP-CONFIG", "IPCONFIG"
-        else if (!fileName.includes('PLAYER')) {
-          // Priorizar detección de IP CONFIG (con o sin separadores)
-          const isIPConfig = /IP[\s_\-]*CONFIG/i.test(fileName);
+        // 2. Detectar IP_CONFIG (más específico - debe contener IP y CONFIG)
+        // Asignar a campo "IP CONFIG"
+        else if (/IP[\s_\-]*CONFIG/i.test(fileName)) {
+          tipoFoto = 'fotoIP';
+          console.log(`  ✅ Detectado IP_CONFIG en: ${file.name} → Se asignará a "IP CONFIG"`);
+        }
+        // 3. Detectar variantes básicas de IP (solo si no es PLAYER_SENDING ni IP_CONFIG)
+        // Asignar a campo "IP CONFIG"
+        else if (!fileName.includes('PLAYER') && !fileName.includes('SENDING')) {
+          const isIPBasic = fileName.includes('_IP') ||
+                           fileName.endsWith(' IP') ||
+                           fileName.endsWith('_IP') ||
+                           fileName.includes('_IP_') ||
+                           fileName.includes(' IP ') ||
+                           fileName.includes(' IP_') ||
+                           fileName.includes('_IP ');
           
-          // También aceptar variantes básicas de IP si no hay IP CONFIG
-          const isIPBasic = !isIPConfig && (
-            fileName.includes('_IP') ||
-            fileName.endsWith(' IP') ||
-            fileName.endsWith('_IP') ||
-            fileName.includes('_IP_') ||
-            fileName.includes(' IP ') ||
-            fileName.includes(' IP_') ||
-            fileName.includes('_IP ')
-          );
-          
-          if (isIPConfig || isIPBasic) {
+          if (isIPBasic) {
             tipoFoto = 'fotoIP';
-            if (isIPConfig) {
-              console.log(`  ✅ Detectado IP CONFIG en: ${file.name}`);
-            }
+            console.log(`  ✅ Detectado IP básico en: ${file.name} → Se asignará a "IP CONFIG"`);
           }
-        } 
-        // Detectar FRONTAL (aceptar FRONT/FRONTAL como token separado)
-        else if (/(?:^|[_\s\-])FRONT(?:AL)?(?:$|[_\s\-])/.test(fileName)) {
-          tipoFoto = 'fotoFrontal';
+        }
+        
+        // 4. Detectar FRONTAL (fotos de la pantalla - solo si no se detectó otro tipo)
+        // Asignar a campo "FOTO FRONTAL"
+        // Excluir FRONTAL_RACK, FRONTAL_ON_THE_SPOT, etc. que son para otros componentes
+        if (!tipoFoto) {
+          const hasFrontal = fileName.includes('_FRONTAL') ||
+                            fileName.includes(' FRONTAL') ||
+                            fileName.includes('-FRONTAL') ||
+                            fileName.endsWith('FRONTAL') ||
+                            fileName.endsWith('_FRONTAL') ||
+                            fileName.endsWith(' FRONTAL') ||
+                            fileName.endsWith('-FRONTAL') ||
+                            /(?:^|[_\s\-])FRONTAL(?:$|[_\s\-\.])/.test(fileName);
+          
+          // Excluir tipos especiales de FRONTAL que no son de pantallas
+          const esFrontalPantalla = hasFrontal && 
+                                   !fileName.includes('FRONTAL_RACK') && 
+                                   !fileName.includes('FRONTAL ON THE SPOT') &&
+                                   !fileName.includes('FRONTAL_ON_THE_SPOT');
+          
+          if (esFrontalPantalla) {
+            tipoFoto = 'fotoFrontal';
+            console.log(`  ✅ Detectado FRONTAL en: ${file.name} → Se asignará a "FOTO FRONTAL"`);
+          }
         }
         
         if (tipoFoto) {
           // Mapear tipo interno a nombre legible
           const tipoNombre = tipoFoto === 'fotoFrontal' ? 'FOTO FRONTAL' : 
                             tipoFoto === 'fotoPlayer' ? 'PLAYER + SENDING' : 
-                            'IP';
+                            'IP CONFIG';
           console.log(`  ✅ Tipo detectado: ${tipoNombre} → Se asignará al bloque "${sxPattern} ${tipoNombre}"`);
           
           // Si ya existe una foto de este tipo para este SX, mantener la primera encontrada
@@ -244,8 +266,11 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
           }
         } else {
           console.log(`  ❌ No se pudo determinar el tipo de foto para: ${file.name}`);
-          console.log(`     Buscando: "FRONTAL", "PLAYER_SENDING", o "IP" en el nombre`);
-          console.log(`     Ejemplo válido: BSK_16909_FR_DIJON_LA-TOISON-DOR_CIRCLE_S1_FRONTAL`);
+          console.log(`     Buscando: "FRONTAL", "PLAYER_SENDING", o "IP_CONFIG" en el nombre`);
+          console.log(`     Ejemplos válidos:`);
+          console.log(`       - BSK_16909_FR_DIJON_LA-TOISON-DOR_CIRCLE_S1_FRONTAL (→ FOTO FRONTAL)`);
+          console.log(`       - BSK_16909_FR_DIJON_LA-TOISON-DOR_CIRCLE_S1_PLAYER_SENDING (→ PLAYER + SENDING)`);
+          console.log(`       - BSK_16909_FR_DIJON_LA-TOISON-DOR_CIRCLE_S1_IP_CONFIG (→ IP CONFIG)`);
         }
       }
       
@@ -288,14 +313,17 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
         const fotosDelSX = fotosPorSX[sxPattern];
         if (!fotosDelSX || Object.keys(fotosDelSX).length === 0) {
           console.log(`  ⚠️ No se encontraron fotos para SX: ${sxPattern} (etiqueta: ${etiquetaPlano})`);
-          console.log(`     Buscando imágenes con patrón: ...${sxPattern}_FRONTAL, ...${sxPattern}_PLAYER_SENDING, etc.`);
+          console.log(`     Buscando imágenes con patrón:`);
+          console.log(`       - ...${sxPattern}_FRONTAL (→ FOTO FRONTAL)`);
+          console.log(`       - ...${sxPattern}_PLAYER_SENDING (→ PLAYER + SENDING)`);
+          console.log(`       - ...${sxPattern}_IP_CONFIG (→ IP CONFIG)`);
           continue;
         }
 
         const tiposEncontrados = Object.keys(fotosDelSX).map(t => {
           if (t === 'fotoFrontal') return 'FOTO FRONTAL';
           if (t === 'fotoPlayer') return 'PLAYER + SENDING';
-          return 'IP';
+          return 'IP CONFIG';
         });
         console.log(`  📁 Fotos encontradas para ${sxPattern}: ${tiposEncontrados.join(', ')}`);
 
@@ -303,7 +331,7 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
         for (const [tipoFoto, file] of Object.entries(fotosDelSX)) {
           const tipoNombre = tipoFoto === 'fotoFrontal' ? 'FOTO FRONTAL' : 
                             tipoFoto === 'fotoPlayer' ? 'PLAYER + SENDING' : 
-                            'IP';
+                            'IP CONFIG';
           
           // Solo actualizar si la foto no está ya asignada
           if (!c.fotos[fotoIndex][tipoFoto]?.url) {
@@ -360,15 +388,15 @@ export const FotosPantallasEditor = ({ data, setData, imageInputRefs, fotoFilesF
       if (fotosProcesadas > 0) {
         let mensaje = `✅ Se asignaron ${fotosProcesadas} foto(s) a ${pantallasActualizadasSet.size} pantalla(s)\n\n`;
         mensaje += `📊 Resumen por tipo:\n`;
-        mensaje += `  • FRONTAL: ${resumenPorTipo.fotoFrontal}\n`;
+        mensaje += `  • FOTO FRONTAL: ${resumenPorTipo.fotoFrontal}\n`;
         mensaje += `  • PLAYER + SENDING: ${resumenPorTipo.fotoPlayer}\n`;
-        mensaje += `  • IP: ${resumenPorTipo.fotoIP}`;
+        mensaje += `  • IP CONFIG: ${resumenPorTipo.fotoIP}`;
         console.log(mensaje);
         // Nota: La información también se envía a App.jsx a través de onFotosProcessed
       } else {
         console.log('⚠️ No se asignaron fotos. Verifica que:');
         console.log('  1. Los nombres de archivo contengan el patrón SX (S1, S2, etc.)');
-        console.log('  2. Los nombres contengan FRONTAL, PLAYER_SENDING, o IP');
+        console.log('  2. Los nombres contengan FRONTAL, PLAYER_SENDING, o IP_CONFIG');
         console.log('  3. Las etiquetas de plano en "Desglose de pantallas" contengan el mismo patrón SX');
       }
       // Marcar lote como procesado y limpiar cola en App para no reintentar
