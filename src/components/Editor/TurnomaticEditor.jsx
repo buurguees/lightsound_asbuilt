@@ -7,13 +7,20 @@ import { FotosTurnomaticEditor } from './FotosTurnomaticEditor';
 export const TurnomaticEditor = ({ data, setData, imageInputRefs, turnomaticExcelFilesFromFolder, fotoTurnomaticFilesFromFolder }) => {
   const lastImportedFileRef = useRef(null);
   const processedFilesRef = useRef(new Set());
+  const hasProcessedFolderFilesRef = useRef(false);
 
   // Procesar archivos Excel recibidos desde App.jsx (importación de carpeta)
   useEffect(() => {
     if (!turnomaticExcelFilesFromFolder || turnomaticExcelFilesFromFolder.length === 0) return;
     
+    // Solo procesar una vez, incluso si el componente se desmonta y vuelve a montar
+    if (hasProcessedFolderFilesRef.current) {
+      return;
+    }
+    
     if (data.turnomatic && data.turnomatic.length > 0) {
       console.log('⚠️ Ya hay turnomatic importados. No se volverá a procesar el Excel automáticamente.');
+      hasProcessedFolderFilesRef.current = true;
       return;
     }
 
@@ -53,12 +60,13 @@ export const TurnomaticEditor = ({ data, setData, imageInputRefs, turnomaticExce
           
           console.log(mensaje);
           alert(mensaje);
+          hasProcessedFolderFilesRef.current = true;
         }
       }
     };
 
     processExcelFiles();
-  }, [turnomaticExcelFilesFromFolder, setData, data.turnomatic]);
+  }, [turnomaticExcelFilesFromFolder, setData]);
 
   const handleExcelUpload = async (file) => {
     if (lastImportedFileRef.current === file.name) {

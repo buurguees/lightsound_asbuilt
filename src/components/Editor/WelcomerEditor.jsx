@@ -7,12 +7,19 @@ import { FotosWelcomerEditor } from './FotosWelcomerEditor';
 export const WelcomerEditor = ({ data, setData, imageInputRefs, welcomerExcelFilesFromFolder, fotoWelcomerFilesFromFolder }) => {
   const lastImportedFileRef = useRef(null);
   const processedFilesRef = useRef(new Set());
+  const hasProcessedFolderFilesRef = useRef(false);
 
   useEffect(() => {
     if (!welcomerExcelFilesFromFolder || welcomerExcelFilesFromFolder.length === 0) return;
     
+    // Solo procesar una vez, incluso si el componente se desmonta y vuelve a montar
+    if (hasProcessedFolderFilesRef.current) {
+      return;
+    }
+    
     if (data.welcomer && data.welcomer.length > 0) {
       console.log('⚠️ Ya hay welcomer importados. No se volverá a procesar el Excel automáticamente.');
+      hasProcessedFolderFilesRef.current = true;
       return;
     }
 
@@ -52,12 +59,13 @@ export const WelcomerEditor = ({ data, setData, imageInputRefs, welcomerExcelFil
           
           console.log(mensaje);
           alert(mensaje);
+          hasProcessedFolderFilesRef.current = true;
         }
       }
     };
 
     processExcelFiles();
-  }, [welcomerExcelFilesFromFolder, setData, data.welcomer]);
+  }, [welcomerExcelFilesFromFolder, setData]);
 
   const handleExcelUpload = async (file) => {
     if (lastImportedFileRef.current === file.name) {

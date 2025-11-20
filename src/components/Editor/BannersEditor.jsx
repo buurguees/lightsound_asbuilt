@@ -7,11 +7,17 @@ import { FotosBannersEditor } from './FotosBannersEditor';
 export const BannersEditor = ({ data, setData, imageInputRefs, bannerExcelFilesFromFolder, fotoBannerFilesFromFolder }) => {
   const lastImportedFileRef = useRef(null);
   const processedFilesRef = useRef(new Set());
+  const hasProcessedFolderFilesRef = useRef(false);
 
   // Procesar archivos Excel recibidos desde App.jsx (importación de carpeta)
   // IMPORTANTE: Solo procesar una vez, no volver a procesar si ya hay banners importados
   useEffect(() => {
     if (!bannerExcelFilesFromFolder || bannerExcelFilesFromFolder.length === 0) return;
+    
+    // Solo procesar una vez, incluso si el componente se desmonta y vuelve a montar
+    if (hasProcessedFolderFilesRef.current) {
+      return;
+    }
     
     // Si ya hay banners importados, no volver a procesar el Excel
     // Esto permite al usuario modificar/eliminar banners sin que se regeneren
@@ -19,6 +25,7 @@ export const BannersEditor = ({ data, setData, imageInputRefs, bannerExcelFilesF
       console.log('⚠️ Ya hay banners importados. No se volverá a procesar el Excel automáticamente.');
       console.log(`   Banners actuales: ${data.banners.length}`);
       console.log(`   Para reimportar, usa el botón "Cargar Excel" manualmente.`);
+      hasProcessedFolderFilesRef.current = true;
       return;
     }
 
@@ -69,12 +76,13 @@ export const BannersEditor = ({ data, setData, imageInputRefs, bannerExcelFilesF
             mensaje += `\n⚠️ Se eliminaron ${totalDuplicados} banner(es) duplicado(s) por patrón SX`;
           }
           alert(mensaje);
+          hasProcessedFolderFilesRef.current = true;
         }
       }
     };
 
     processExcelFiles();
-  }, [bannerExcelFilesFromFolder, setData, data.banners]);
+  }, [bannerExcelFilesFromFolder, setData]);
 
   const handleExcelUpload = async (file) => {
     // FILTRO DE SEGURIDAD: Evitar doble importación del mismo archivo
